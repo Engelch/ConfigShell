@@ -44,8 +44,8 @@ VerboseFlag=FALSE
 
 function debugSet()             { DebugFlag=TRUE; return 0; }
 function debugUnset()           { DebugFlag=; return 0; }
-function debugExecIfDebug()     { [ ! -z $DebugFlag ] && $*; return 0; }
-function debug()                { [ ! -z $DebugFlag ] && err 'DEBUG:' $* 1>&2 ; return 0; }
+function debugExecIfDebug()     { [ $DebugFlag = TRUE ] && $*; return 0; }
+function debug()                { [ $DebugFlag = TRUE ] && err 'DEBUG:' $* 1>&2 ; return 0; }
 
 function verbose()              { [ "$VerboseFlag" = TRUE ] && echo -n $* ; return 0; }
 function verbosenl()            { [ "$VerboseFlag" = TRUE ] && echo $* ; return 0; }
@@ -90,44 +90,37 @@ function usage()
 {
     err $_app
     err SYNOPSIS: 
-    err4 $_app '[-d|--debug] [-v|--verbose] [-f|--force] file...'
-    err4 $_app '[-h|--help]'
-    err DESCRIPTION: TODO
+    err4 $_app '[-d] [-f] [dir...]'
+    err4 $_app '-h'
+    err DESCRIPTION: 
+    err4 TODO
 }
 
 function parseCLI() {
-    local _endLoop=
-    local -i counter=0
-    # have to call it 2x to get output and exit code. Else 'cmd -x' different to 'cmd -dx'
-    getopt -o dvf -l debug,verbose,force -- $* &> /dev/null ; res=$?
-    [ $res -ne 0 ] && usage && exit 1
-    local cliLine=$(getopt -o dvf -l debug,verbose,force -- $*) 
-    for option in $cliLine; do
-        counter=$(( $counter + 1 ))
-        case "$option" in
-        -d|--debug) debugSet; verboseSet; debug Debug and verbosity enabled.
-                    debug cliLine $cliLine
-                    ;;
-        -v|--verbose) verboseSet; debug Verbose mode enabled.;;
-        -f|--force) forcedMode=YES; debug Forced mode enabled.;;
-        --) debug End of options reached. ; break 2 ;;
-        *) errorExit 1 This should never happen. Option is $option.
+    while getopts "dfh" options; do         # Loop: Get the next option;
+        case "${options}" in                    # TIMES=${OPTARG}
+            d) err Debug enabled ; debugSet     
+                ;;
+            f) debug forcedMode; forcedMode=TRUE
+                ;;
+            h) usage ; exit 1
+                ;;
+            *)
+            usage
+            errorExit 2 unwanted option ${options}  # Exit abnormally.
+                ;;
         esac
     done
-    debug counter $counter
-    # remove $counter first words from cliLine
-    cliLine=$(echo $cliLine | cut -f$(( $counter + 1))- -d ' ')
-    debug new cliLine $cliLine
-    cliLine=$(echo $cliLine | sed "s/\'//g" )
-    debug new cliLine quotes removed $cliLine
-    parseCLI_result=$cliLine
 }
 
 function main() {
     exitIfBinariesNotFound pwd tput basename dirname mktemp
-    parseCLI $* ; args=$parseCLI_result # args=$(parseCLI $*) creates a subshell and cannot set current shell debugFlag...
-    debug args are $args
-}
+    parseCLI $* 
+    shift $(($OPTIND - 1))  # not working inside parseCLI
+    debug args are $*
+    debug forcedMode is $forcedMode
+    echo here more....................
+}    
 
 main $*
 
