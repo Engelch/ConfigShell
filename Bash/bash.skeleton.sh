@@ -8,10 +8,15 @@
 # CHANGELOG:
 # - 0.0.1:
 #
-# COPYRIGHT © 2021 Christian Engel (mailto:engel-ch@outlook.com)
+# COPYRIGHT © 2022 Christian Engel (mailto:engel-ch@outlook.com)
+#
 # Skeleton: 
+#   0.2.0 - use of bash builtin GNU getopts (no support for long options)
+#         - bug fix with debug's internal variable DebugFlag
 #   0.1.0 - improved exitIfErr
+#
 # LICENSE: MIT
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this
 # software and associated documentation files (the "Software"), to deal in the Software
 # without restriction, including without limitation the rights to use, copy, modify, merge,
@@ -27,8 +32,11 @@
 # FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
+
 #########################################################################################
 # VARIABLES
+
+# skeleton_version=0.2.0
 
 readonly _app=$(basename $0)
 readonly _appDir=$(dirname $0)
@@ -59,16 +67,14 @@ function colBlink()     { printf "\e[5m"; return 0; }
 
 # --- Exits
 
-# always show such a message.  If known terminal, print the message
-# in reverse video mode. This is the other way, not using escape sequences
-function soErr() { err $*; }
-
-function error()        { soErr 'ERROR:' $*; return 0; } # similar to err but with ERROR prefix and reverse colour (curses).
+function error()        { err 'ERROR:' $*; return 0; } # similar to err but with ERROR prefix and possibility to include 
 function errorExit()    { EXITCODE=$1 ; shift; error $* 1>&2; exit $EXITCODE; }
 function exitIfErr()    { a="$1"; b="$2"; shift; shift; [ "$a" -ne 0 ] && errorExit $b App returned $b $*; }
-function err()          { echo $* 1>&2; } # just write to stderr
-function err4()          { echo '   ' $* 1>&2; } # just write to stderr
-function err8()          { echo '       ' $* 1>&2; } # just write to stderr
+
+function err()          { echo $* 1>&2; }                 # just write to stderr
+function err4()         { echo '   ' $* 1>&2; }           # just write to stderr
+function err8()         { echo '       ' $* 1>&2; }       # just write to stderr
+function err12()        { echo '           ' $* 1>&2; }   # just write to stderr
 
 # --- Existance checks
 function exitIfBinariesNotFound()       { for file in $@; do [ $(command -v "$file") ] || errorExit 253 binary not found: $file; done }
@@ -93,21 +99,23 @@ function usage()
     err4 $_app '[-d] [-f] [dir...]'
     err4 $_app '-h'
     err DESCRIPTION: 
-    err4 TODO
+    err4 $_app '-h      ::= show usage message and exit with exit code 1'
+    err4 TODO .......
 }
 
 function parseCLI() {
+    local currentOption
     while getopts "dfh" options; do         # Loop: Get the next option;
         case "${options}" in                    # TIMES=${OPTARG}
-            d) err Debug enabled ; debugSet     
+            d)  err Debug enabled ; debugSet     
                 ;;
-            f) debug forcedMode; forcedMode=TRUE
+            f)  debug forcedMode; forcedMode=TRUE
                 ;;
-            h) usage ; exit 1
+            h)  usage ; exit 1
                 ;;
             *)
-            usage
-            errorExit 2 unwanted option ${options}  # Exit abnormally.
+                err Help with $_app -h
+                exit 2  # Exit abnormally.
                 ;;
         esac
     done
@@ -119,7 +127,7 @@ function main() {
     shift $(($OPTIND - 1))  # not working inside parseCLI
     debug args are $*
     debug forcedMode is $forcedMode
-    echo here more....................
+    echo TODO '(search and replace all TODO accordingly)' here more....................
 }    
 
 main $*

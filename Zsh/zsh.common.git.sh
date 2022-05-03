@@ -35,7 +35,7 @@ function gihelp() {
     echo alias gidi='git diff'               # show delta working-tree vs index
     echo alias gidic='git diff --cached'     # show delta index vs last commit
     echo alias gibr='git branch -avv'
-    echo alias gilo='git log --no-pager --branches --remotes --tags --graph --oneline --decorate'
+    echo alias gilo='git --no-pager log --branches --remotes --tags --graph --oneline --decorate'
     echo alias gist='git status'
     echo alias gipl='git pull --all; git fetch --tags'
     echo alias girm="git status | sed '1,/not staged/d' | grep deleted | awk '{print \$2}' | xargs git rm"
