@@ -96,7 +96,7 @@ debug PROFILES_CONFIG_DIR: $PROFILES_CONFIG_DIR
 
 function main() {
     local files
-   umask 002 # umask for group work
+   umask 022 # umask 022 for group work, removed again because this does not work properly for SSH cfg files...
    loadSource pre
    # potentially reread .zshenv, but required as oh-my-zsh seems to destroy the PATH variable.
     # Optimised just to reread the cached path file
