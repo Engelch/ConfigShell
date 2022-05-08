@@ -176,6 +176,11 @@ EOF
    unset a
 }
 
+function tlsCert2LeafSubject() {
+	[ ! -f "$1" ] && errorExit 70 Supplied argument $1 is not a file
+	tlsCert $1 | grep 'subject=' | head -n 1 | sed -e 's/^.*CN = //' -e 's/,.*//'
+}
+
 # ------ Keys
 # show fingerprint of private RSA key
 function tlsRsaPrvFingerprint() { local output="/dev/null" ; [ "$1" = -v ] &&  output="/dev/stdout" && shift ; local file; for file in $*; do /bin/echo -n "$file:" > $output; openssl rsa -modulus -noout -in "$file" | openssl sha256 | sed 's/.*stdin)= //'; done; }
