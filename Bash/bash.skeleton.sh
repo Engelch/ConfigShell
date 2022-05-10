@@ -1,21 +1,22 @@
 #!/usr/bin/env bash
 # vim: set expandtab: ts=3: sw=3
 #
-# TITLE:
+# TITLE: $_app
 #
-# DESCRIPTION:
+# DESCRIPTION: <see usage function below>
 #
-# CHANGELOG:
+# CHANGELOG: todo
 # - 0.0.1:
 #
-# COPYRIGHT © 2022 Christian Engel (mailto:engel-ch@outlook.com)
+# COPYRIGHT © 2022 Christian Engel (mailto:engel-ch@outlook.com) todo
 #
 # Skeleton: 
+#   0.3.0 - clean-up, local changes
 #   0.2.0 - use of bash builtin GNU getopts (no support for long options)
 #         - bug fix with debug's internal variable DebugFlag
 #   0.1.0 - improved exitIfErr
 #
-# LICENSE: MIT
+# LICENSE: MIT todo
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this
 # software and associated documentation files (the "Software"), to deal in the Software
@@ -34,9 +35,9 @@
 #
 
 #########################################################################################
-# VARIABLES
+# VARIABLES, CONSTANTS
 
-# skeleton_version=0.2.0
+# readonly skeleton_version=0.3.0 # variable normally not required
 
 readonly _app=$(basename $0)
 readonly _appDir=$(dirname $0)
@@ -46,14 +47,14 @@ DebugFlag=FALSE
 VerboseFlag=FALSE
 
 #########################################################################################
-# FUNCTIONS
+# SKELETON FUNCTIONS, considered R/O
 
 # --- debug: Conditional debugging. All commands begin w/ debug.
 
 function debugSet()             { DebugFlag=TRUE; return 0; }
 function debugUnset()           { DebugFlag=; return 0; }
 function debugExecIfDebug()     { [ $DebugFlag = TRUE ] && $*; return 0; }
-function debug()                { [ $DebugFlag = TRUE ] && err 'DEBUG:' $* 1>&2 ; return 0; }
+function debug()                { [ $DebugFlag = TRUE ] && err 'DEBUG:' $* ; return 0; }
 
 function verbose()              { [ "$VerboseFlag" = TRUE ] && echo -n $* ; return 0; }
 function verbosenl()            { [ "$VerboseFlag" = TRUE ] && echo $* ; return 0; }
@@ -90,17 +91,23 @@ function tempFile()                     { mktemp ${TMPDIR:-/tmp/}$_app.XXXXXXXX;
 function tempDir()                      { mktemp -d "${TMPDIR:-/tmp/}$_app.YYYYYYYYY"; }
 # realpath as shell, argument either supplied as stdin or as $1
 
-# MAIN ===============================================================================
+# application-specific functions  ===============================================================================
 
 function usage()
 {
+    err DESCRIPTION
+    err
     err $_app
-    err SYNOPSIS: 
+    err SYNOPSIS
     err4 $_app '[-d] [-f] [dir...]'
     err4 $_app '-h'
-    err DESCRIPTION: 
-    err4 $_app '-h      ::= show usage message and exit with exit code 1'
-    err4 TODO .......
+    err
+    err VERSION
+    err4 $_appVersion
+    err
+    err OPTIONS
+    err4 '-h      ::= show usage message and exit with exit code 1'
+    err4 todo .......
 }
 
 function parseCLI() {
@@ -126,8 +133,8 @@ function main() {
     parseCLI $* 
     shift $(($OPTIND - 1))  # not working inside parseCLI
     debug args are $*
-    debug forcedMode is $forcedMode
-    echo TODO '(search and replace all TODO accordingly)' here more....................
+    debug forcedMode is ${forcedMode:-FALSE}
+    echo todo '(search and replace all todo accordingly)' here more....................
 }    
 
 main $*

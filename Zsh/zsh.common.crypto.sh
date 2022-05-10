@@ -176,9 +176,26 @@ EOF
    unset a
 }
 
-function tlsCert2LeafSubject() {
-	[ ! -f "$1" ] && errorExit 70 Supplied argument $1 is not a file
+function tlsCert2LeafCn() {
+	[ ! -f "$1" ] && error Supplied argument $1 is not a file && return
 	tlsCert $1 | grep 'subject=' | head -n 1 | sed -e 's/^.*CN = //' -e 's/,.*//'
+}
+
+function tlsCert2LeafSubject() {
+	[ ! -f "$1" ] && error Supplied argument $1 is not a file && return
+	tlsCert $1 | grep 'subject=' | head -n 1 | sed -e 's/^.*subject=//'
+}
+
+alias  tlsSrvCrt=tlsServerCert
+alias  tlsSrvCert=tlsServerCert
+function tlsServerCert() {
+    # gnutls-cli --print-cert $1  < /dev/null  > $1.pem
+    [ -z $1 ] && return 0
+    url=$1
+    # strip potential leading ^http.?://
+    [[ $url =~ ^http.?:// ]] && url=$(echo $url | sed 's,^.*://,,')
+    debug url: $url
+    gnutls-cli --print-cert --no-ca-verification $url  < /dev/null
 }
 
 # ------ Keys
