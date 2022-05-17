@@ -4,3 +4,6 @@
 [submodule "ConfigDarwin"]
 	path = ConfigDarwin
 	url = git@github.com:Engelch/ConfigDarwin.git
+[submodule "ConfigLinux"]
+	path = ConfigLinux
+	url = git@github.com:Engelch/ConfigLinux.git
