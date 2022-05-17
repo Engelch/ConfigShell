@@ -182,7 +182,7 @@ function main() {
 
     sourcePaths $HOME/.env.*.path   
 
-    [ -f ~/.bashrc ] && . ~/.bashrc # start all the normal files
+    [ -z "$NO_bashrc" -a -f ~/.bashrc ] && . ~/.bashrc # start all the normal files
 }
 
 debug START .................... dot.bash_profile

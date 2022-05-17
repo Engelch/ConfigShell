@@ -25,7 +25,7 @@ LinuxPath=$HOME/.env.$uname.path
 
 function env.Linux.init() {
    debug4 env.Linux.init %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-   if [ -f "$LinuxPath" ] && debug8 cached .env.Linux.path file found && return
+   [ -f "$LinuxPath" ] && debug8 cached .env.Linux.path file found && return
    setupLinuxPath
 }
 
