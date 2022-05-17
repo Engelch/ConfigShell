@@ -38,22 +38,22 @@ function setupLaTeX() {
         # fi
 }
 
-function env.path.tool.latex.init() {
-    debug4 env.path.tool.latex.init %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    LATEX_PATH=$HOME/.bash.env.latex.path
+LATEX_PATH=$HOME/.env.latex.path
+
+function env.path.latex.init() {
+    debug4 env.path.latex.init %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     [ -f $LATEX_PATH ] && debug8 $LATEX_PATH found, returning && return 
     debug8 $LATEX_PATH not found, creating it
     setupLaTeX $LATEX_PATH
 }
 
-function env.path.tool.latex.del() {
-    debug4 env.path.tool.latex.del %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    LATEX_PATH=$HOME/.bash.env.latex.path
+function env.path.latex.del() {
+    debug4 env.path.to.latex.del %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     [ -f $LATEX_PATH ] && \
-        debug8 env.path.tool.latex.del: $LATEX_PATH found, removing it && \
+        debug8 env.path.latex.del: $LATEX_PATH found, removing it && \
         /bin/rm $LATEX_PATH && \
         return
-    debug8 env.path.tool.latex.del: No LATEX_PATH $LATEX_PATH found.
+    debug8 env.path.latex.del: No LATEX_PATH $LATEX_PATH found.
 }
 
 # EOF
