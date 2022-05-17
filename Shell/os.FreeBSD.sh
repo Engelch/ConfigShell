@@ -8,12 +8,12 @@ function setupBSD() {
 }
 
 function os.FreeBSD.init() {
-   debug4 LOADING zsh.os.FreeBSD.init %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+   debug4 LOADING os.FreeBSD.init %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    setupBSD
 }
 
 function os.FreeBSD.init() {
-   debug4 LOADING zsh.os.FreeBSD.del %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+   debug4 LOADING os.FreeBSD.del %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 }
 
 # EOF

@@ -16,16 +16,18 @@ function setupOSXPaths() {
     done
 }
 
+##################################
+
+OS_PATHFILE=$HOME/.env.Darwin.path
+
 function env.path.Darwin.init() {
    debug4 env.Path.Darwin.init %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-   OS_PATHFILE=$HOME/.bash.env.Darwin.path
    [ -f $OS_PATHFILE ] && debug8 $OS_PATHFILE found, returning && return # caching
    setupOSXPaths
 }
 
 function env.path.Darwin.del() {
    debug4 env.Path.Darwin.del %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-   OS_PATHFILE=$HOME/.bash.env.Darwin.path
    [ -f $OS_PATHFILE ] && debug8 $OS_PATHFILE found, deleting it && /bin/rm $OS_PATHFILE # remove cache
 }
 

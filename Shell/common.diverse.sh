@@ -82,7 +82,7 @@ function rmCache() {
 
 # If multiple users log in as user hadm, determine the real user logging in by identifying her/his SSH finger-print
 function realUserForHadm() {
-   debug common.zshrc in realUserForHadm
+   debug realUserForHadm ...........
    if [[ $(id -un) == hadm && $(uname) = Linux && ! $(uname -r) =~ Microsoft && $(id -Gn) =~ wheel ]] ; then
       export HADM_LAST_LOGIN_FINGERPRINT=${HADM_LAST_LOGIN_FINGERPRINT:-$(sudo journalctl -r -u ssh -g 'Accepted publickey' -n 1 -q 2&>/dev/null| awk '{ print $NF }')}
 

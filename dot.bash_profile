@@ -4,7 +4,7 @@ export DebugFlag=${DebugFlag:-FALSE}
 export VerboseFlag=${VerboseFlasg:-FALSE}
 
 # shall begin with .bash and end in .path
-export PATHFILE="$HOME/.bash.profile.path"
+export PATHFILE="$HOME/.env.profile.path"
 
 ###################################### 
 # Skeleton functions, considered RO. v0.4.1
@@ -124,9 +124,7 @@ function setupPath() {
         [ -d "$_POTENTIAL_DIR/." ] && debug8 found path element $_POTENTIAL_DIR && echo $_POTENTIAL_DIR >> $PATHFILE
     done
 
-
-
-    unset _POTENTIAL_DIR _os _file _line _jdk
+    unset _POTENTIAL_DIR
 }
 
 # setupPathDel deletes cached path file
@@ -175,15 +173,14 @@ function main() {
     envVars     # load environment variables (above), required for PROFILES_CONFIG_DIR below
 
     # OS- and tools-based environment setup files
-    for file in $PROFILES_CONFIG_DIR/Shell/env.path.*.sh ; do
+    for file in $PROFILES_CONFIG_DIR/Shell/env.*.sh ; do
         if [ -r $file ] ; then # required for the case if no such file exists
             source $file $HOME/.$(basename $file)
             $(basename $file .sh).init
         fi
     done
-    
-    sourcePaths $HOME/.bash.*.path
-    
+
+    sourcePaths $HOME/.env.*.path   
 
     [ -f ~/.bashrc ] && . ~/.bashrc # start all the normal files
 }
