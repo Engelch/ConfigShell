@@ -37,6 +37,7 @@ debug debug is ON ......................
 debug Script version is $VERSION
 debug Arguments to scripts are: $*
 
+# PORT mapping flag files _p
 for file in _p*:* _p*_* ; do
   [ $file = '_p*:*' -o $file = '_p*_*' ] && continue
   map="-p$(echo $file | sed -e 's/^_p//' | sed -e 's/_/:/') $map"
@@ -44,6 +45,7 @@ done
 
 debug Port mapping: $map
 
+# NETWORK mapping flag files _net
 for file in _net_*  ; do
   [ $file = '_net_*'  ] && continue
   net="--net $(echo $file | sed -e 's/^_net_//' ) $net"
@@ -51,10 +53,12 @@ done
 
 debug Nets are $net
 
+# _rm container flag file
 [ -f --rm -o -f __rm -o -f _rm ] && rm='--rm'
 
 debug Remove image is $rm
 
+# _name name container instance file
 for file in _name_* ; do
   [ $file = '_name_*'  ] && continue
   name="--name $(echo $file | sed -e 's/^_name_//' | tr '[A-Z]' '[a-z]') $name"
@@ -62,6 +66,7 @@ done
 
 debug image name is $name
 
+# _v map directories, allows for relative directories
 for file in _v* ; do
   [ $file = '_v*'  ] && continue
   srcmap=$(echo $file | sed 's/^_v//' | sed -e "s,:.*,," | sed "s,_,/,g" | sed -e s",^\.,$(pwd)," )
@@ -72,6 +77,7 @@ done
 
 debug Directory mappings are $dirmap
 
+# _image map image names, replac upper- against lower-case
 for file in _image_* ; do
   [ $file = '_image_*'  ] && continue
   image=$(echo $file | sed -e "s/_image_//" | sed -e "s,_,/,g" | tr [A-Z] [a-z] ) 
@@ -82,12 +88,17 @@ fi
 
 debug Image name is $image
 
+# _sudo flag to start docker with sudo
 [ -f _sudo ] && sudo=sudo 
 debug sudo is set to $sudo
 
+# .version file 
 _ver=
-[ -f .version ] && _ver=$(cat .version | grep -v '^$' | sed 's/#.*//' ) && debug _ver is $_ver
+[ -f .version ] && _verfile=.version
+[ -f _version ] && _verfile=_version
+_ver=$(cat $_verfile | grep -v '^$' | sed 's/#.*//' ) && debug _ver is $_ver
 
+# docker-registry file
 _dockerRegistryFile=./docker-registry
 if [ -f $_dockerRegistryFile ] ; then
   _registry=$(cat $_dockerRegistryFile | grep -v ^$ | grep -v '^#' | head -n1 | sed 's/[[:space:]]#.*//')

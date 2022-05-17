@@ -1,41 +1,31 @@
-# go support --2110
 
-debug LOADING zsh.go.sh %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function setupGo() {
+    alias gopad="checkIfCurrentVersionExisting debug patch"
+    alias gopd=gopad
+    alias gopa=gopad
+    alias gopar="checkIfCurrentVersionExisting release patch"
 
-[ ! -z $NO_zshGo ] && debug exiting zsh.go.sh && return 
+    alias gomid="checkIfCurrentVersionExisting debug minor"
+    alias gomi="gomid"
+    alias gomir="checkIfCurrentVersionExisting release minor"
 
-alias gopad="checkIfCurrentVersionExisting debug patch"
-alias gopd=gopad
-alias gopa=gopad
-alias gopar="checkIfCurrentVersionExisting release patch"
+    alias gomad="checkIfCurrentVersionExisting debug major"
+    alias goma="gomad"
+    alias gomar="checkIfCurrentVersionExisting release major"
 
-alias gomid="checkIfCurrentVersionExisting debug minor"
-alias gomi="gomid"
-alias gomir="checkIfCurrentVersionExisting release minor"
+    alias god=godebug
+    alias gor=gorelease
 
-alias gomad="checkIfCurrentVersionExisting debug major"
-alias goma="gomad"
-alias gomar="checkIfCurrentVersionExisting release major"
+    alias exd=gode
+    alias gode='execHelp debug $*'
+    alias exr=gore
+    alias gore='execHelp release $*'
+    alias goue='execHelp upx $*'
 
-alias god=godebug
-alias gor=gorelease
-
-alias exd=gode
-alias gode='execHelp debug $*'
-alias exr=gore
-alias gore='execHelp release $*'
-alias goue='execHelp upx $*'
-
-alias bpa=bumppatch
-alias bmi=bumpminor
-alias bma=bumpmajor
-
-if [ -z $_goPathCheck ] ; then
-    _goPathCheck=yes
-    _p=$(ls $HOME/sdk/ 2> /dev/null | tail -n 1)
-    [ -d $HOME/sdk/$_p/bin ] && echo local go in $HOME/sdk/$_p/bin exists && PATH=$HOME/sdk/$_p/bin:$PATH
-    unset _p
-fi
+    alias bpa=bumppatch
+    alias bmi=bumpminor
+    alias bma=bumpmajor
+}
 
 # checkIfCurrentVersionExisting checks if a binary exists for the current version, architecture, and environment. If not,
 # it shall not increase the version number. It is a helper function to be called by gopad, gomid, gomad. If you you for
@@ -83,3 +73,16 @@ function execHelp() {
 
     build/${__env}/${__os}_${__arch}/${__app} $*
 }
+
+function common.go.init() {
+    debug4 common.go.init %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    [ ! -z "$NO_commonGo" ] && debug4 exiting common.go.sh && return 
+    setupGo
+    :
+}
+
+function common.go.del() {
+    debug4 common.go.del %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+}
+
+# EOF

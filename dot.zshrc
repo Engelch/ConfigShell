@@ -110,7 +110,7 @@ function main() {
 
     case $- in
         *i*) #  "This shell is interactive"
-            for files in $PATHFILE $PROFILES_CONFIG_DIR/Zsh/zsh.common.*.sh; do
+            for files in $PATHFILE $PROFILES_CONFIG_DIR/Shell/common.*.sh $PROFILES_CONFIG_DIR/Shell/zsh.*.sh; do
                 if [ -f $files ] ; then
                     debug .zshrc sourcing $files
                     source $files
@@ -119,11 +119,11 @@ function main() {
                 fi 
             done 
             # load os-specifics
-            if [ -f "$PROFILES_CONFIG_DIR/Zsh/zsh.os.$(uname).sh" ] ; then
+            if [ -f "$PROFILES_CONFIG_DIR/Zsh/common.os.$(uname).sh" ] ; then
                 debug8 OS is $(uname)
-                source "$PROFILES_CONFIG_DIR/Zsh/zsh.os.$(uname).sh"
+                source "$PROFILES_CONFIG_DIR/Zsh/common.os.$(uname).sh"
             else
-                err4 No OS-specific path file "$PROFILES_CONFIG_DIR/Zsh/zsh.os.$(uname).sh" found
+                err4 No OS-specific path file "$PROFILES_CONFIG_DIR/Zsh/common.os.$(uname).sh" found
             fi
             # prompts
             NEWLINE=$'\n'

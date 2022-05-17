@@ -1,9 +1,4 @@
-debug LOADING zsh.os-specific.sh %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-[ ! -z $NO_os_specific ] && debug exiting zsh.os-specific.sh && return 
-
 # ---- Darwin alias OSX -----------------------------------------------------------------------
-
 
 # Darwin- alias OSX-specific settings of aliases and shell-functions
 function setupOSX() {
@@ -15,7 +10,8 @@ function setupOSX() {
    alias subl=sublime
    alias o=open
    alias vnc='open /System/Library/CoreServices/Applications/Screen\ Sharing.app'
-   for _newApp in getopt curl openssl ; do
+   # root should use default tools, /opt and /usr/local is of secondary concern only.
+   [ $UID -ne 0 ] && for _newApp in getopt curl openssl ; do
       which $_newApp | egrep '^/opt/homebrew|/usr/local' > /dev/null || warning $_newApp does not seem to be from homebrew.
    done
 
@@ -90,7 +86,14 @@ function setupOSX_PostgreSQL() {
    fi
 }
 
-[ -z $NO_setupOSX ] && setupOSX
-[ -z $NO_setupOSX_PostgreSQL ] && setupOSX_PostgreSQL
+function os.Darwin.init() {
+   debug4 LOADING os.Darwin.init %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+   [ -z $NO_setupOSX ] && setupOSX
+   [ -z $NO_setupOSX_PostgreSQL ] && setupOSX_PostgreSQL
+}
+
+function os.Darwin.del() {
+   debug4 LOADING os.Darwin.del %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+}
 
 # EOF

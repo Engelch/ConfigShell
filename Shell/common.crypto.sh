@@ -1,7 +1,3 @@
-debug LOADING zsh.crypto.sh %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-[ ! -z $NO_zshCrypto ] && debug exiting zsh.crypto.sh && return 
-
 # ---- Crypto -----------------------------------------------------------------------
 
 # These routines delete the original file. By default, they do not overwrite existing files. This can be changed by supplying the argument `-f`.
@@ -56,13 +52,13 @@ function sshPriv2PubKey() { ssh-keygen -yf $1 ;  } # create public key out of pr
 
 
 function sshagent_findsockets {
-   debug8 zsh.crypto.sh sshagent_findsockets
+   debug8 common.crypto.sh sshagent_findsockets
    res=$(find /tmp -uid $(id -u) -type s -name agent.\* 2>/dev/null | wc -l)
    return [ $res -ne 0 ]
 }
 
 function sshagent_testsocket {
-   debug8 zsh.crypto.sh sshagent_testsocket
+   debug8 common.crypto.sh sshagent_testsocket
     [ ! -x "$(which ssh-add)" ] && echo "ssh-add is not available; agent testing aborted" && return 1
 
     [ X"$1" != X ] && export SSH_AUTH_SOCK=$1
@@ -84,7 +80,7 @@ function sshagent_testsocket {
 }
 
 function sshagent_init { #  ssh agent sockets can be attached to a ssh daemon process or an ssh-agent process.
-    debug4 zsh.crypto.sh sshagent_init
+    debug8 common.crypto.sh sshagent_init
     local AGENTFOUND=0
     local agentsocket
 
@@ -100,13 +96,13 @@ function sshagent_init { #  ssh agent sockets can be attached to a ssh daemon pr
          done
          eval `ssh-agent`
       else
-        debug8 Agent found
+        debug8 sshagent_init agent found
     fi
     [[ $(ssh-add -l 2>/dev/null | grep  'no identities' | wc -l) -eq 1 ]] && ssh-add # load keys if none loaded so far
 }
 
 function sshSetup() {
-   debug4 zsh.crypto.sh sshSetup
+   debug8 zcommonsh.crypto.sh sshSetup
    alias sagent="sshagent_init"     # SSH setup
    sshagent_init
 }
@@ -211,6 +207,14 @@ function tlsCsr() { local file; for file in $*; do openssl req -in "$file"  -noo
 
 ##########################################
 
-sshSetup # from zsh.common.crypto.sh
+function common.crypto.init() {
+   debug4 common.crypto.init %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+   [ ! -z $NO_commonCrypto ] && debug exiting common.crypto.sh && return 
+   sshSetup # from zsh.common.crypto.sh
+}
+
+function common.crypto.del() {
+   debug4 common.crypto.del %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+}
 
 # EOF

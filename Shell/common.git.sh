@@ -1,7 +1,3 @@
-debug LOADING zsh.git.sh %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-[ ! -z $NO_zshGit ] && debug exiting zsh.git.sh && return 
-
 # ---- GIT  -----------------------------------------------------------------------
 
 # gitContents: helper for PS1: git bash prompt like, but much shorter and also working for darwin.
@@ -46,6 +42,14 @@ function gihelp() {
     echo 'function gipua() { for remoterepo in $(grep "^\[remote" $(git rev-parse --show-toplevel)/.git/config | sed -e "s/.remote \"//" -e s"/..$//") ; do git push --all $remoterepo ; git push --tags $* ; done ; }'
 }
 
-setupGit
+function common.git.init() {
+    debug4 common.git.init %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    [ ! -z $NO_commonGit ] && debug exiting common.git.sh && return 
+    setupGit
+}
+
+function common.git.del() {
+    debug4 common.git.del %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+}
 
 # EOF
