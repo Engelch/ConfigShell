@@ -1,3 +1,6 @@
 [submodule "PowerlineFonts"]
 	path = PowerlineFonts
 	url = https://github.com/powerline/fonts.git
+[submodule "ConfigDarwin"]
+	path = ConfigDarwin
+	url = git@github.com:Engelch/ConfigDarwin.git
