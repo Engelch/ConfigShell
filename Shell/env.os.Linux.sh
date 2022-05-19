@@ -21,16 +21,16 @@ function setupLinuxPath() {
       done
 }
 
-LinuxPath=$HOME/.env.$uname.path
+LinuxPath=$HOME/.env.os.$uname.path
 
-function env.Linux.init() {
+function env.os.Linux.init() {
    debug4 env.Linux.init %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    [ -f "$LinuxPath" ] && debug8 cached .env.Linux.path file found && return
    setupLinuxPath
 }
 
-function env.Linux.del() {
-   debug4 env.Linux.del %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function env.os.Linux.del() {
+   debug4 env.os.Linux.del %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    [ -f "$LinuxPath" ] && /bin/rm "$LinuxPath"
 }
 

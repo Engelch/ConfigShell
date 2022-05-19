@@ -95,7 +95,7 @@ function sourcePaths() {
 # setupPathInitial fills the path file (1st arg) which is not existing with the supplied path elements
 # line by line
 function setupPathInitial {
-    file=$1 ; shift
+    file="$1" ; shift
     for pathElem in $* ; do
         echo $pathElem >> $file
     done
@@ -121,7 +121,7 @@ function setupPath() {
         /opt/android-studio/bin
     do
         debug8 checking for dir $_POTENTIAL_DIR
-        [ -d "$_POTENTIAL_DIR/." ] && debug8 found path element $_POTENTIAL_DIR && echo $_POTENTIAL_DIR >> $PATHFILE
+        [ -d "$_POTENTIAL_DIR/." ] && debug8 found path element $_POTENTIAL_DIR && echo $_POTENTIAL_DIR >> "$PATHFILE"
     done
 
     unset _POTENTIAL_DIR
@@ -168,12 +168,13 @@ function main() {
 
     # PATH settings are environment variables. We do not want to do it for each individual sub-shell
     # PATHFILE must be set for these files (as done at BOF)
+    [ $(echo $PATHFILE | wc -w ) -ne 1 ] && error something wrong about PATHFILE being $PATHFILE && return
     [ ! -f "$PATHFILE" ] && [ -z $NO_setupPath ] && setupPath # defined above in this file
     
     envVars     # load environment variables (above), required for PROFILES_CONFIG_DIR below
 
     # OS- and tools-based environment setup files
-    for file in $PROFILES_CONFIG_DIR/Shell/env.*.sh ; do
+    for file in $PROFILES_CONFIG_DIR/Shell/env.path.*.sh $PROFILES_CONFIG_DIR/Shell/env.os.$(uname).sh; do
         if [ -r $file ] ; then # required for the case if no such file exists
             source $file $HOME/.$(basename $file)
             $(basename $file .sh).init

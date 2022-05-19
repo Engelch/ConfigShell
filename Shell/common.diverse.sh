@@ -54,11 +54,8 @@ function rlFull() {
     debugSet
     debug START rlFull ========================================================
     case "$SHELL" in
-    *bash)  for file in $PROFILES_CONFIG_DIR/Shell/{common*,bash*,env*} ; do
-                $(basename $file .sh).del
-            done
-            setupPathDel
-            _otherFiles=$(ls $HOME/.bash.*.path 2>&-) ; res=$?
+    *bash)  rmCache
+            _otherFiles=$(ls $HOME/.*.path 2>&-) ; res=$?
             [ "$res" -eq 0 ] && err Missed path files found: echo $_otherFiles
             debug RELOAD STARTING ========================================================
             source ~/.bash_profile
@@ -74,8 +71,8 @@ function rlFull() {
 
 # rmCache deletes cache files and calls the destructor functions
 function rmCache() {
-    for file in $PROFILES_CONFIG_DIR/Shell/{common*,bash*,env*} ; do
-        $(basename $file .sh).del
+    for file in $PROFILES_CONFIG_DIR/Shell/{common*,bash*,env.path*,env.os.$(uname)*,os.$(uname)*} ; do
+        [ -f "$file" ] && $(basename $file .sh).del
     done
     setupPathDel # todo can we remove special handling here
 }

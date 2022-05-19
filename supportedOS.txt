@@ -1,0 +1,6 @@
+- Linux (debian-based such as Ubuntu and Debian)
+- Linux (redhat-based such as Fedora and RHEL)
+- Darwin (alias OSX alias Mac OS)
+- WSL with Windows 10
+- WSL with Windows 11
+
