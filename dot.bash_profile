@@ -152,7 +152,7 @@ function envVars() {
 
     export BASH_SILENCE_DEPRECATION_WARNING=1   # osx suppress bash warning
 
-    export PROFILES_CONFIG_DIR=$(if [ $(command -v "realpath") ] ; then realpath $HOME/.bashrc ; else ls -l $HOME/.bashrc | awk '{ print $NF }' | xargs dirname ; fi ;)
+    export PROFILES_CONFIG_DIR=$(if [ $(command -v "realpath") ] ; then dirname $(realpath $HOME/.bashrc) ; else ls -l $HOME/.bashrc | awk '{ print $NF }' | xargs dirname ; fi ;)
     [ -z "$PROFILES_CONFIG_DIR" ] && error PROFILES_CONFIG_DIR not set
 }
 
