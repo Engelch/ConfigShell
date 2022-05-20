@@ -28,9 +28,9 @@ function setupLinux() {          # Linux-specific settings of aliases and shell-
 
    function pkgU() {
       local found=0
-      [ -e /etc/debian_version ] && found=1 && apt-get update && apt-get dist-upgrade && apt-get autoremove
-      command -v dnf &>/dev/null && found=1 && dnf -y upgrade && dnf -y clean packages
-      command -v dnf &>/dev/null || command -v yum &>/dev/null && found=1 && yum -y update && yum -y clean packages
+      [ -e /etc/debian_version ] && found=1 && sudo apt-get update && sudo apt-get dist-upgrade && sudo apt-get autoremove
+      command -v dnf &>/dev/null && found=1 && sudo dnf -y upgrade && sudo dnf -y clean packages
+      command -v dnf &>/dev/null || command -v yum &>/dev/null && found=1 && sudo yum -y update && sudo yum -y clean packages
       [ $found -eq 0 ] && error pkgU not supported for this OS && return 1
       touch ~/.pkgU
    }
