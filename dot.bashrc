@@ -121,7 +121,7 @@ function loadSource() {
 
 # setHistFile sets the HISTFILE to to effective users home-directory/.bash_history file
 function setHistFile() {
-   debug ......................... in setHistFile
+   debug4 ......................... in setHistFile
       # Avoid duplicates
    export HISTCONTROL=ignoredups:erasedups
    export HISTSIZE=100000
@@ -129,8 +129,8 @@ function setHistFile() {
    # When the shell exits, append to the history file instead of overwriting it
    shopt -s histappend
    export HISTFILE=$(eval echo ~$USER/.bash_history)
-   debug4 HISTFILE is $HISTFILE
-   [ -f $HISTFILE ] && debug4 histfile existing && \
+   debug8 HISTFILE is $HISTFILE
+   [ -f $HISTFILE ] && debug8 histfile existing && \
       local histfileUser=$(ls -l $HISTFILE | awk '{ print $3 } ') && \
       USER=${USER:-root} # fix for docker
       SHELL=${SHELL:-$(ps a | grep $$ | sed -n "/^ *$$/p" | awk '{ print $NF }')} # fix for docker
