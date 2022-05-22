@@ -25,7 +25,7 @@ function env.path.go.init() {
 function env.path.go.del() {
     [ -f "$GO_PATH_CACHE_FILE" ] && \
         debug8 GO_PATH_CACHE_FILE $GO_PATH_CACHE_FILE found, removing && \
-        /bin/rm $GO_PATH_CACHE_FILE \
+        /bin/rm $GO_PATH_CACHE_FILE && \
         return
     debug8 GO_PATH_CACHE_FILE NOT FOUND
 }
