@@ -54,7 +54,8 @@ function sshPriv2PubKey() { ssh-keygen -yf $1 ;  } # create public key out of pr
 function sshagent_findsockets {
    debug8 common.crypto.sh sshagent_findsockets
    res=$(find /tmp -uid $(id -u) -type s -name agent.\* 2>/dev/null | wc -l)
-   return [ $res -ne 0 ]
+   debug12 sshagent_findsockets, res: $res
+   [ "$res" -ne 0 ] && return 0 ;  return 1
 }
 
 function sshagent_testsocket {
@@ -77,6 +78,7 @@ function sshagent_testsocket {
     else
         debug12 "$SSH_AUTH_SOCK is not a socket!"; return 3
     fi
+    debug12 exit at end of proc
 }
 
 function sshagent_init { #  ssh agent sockets can be attached to a ssh daemon process or an ssh-agent process.
@@ -88,16 +90,18 @@ function sshagent_init { #  ssh agent sockets can be attached to a ssh daemon pr
 
     # If there is no agent in the environment, search /tmp for possible agents to reuse before starting a fresh ssh-agent process.
     if [ $AGENTFOUND = 0 ] ; then
-        debug8 No agent found
+        debug12 No agent found
          for agentsocket in $(sshagent_findsockets) ; do
-            debug8 Loop findsockets
-            if [ $AGENTFOUND != 0 ] ; then break ; fi
+            debug12 Loop findsockets, agentsocket is $agentsocket
+            if [ $AGENTFOUND != 0 ] ; then debug12 agentfound, break ; break ; fi
             if sshagent_testsocket $agentsocket ; then AGENTFOUND=1 ; fi
          done
+         debug12 eval ssh-agent
          eval `ssh-agent`
       else
-        debug8 sshagent_init agent found
+        debug12 sshagent_init agent found
     fi
+    debug12 now ssh-add
     [[ $(ssh-add -l 2>/dev/null | grep  'no identities' | wc -l) -eq 1 ]] && ssh-add # load keys if none loaded so far
 }
 
@@ -108,6 +112,7 @@ function sshSetup() {
 }
 
 function TRAPEXIT() {
+   debug8 THIS IS TRAPEXIT
    [ $(id -u) -eq 0 ] && test -n "$SSH_AGENT_PID" && eval `/usr/bin/ssh-agent -k`  # kill agent if leaving root
 }
 
