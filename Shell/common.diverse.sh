@@ -71,7 +71,7 @@ function rlFull() {
 
 # rmCache deletes cache files and calls the destructor functions
 function rmCache() {
-    for file in $PROFILES_CONFIG_DIR/Shell/{common*,bash*,env.path*,env.os.$(uname)*,os.$(uname)*} ; do
+    for file in $PROFILES_CONFIG_DIR/Shell/{common*.sh,bash*.sh,env.path*.sh,env.os.$(uname)*.sh,os.$(uname)*.sh} ; do
         [ -f "$file" ] && $(basename $file .sh).del
     done
     setupPathDel # todo can we remove special handling here

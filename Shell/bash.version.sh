@@ -11,7 +11,7 @@ function bashSetVersion() {
    # vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
    # vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
    # vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-   export BASH_RC_VERSION="4.2.2"
+   export BASH_RC_VERSION="4.3.0"
    debug BASH_RC_VERSION is $BASH_RC_VERSION
    # 3.8, 3.7
    # - new fn tlsServerCert with aliases tlsSrvCrt, tlsSrvCert
