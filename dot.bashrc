@@ -143,10 +143,10 @@ function setHistFile() {
 
 function main() {
    umask 0022
-   loadSource pre
 
    case $- in
       *i*) #  "This shell is interactive"
+         loadSource pre
          set -o ignoreeof                 # prevent ^d logout
          set -o noclobber                 # overwrite protection, use >| to force
          setHistFile                      # history file permission, ownership, settings
@@ -171,12 +171,12 @@ function main() {
          else
             warning No OS-specific path file "$PROFILES_CONFIG_DIR/Shell/os.$(uname).sh" found
          fi
+         [ -z $NO_loadPost ]  && loadSource post
          ;;
       *) #echo "This is a script";;
          debug non-interactive shell
          ;;
    esac
-   [ -z $NO_loadPost ]  && loadSource post
 }
 
 main $@

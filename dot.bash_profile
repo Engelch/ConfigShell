@@ -135,7 +135,7 @@ function setupPathDel() {
 
 # envVars set environment variables for all (sub-)shells
 function envVars() {
-    export SHELL=bash       # fix for docker
+    export SHELL=$(which bash)       # fix for docker
     export BASH_ENV=TRUE    # must be set before loading .bashrc files
     export LESS='-iR'       # -i := searches are case insensitive; 
                             # -R := Like -r, but only ANSI "color" escape sequences are output in "raw" form.
@@ -171,7 +171,7 @@ function main() {
     [ $(echo $PATHFILE | wc -w ) -ne 1 ] && error something wrong about PATHFILE being $PATHFILE && return
     [ ! -f "$PATHFILE" ] && [ -z $NO_setupPath ] && setupPath # defined above in this file
     
-    envVars     # load environment variables (above), required for PROFILES_CONFIG_DIR below
+    envVars     # load environment variables (above), required for PROFILES_CONFIG_DIR below, must be done after PATH setup
 
     # OS- and tools-based environment setup files
     for file in $PROFILES_CONFIG_DIR/Shell/env.path.*.sh $PROFILES_CONFIG_DIR/Shell/env.os.$(uname).sh; do
