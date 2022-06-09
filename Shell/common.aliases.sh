@@ -30,7 +30,7 @@ function common.aliases.init() {
     alias l=less
     alias la="/bin/ls    -aCF     $LS_COLOUR"
     alias ll="/bin/ls    -lhF     $LS_COLOUR"
-    alias lla="/bin/ls   -laCF    $LS_COLOUR"
+    alias lla="/bin/ls   -laF    $LS_COLOUR"
     alias ln-s='ln -s'
     alias ls="/bin/ls    -hCF      $LS_COLOUR"
     alias m=make

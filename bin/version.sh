@@ -5,7 +5,7 @@ function err()          { echo $* 1>&2; } # just write to stderr
 # -d as debug option to show if the correct line is identified
 # without -d, the line is reduced to the pure version number.
 
-declare -r _version="0.2.0"
+declare -r _version="1.0.0"
 
 if [ "$1" = -h -o "$1" = --help ] ; then
    echo $(basename $0)'     ' show and determines the app version  1>&2
@@ -25,7 +25,11 @@ appDir=$(dirname $0)
 if [ -f "./versionFilePattern" ] ; then
    # _versionFilePattern can either contain specific filenames to search for version information or a pattern
    _versionFilePattern=$(cat "./versionFilePattern" | grep -v '^$' | egrep -v '^[[:space:]]*#' | sed 's/[[:space:]]*#.*$//')
-   START="egrep '' $_versionFilePattern /dev/null | grep -v '^$' | egrep -v '^[[:space:]]*#'"
+   [ $(echo $_versionFilePattern | wc -w ) -ne 2 ] && 1>&2 echo 'Versionpattern file should be of the format <filename> <pattern>'
+   _file=$(echo $_versionFilePattern | awk '{ print $1 }')
+   _pattern=$(echo $_versionFilePattern | awk '{ print $2 }')
+   #echo _file $_file _pattern $_pattern
+   START="egrep $_pattern $_file /dev/null | grep -v '^$' | egrep -v '^[[:space:]]*#'"
 else
    _versionFilePattern='*.go'
    START="egrep -i$_egrepFlag 'app(\.)?Version[[:space:]]*=' $_versionFilePattern /dev/null | egrep '[0-9]+\.[0-9]+\.[0-9]+' | tail -n1"
