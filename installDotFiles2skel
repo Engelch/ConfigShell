@@ -155,6 +155,7 @@ function main() {
     cd /etc/skel && \
     for file in $_absoluteAppDir/dot* ; do
         _nameWithoutDot=$(basename $file | sed 's/^dot//')
+        [[ $_nameWithoutDot =~ .*~ ]] && continue
         [ -f $_nameWithoutDot -a ! -L $_nameWithoutDot ] && sudo mv -fv $_nameWithoutDot $_nameWithoutDot.old # backup existing plain file
         sudo ln -sfv $file $_nameWithoutDot
     done

@@ -1,0 +1,5 @@
+if [ $(which watson | wc -l) -ne 0 ] ; then 
+   export WATSON_PROMPT=TRUE
+fi
+
+

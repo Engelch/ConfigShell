@@ -191,6 +191,7 @@ function main() {
     fi
     for file in $_absoluteAppDir/dot* ; do
         _nameWithoutDot=$(basename $file | sed 's/^dot//')
+        [[ $_nameWithoutDot =~ .*~ ]] && continue
         ln -sfv $file $_nameWithoutDot
     done
     fixGnupg
