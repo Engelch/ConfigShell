@@ -17,8 +17,14 @@ function setupLinuxPath() {
       /mnt/c/Program\ Files/draw.io /mnt/c/Program\ Files/Mozilla\ Firefox /snap/bin/
       do
          debug8 checking for dir $_POTENTIAL_DIR
-         [ -d "$_POTENTIAL_DIR/." ] && debug8 adding path element $_POTENTIAL_DIR && echo $_POTENTIAL_DIR >> $LinuxPath      
+         [ -d "$_POTENTIAL_DIR/." ] && debug8 adding WSL path element $_POTENTIAL_DIR && echo $_POTENTIAL_DIR >> $LinuxPath
       done
+   # default Linux checks
+   for _POTENTIAL_DIR in \
+      /snap/bin /opt/bin
+   do
+      [ -d "$_POTENTIAL_DIR/." ] && debug8 adding path element $_POTENTIAL_DIR && echo $_POTENTIAL_DIR >> $LinuxPath
+   done
 }
 
 LinuxPath=$HOME/.env.os.$uname.path
