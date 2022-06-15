@@ -22,9 +22,9 @@ function bashPrompt() {
 }
 
 function enableBashCaseInsensitiveCompletion() {
-   readonly _enableCICompl='set completion-ignore-case'   # must be in ~/.inputrc and set to on
-   readonly _inputRcFile="$HOME/.inputrc"
-   if [ ! -f $_inputRcFile -o $(grep $_enableCICompl $_inputRcFile | wc -l) -eq 0 ] ; then
+   _enableCICompl='set completion-ignore-case'   # must be in ~/.inputrc and set to on
+   _inputRcFile="$HOME/.inputrc"
+   if [ ! -f $_inputRcFile -o $(grep "$_enableCICompl" "$_inputRcFile" | wc -l) -eq 0 ] ; then
       echo $_enableCICompl on >> $_inputRcFile ; res=$?
       [ $res -ne 0 ] && 2> echo error setting enableBashCaseInsensitiveCompletion && return $res
    fi
