@@ -13,7 +13,7 @@ function env.path.terraform.init() {
 function env.path.terraform.del() {
     [ ! -z "$NO_TERRAFORM" ] && return
     debug4 env.path.terraform.del %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    [ ! -z "$TERRAFORM" ] && debug8 removing terraform completion && complete -r $TERRAFORM
+    [ ! -z "$TERRAFORM" ] && debug8 removing terraform completion && complete -r $TERRAFORM 2>&-
 }
 
 # EOF

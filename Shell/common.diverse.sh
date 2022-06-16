@@ -55,8 +55,8 @@ function rlFull() {
     debug START rlFull ========================================================
     case "$SHELL" in
     *bash)  rmCache
-            _otherFiles=$(ls $HOME/.*.path 2>&-) ; res=$?
-            [ "$res" -eq 0 ] && err Missed path files found: echo $_otherFiles
+            _otherFilesCount=$(ls $HOME/.*.path 2>&- | xargs basename | egrep -v '^.zsh.*' | wc -l)
+            [ "$_otherFilesCount" -gt 0 ] && err Missed path files found: echo $_otherFiles
             debug RELOAD STARTING ========================================================
             source ~/.bash_profile
             ;;
