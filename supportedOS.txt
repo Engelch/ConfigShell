@@ -4,3 +4,7 @@
 - WSL with Windows 10
 - WSL with Windows 11
 
+## Expected to be not working
+
+- Ubuntu 18.04 in WSL
+
