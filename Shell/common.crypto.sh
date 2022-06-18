@@ -101,8 +101,12 @@ function sshagent_init { #  ssh agent sockets can be attached to a ssh daemon pr
       else
         debug12 sshagent_init agent found
     fi
-    debug12 now ssh-add
-    [[ $(ssh-add -l 2>/dev/null | grep  'no identities' | wc -l) -eq 1 ]] && ssh-add # load keys if none loaded so far
+    debug12 now ssh-add if no identity loaded so far
+    if [[ $(ssh-add -l 2>/dev/null | grep  'no identities' | wc -l) -eq 1 ]] ; then
+      debug12 loading default key && ssh-add # load SSH default key
+   else
+      debug12 Key found, not loading default key
+   fi
 }
 
 function sshSetup() {
