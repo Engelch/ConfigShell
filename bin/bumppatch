@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 
 # bumpversion increase script
-# bumpversion increase script
+# RELEASE NOTES
+# 0.3
+# - now first jumping to git root dir to execute bump version. Error handling if this directory
+#   is not under git VCS.
 
 #########################################################################################
 # FUNCTIONS
@@ -67,7 +70,7 @@ function tempDir()                      { mktemp -d "${TMPDIR:-/tmp/}$_app.YYYYY
 #     ;;
 # esac
 
-declare -r _version="0.2.0"
+declare -r _version="0.3.1"
 declare -r _appDir=$(cd $(dirname $0); /bin/pwd)
 CMD=$(basename $0 | sed 's/^bump//')
 
@@ -83,8 +86,11 @@ debug PWD is $(pwd)
 
 exitIfBinariesNotFound bumpversion version.sh
 
-debug version is $(version.sh)
+_gitRootDir=$(git rev-parse --show-toplevel 2>/dev/null); res=$? 
+[ $res -eq 0 ] && debug git found, jumping to git root && cd "$_gitRootDir"
 
+debug Current version is $(version.sh)
 $dry bumpversion --current-version `version.sh` --allow-dirty ${CMD} $(version.sh -d | cut -d: -f1)
+debug New version is $(version.sh)
 
 # eof
