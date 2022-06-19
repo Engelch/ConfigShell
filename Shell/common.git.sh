@@ -42,14 +42,36 @@ function gihelp() {
     echo 'function gipua() { for remoterepo in $(grep "^\[remote" $(git rev-parse --show-toplevel)/.git/config | sed -e "s/.remote \"//" -e s"/..$//") ; do git push --all $remoterepo ; git push --tags $* ; done ; }'
 }
 
+function lower() {
+    echo $* | tr "[:upper:]" "[:lower:]"
+}
+
+function upper() {
+    echo $* | tr "[:lower:]" "[:upper:]"
+}
+
 function common.git.init() {
     debug4 common.git.init %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    [ ! -z $NO_commonGit ] && debug exiting common.git.sh && return 
+    [ ! -z $NO_gitCommon ] && debug exiting common.git.sh && return 
+    debug8 setting up git...
     setupGit
+    if [[ "$SHELL" =~ bash && $(lower $NO_gitCompletion) != true ]] ; then
+        debug8 loading bash git completion
+        [ ! -r "$PROFILES_CONFIG_DIR/git-completion.bash" ] && 1>&2 echo ERROR: Cannot find completion file && return 1
+        . "$PROFILES_CONFIG_DIR/git-completion.bash"
+        gitCompletionLoaded=true
+    fi
+    return 0
 }
 
 function common.git.del() {
     debug4 common.git.del %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if [ ! -z "$gitCompletionLoaded" ] ; then 
+        debug8 removing completions for git, gitk
+        complete -r git
+        complete -r gitk
+        unset gitCompletionLoaded
+    fi
 }
 
 # EOF

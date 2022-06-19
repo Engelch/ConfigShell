@@ -1,3 +1,9 @@
+All files except git-completion.sh are under MIT License.
+
+The file git-completion.bash is under GPL as stated in the file.
+
+-----------------
+
 MIT License
 
 Copyright (c) 2022 Christian
