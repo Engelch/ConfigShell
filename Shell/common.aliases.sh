@@ -1,3 +1,9 @@
+function common.aliases.ls() {
+    alias la="/bin/ls    -aCF       $LS_COLOUR"
+    alias ll="/bin/ls    -lhF       $LS_COLOUR"
+    alias lla="/bin/ls   -laF       $LS_COLOUR"
+    alias ls="/bin/ls    -hCF       $LS_COLOUR"
+}
 
 function common.aliases.init() {
     debug4 common.aliases.init '%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'
@@ -28,11 +34,8 @@ function common.aliases.init() {
     alias ipi='curl https://ipinfo.io'
     alias j=jobs
     alias l=less
-    alias la="/bin/ls    -aCF     $LS_COLOUR"
-    alias ll="/bin/ls    -lhF     $LS_COLOUR"
-    alias lla="/bin/ls   -laF    $LS_COLOUR"
+
     alias ln-s='ln -s'
-    alias ls="/bin/ls    -hCF      $LS_COLOUR"
     alias m=make
     alias mcd=mkcd
     function mkcd(){ mkdir -p $1 && cd $1; }

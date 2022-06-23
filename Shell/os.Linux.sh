@@ -4,6 +4,7 @@ function setupLinux() {          # Linux-specific settings of aliases and shell-
    debug4 '>>>>' setupLinux
    eval $(dircolors)
    export LS_COLOUR='--color=auto'
+   common.aliases.ls             # realias ls commands to reflect colour mode
    alias proc='ps -ef | grep -i '
    alias o=xdg-open
    alias open=o

@@ -5,6 +5,7 @@ function setupOSX() {
    debug4 '>>>>' setupOSX
    export LS_COLOUR='-G'
    export LSCOLORS=Exfxcxdxbxegedabagacad # change directory colour 1st letter; see man ls(1)
+   common.aliases.ls          # realias ls commands to reflect colour mode
    alias proc='ps -ef | grep -i '
    alias sublime='Sublime\ Text'
    alias subl=sublime
