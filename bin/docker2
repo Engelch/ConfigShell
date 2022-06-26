@@ -4,7 +4,7 @@
 # 1.1.0
 # - introducing new touch variable _detach
 
-VERSION=1.1.0
+VERSION=1.2.0
 
 function err()          { echo $* 1>&2; } # write to stderr
 function err4()          { echo '    '$* 1>&2; } # write to stderr
@@ -12,8 +12,8 @@ function err8()          { echo '        '$* 1>&2; } # write to stderr
 
 function debugSet()             { DebugFlag=TRUE; return 0; }
 function debugUnset()           { DebugFlag=; return 0; }
-function debugExecIfDebug()     { [ ! -z $DebugFlag ] && $*; }
-function debug()                { [ ! -z $DebugFlag ] && err 'DEBUG:' $* 1>&2 ; return 0; }
+function debugExecIfDebug()     { [ "$DebugFlag" == TRUE ] && $*; }
+function debug()                { [ "$DebugFlag" == TRUE ] && err 'DEBUG:' $* 1>&2 ; return 0; }
 
 case "$1" in
 -d)
@@ -96,7 +96,7 @@ debug sudo is set to $sudo
 _ver=
 [ -f .version ] && _verfile=.version
 [ -f _version ] && _verfile=_version
-_ver=$(cat $_verfile | grep -v '^$' | sed 's/#.*//' ) && debug _ver is $_ver
+[ ! -z $_verfile ] && _ver=$(cat $_verfile | grep -v '^$' | sed 's/#.*//' ) && debug _ver is $_ver
 
 # docker-registry file
 _dockerRegistryFile=./docker-registry
