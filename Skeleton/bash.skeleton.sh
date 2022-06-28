@@ -11,6 +11,7 @@
 # COPYRIGHT © 2022 Christian Engel (mailto:engel-ch@outlook.com) todo
 #
 # Skeleton: 
+#   0.5   - default option now -D by default
 #   0.4.1 - repaired debug4/8/12 echoing directly, no err call deleting spaces
 #   0.4.0 - debug4, debug8
 #   0.3.1 - usage with information about debug option
@@ -50,7 +51,7 @@ export DebugFlag=${DebugFlag:-FALSE}
 export VerboseFlag=${VerboseFlasg:-FALSE}
 
 #########################################################################################
-# SKELETON FUNCTIONS, considered R/O, v0.4.1
+# SKELETON FUNCTIONS, considered R/O, v0.5.0
 
 # so helps to write a message in reverse mode
 function so()
@@ -140,9 +141,9 @@ function usage()
 
 function parseCLI() {
     local currentOption
-    while getopts "dfh" options; do         # Loop: Get the next option;
+    while getopts "Dfh" options; do         # Loop: Get the next option;
         case "${options}" in                    # TIMES=${OPTARG}
-            d)  err Debug enabled ; debugSet     
+            D)  err Debug enabled ; debugSet     
                 ;;
             f)  debug forcedMode; forcedMode=TRUE
                 ;;
