@@ -1,9 +1,13 @@
 #!/usr/bin/env bash
 
 ########## RELEASE INFORMATION
+# 2.2
+#   set container name to directory name if not explicitly set (same as for image name)
+# 2.1
+#   output help to stdout to make viewing help easier, not nice
 # 2.0
 # - major clean up into functions
-# - creation documentation/usage from source using special comments 
+# - creation documentation/usage from source using special comments
 #   with 2,3,4 hashmarks (2 normal line, 3 subsection, 4 section)
 #   Lines with 1 or more than 4 hashmarks are ignored.
 # 1.2.
@@ -11,7 +15,7 @@
 # 1.1.0
 # - introducing new touch variable _detach
 
-VERSION=2.0.0
+VERSION=2.2.0
 
 function err()          { echo $* 1>&2; } # write to stderr
 function err4()          { echo '    '$* 1>&2; } # write to stderr
@@ -35,53 +39,51 @@ function errorExit()    { EXITCODE=$1 ; shift; error $* ; exit $EXITCODE; }
 ################################################################################
 
 function usage() {
-  err NAME
-  err4 $(basename $0) version is $VERSION
-  err
-  err4 This is a helper application to build, tag, push, run docker 
-  err4 images and to exec into images. Its main idea is to set the main
-  err4 parameters not in a script but to make it visisble immediately by using
-  err4 file names of touch '(aka empty)' files. Furthermore, it uses the current
-  err4 directory as the default for the docker name. So it is possible to replicate
-  err4 a complete directory of this kind and  give it a new name. This new
-  err4 configuration does not interfere with the old one.
-  err
-  err4 This command is main thought for development environments where is shall be
-  err4 easily visisble how an application was started. 
-  err
-  err4 The touch files are defined as:
-  err
-  grep -v '#####' $0 | grep '##' | sed 's/^[[:space:]]*##$//' | sed 's/^[[:space:]]*## /    /' | sed 's/^[[:space:]]*### /    ## /' |  sed 's/^[[:space:]]*#### /    # /' |
-    cat 1>&2
-  err
-  err SYNOPSIS
-  1>&2 echo '    '$(basename $0) '-D        # debug mode, more verbose than verbose'
-  1>&2 echo '    '$(basename $0) '-V        # show version number'
-  1>&2 echo '    '$(basename $0) '-b  ...   # build image, further arguments'
-  1>&2 echo '    '$(basename $0) '-d ...    # detached run, implies -r'
-  1>&2 echo '    '$(basename $0) '-e ...    # exec in image'
-  1>&2 echo '    '$(basename $0) '-h        # show help'
-  1>&2 echo '    '$(basename $0) '-k        # kill image'
-  1>&2 echo '    '$(basename $0) '-n        # dry run' 
-  1>&2 echo '    '$(basename $0) '-p        # push image' 
-  1>&2 echo '    '$(basename $0) '-r ...    # run image'
-  1>&2 echo '    '$(basename $0) '-t        # tag image' 
-  1>&2 echo '    '$(basename $0) '-u        # tag & push in one step' 
-  1>&2 echo '    '$(basename $0) '-v        # verbose mode'
-  1>&2 echo '    '$(basename $0) '-a        # start container'
-  1>&2 echo '    '$(basename $0) '-o        # stop container'
+  echo NAME
+  echo '    '$(basename $0) version is $VERSION
+  echo
+  echo  This is a helper application to build, tag, push, run docker
+  echo  images and to exec into images. Its main idea is to set the main
+  echo  parameters not in a script but to make it visisble immediately by using
+  echo  file names of touch '(aka empty)' files. Furthermore, it uses the current
+  echo  directory as the default for the docker name. So it is possible to replicate
+  echo  a complete directory of this kind and  give it a new name. This new
+  echo  configuration does not interfere with the old one.
+  echo
+  echo  This command is main thought for development environments where is shall be
+  echo  easily visisble how an application was started.
+  echo
+  echo  The touch files are defined as:
+  grep -v '#####' $0 | grep '##' | sed 's/^[[:space:]]*##$//' | sed 's/^[[:space:]]*## /    /' | sed 's/^[[:space:]]*### /    ## /' |  sed 's/^[[:space:]]*#### /    # /'
+  echo
+  echo SYNOPSIS
+  echo '    '$(basename $0) '-D        # debug mode, more verbose than verbose'
+  echo '    '$(basename $0) '-V        # show version number'
+  echo '    '$(basename $0) '-b  ...   # build image, further arguments'
+  echo '    '$(basename $0) '-d ...    # detached run, implies -r'
+  echo '    '$(basename $0) '-e ...    # exec in image'
+  echo '    '$(basename $0) '-h        # show help'
+  echo '    '$(basename $0) '-k        # kill image'
+  echo '    '$(basename $0) '-n        # dry run'
+  echo '    '$(basename $0) '-p        # push image'
+  echo '    '$(basename $0) '-r ...    # run image'
+  echo '    '$(basename $0) '-t        # tag image'
+  echo '    '$(basename $0) '-u        # tag & push in one step'
+  echo '    '$(basename $0) '-v        # verbose mode'
+  echo '    '$(basename $0) '-a        # start container'
+  echo '    '$(basename $0) '-o        # stop container'
 }
 
 function parseCLI() {
     local currentOption
     while getopts "DVbdehknprtuvao" options; do         # Loop: Get the next option;
         case "${options}" in                    # TIMES=${OPTARG}
-            D)  err Debug \& verbose enabled ; debugSet ; verboseSet     
+            D)  err Debug \& verbose enabled ; debugSet ; verboseSet
                 ;;
             V)  debug version number; echo $VERSION
                 exit 0
                 ;;
-            b)  debug build mode; 
+            b)  debug build mode;
                 mode=build
                 ;;
             d)  debug detached run mode;
@@ -135,7 +137,7 @@ function parseCLI() {
 ##
 
 function checkDetach() {
-  ## `_detach` defined that if the container is to be started, 
+  ## `_detach` defined that if the container is to be started,
   ## it is to be run in detached mode.
   ##
   declare -g _detach
@@ -144,17 +146,17 @@ function checkDetach() {
 }
 
 function checkDockerRegistry() {
-  ## A docker registry can be defined for pushing/pulling images. 
+  ## A docker registry can be defined for pushing/pulling images.
   ## Either to be set by the file `docker-registry` or by the environment
   ## variable `DOCKERREGISTRY`.
-  ## 
+  ##
   declare -g _registry
   _dockerRegistryFile=./docker-registry
   if [ -f $_dockerRegistryFile ] ; then
     _registry=$(cat $_dockerRegistryFile | grep -v ^$ | grep -v '^#' | head -n1 | sed 's/[[:space:]]#.*//')
   elif [ ! -z $DOCKERREGISTRY ] ; then
     _registry=$DOCKERREGISTRY
-  fi 
+  fi
   unset _dockerRegistryFile
   debug Docker registry is $_registry
 }
@@ -169,14 +171,14 @@ function checkVersionFile() {
   [ -f .version ] && _verfile=.version
   [ -f _version ] && _verfile=_version
   [ ! -z $_verfile ] && _ver=$(cat $_verfile | grep -v '^$' | sed 's/#.*//' )
-  debug Version is $_ver 
+  debug Version is $_ver
 }
 
 function checkSudo() {
   ## `_sudo` flag to start docker with sudo
   ##
   declare -g sudo
-  [ -f _sudo ] && sudo=sudo 
+  [ -f _sudo ] && sudo=sudo
   debug Sudo is $sudo
 }
 
@@ -188,7 +190,7 @@ function checkImageName() {
   declare -g image
   for file in _image_* ; do
     [ $file = '_image_*'  ] && continue
-    image=$(echo $file | sed -e "s/_image_//" | sed -e "s,_,/,g" | tr [A-Z] [a-z] ) 
+    image=$(echo $file | sed -e "s/_image_//" | sed -e "s,_,/,g" | tr [A-Z] [a-z] )
   done
   if [ -z $image ] ; then
     image=$(basename $PWD | sed -e 's/ /_/g' | tr [A-Z] [a-z]) # as in dockerBuild
@@ -202,12 +204,12 @@ function checkVolumeMounts() {
   ## It allows for relative directories such as if the fromDir starts with a
   ## `.` it will be replaced with the absolute path to the current directory.
   ## `/` in paths are to be expressed underscores `_`.
-  ## 
+  ##
   declare -g dirmap
   for file in _v*:* ; do
     [ $file = '_v*'  ] && continue
     srcmap=$(echo $file | sed 's/^_v//' | sed -e "s,:.*,," | sed "s,_,/,g" | sed -e s",^\.,$(pwd)," )
-    dstmap=$(echo $file | sed 's/^_v//' | sed -e "s,.*:,," | sed "s,_,/,g" ) 
+    dstmap=$(echo $file | sed 's/^_v//' | sed -e "s,.*:,," | sed "s,_,/,g" )
     # debug srcmap $srcmap dstmap $dstmap
     dirmap="-v $srcmap:$dstmap $dirmap"
   done
@@ -216,7 +218,7 @@ function checkVolumeMounts() {
 }
 
 function checkContainerName() {
-  ## `_name_<<name>` can specify the container alias instance name. Only one suche file 
+  ## `_name_<<name>` can specify the container alias instance name. Only one suche file
   ## must exist in the current directory.
   ##
   declare -g name
@@ -225,6 +227,9 @@ function checkContainerName() {
     [ $file = '_name_*'  ] && continue
     name="--name $(echo $file | sed -e 's/^_name_//' | tr '[A-Z]' '[a-z]') $name"
   done
+  if [ -z $name ] ; then # if not set, set it to the directory name
+    name="--name "$(basename $PWD | sed -e 's/ /_/g' | tr [A-Z] [a-z]) # as in dockerBuild
+  fi
   unset file
   debug Instance/container name is $name
 }
@@ -292,7 +297,7 @@ function modeExec() {
     verbose docker exec $* -it $purename ${DOCKERSHELL:-/bin/bash}
     $dry docker  exec $* -it $purename ${DOCKERSHELL:-/bin/bash}
     res=$?
-  else  
+  else
     err ERROR No clear image name.
     res=1
   fi
@@ -301,7 +306,7 @@ function modeExec() {
 function modeRun() {
   debug evaluateMode run
   shift # remove argument so that $* b4 supplied to command
-  [ ! -z $_ver ] && ver=:$_ver 
+  [ ! -z $_ver ] && ver=:$_ver
   verbose $sudo docker run $rm $net $name $map $dirmap $_detach $* $image$ver
   $dry    $sudo docker run $rm $net $name $map $dirmap $_detach $* $image$ver
   res=$?
@@ -310,8 +315,8 @@ function modeRun() {
 function modeBuild() {
   debug evaluateMode build
   [ ! -z $_ver ] && ver="-t $image:$_ver" && debug version is $image:$_ver
-  verbose docker build $ver -t $image:latest .
-  $dry docker build    $ver -t $image:latest .
+  verbose docker build  -t $image:latest .
+  $dry docker build     -t $image:latest .
   res=$?
 }
 
@@ -369,7 +374,7 @@ function modePush() {
   debug SHA checksum is $_sha
   verbose docker push $_registry/$image:$_sha
   $dry docker push $_registry/$image:$_sha
-  res=$(( res + $? )) # might be combined with res from modeTag 
+  res=$(( res + $? )) # might be combined with res from modeTag
 }
 
 function modeStartStopKill() {
@@ -382,7 +387,7 @@ function modeStartStopKill() {
     verbose docker $cmd $instance
     $dry docker  $cmd $instance
     res=$?
-  else  
+  else
     err ERROR, istance name not detected.
     res=1
   fi
@@ -406,8 +411,8 @@ push)       modePush $*
 tagPush)    debug TAG+PUSH case
             modeTag $*
             modePush $*
-            ;; 
-  start|stop|kill)   
+            ;;
+  start|stop|kill)
             modeStartStopKill $*
             ;;
   esac
@@ -415,7 +420,7 @@ tagPush)    debug TAG+PUSH case
 
 function main() {
   exitIfBinariesNotFound pwd tput basename dirname mktemp
-  parseCLI $* 
+  parseCLI $*
   shift $(($OPTIND - 1))  # not working inside parseCLI
 
   debug Script version is $VERSION
