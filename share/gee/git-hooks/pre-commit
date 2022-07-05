@@ -88,12 +88,11 @@ function determineToBeEncryptedFiles() {
       debug4 working on $geeFile
       for entry in $(cat $geeFile | egrep -v '^[[:space:]]*#' | egrep -v '^$') ; do
          debug8 entry $entry
-         out="$out $(find $(dirname $geeFile)/$entry -type f -print)"; res=$?
-         [ $res -ne 0 ] && return 20
+         out="$out $(find $(dirname $geeFile)/ -path $(dirname $geeFile)/$entry -type f -print)"
       done
    done
    debug4 collected output is $out
-   echo $out   # the call below consumes the stdout of this proc
+   echo $out
    return 0
 }
 
