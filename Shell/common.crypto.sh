@@ -128,19 +128,19 @@ function tlsCertFingerprint() {  local output="/dev/null" ; [ "$1" = -v ] &&  ou
 
 # split -p not existing under Linux .... > switch to simple ruby as existing on most plaforms
 # show certificate (replacing the package version tlsCertView) - removed awk against split
-# function tlsCert() { 
-#    setopt +o nomatch ; 
+# function tlsCert() {
+#    setopt +o nomatch ;
 #    local file
 #    local infile
 #    local tmpCertDir=$(mktemp -d tmpx.XXXXXX); trap "rm -fr $tmpCertDir" INT TERM EXIT;
 
 #    for file in $* ; do
 #       split -p "-----BEGIN CERTIFICATE" $file $tmpCertDir/$file.
-#       for infile in $tmpCertDir/$file*; do 
-#          openssl x509 -in "$infile" -subject -email -issuer -dates -sha256 -serial -noout -ext 'subjectAltName' 2>/dev/null | sed -e "s,^,$(basename $infile .in):,"; openssl x509 -in "$infile" -modulus -noout 2>/dev/null | openssl sha256 |  sed -e "s,^.*= ,$(basename $infile .in):SHA256 Fingerprint=,"; 
-#       done; 
+#       for infile in $tmpCertDir/$file*; do
+#          openssl x509 -in "$infile" -subject -email -issuer -dates -sha256 -serial -noout -ext 'subjectAltName' 2>/dev/null | sed -e "s,^,$(basename $infile .in):,"; openssl x509 -in "$infile" -modulus -noout 2>/dev/null | openssl sha256 |  sed -e "s,^.*= ,$(basename $infile .in):SHA256 Fingerprint=,";
+#       done;
 #    done
-#    setopt -o nomatch; 
+#    setopt -o nomatch;
 # }
 
 function tlsCert() {
@@ -150,27 +150,27 @@ function tlsCert() {
 #!/usr/bin/env ruby
 VERSION="v2.1.23"
 args    = ARGV.join(" ")
-count   = -1 
+count   = -1
 outarr  = Array.new()
 # read lines beginning with BEGIN CERTIFICATE and the following into an outarr
 IO.foreach(args) do | name |
     if name.include? "----BEGIN CERTIFICATE"
         count += 1
     end
-    outarr[count] = outarr[count].to_s + name if count >= 0 
+    outarr[count] = outarr[count].to_s + name if count >= 0
 end
 print "Number of certificates (#{VERSION}): ", count+1, "\n"
 print "================================\n"
 (count+1).times do |val|
-    IO.popen("openssl x509 -in - -subject -email -issuer -dates -sha256 -serial -noout -ext 'subjectAltName,authorityKeyIdentifier,subjectKeyIdentifier' 2>/dev/null", "w+") do |proc|
+    IO.popen("openssl x509 -subject -email -issuer -dates -sha256 -serial -noout -ext 'subjectAltName,authorityKeyIdentifier,subjectKeyIdentifier' 2>/dev/null", "w+") do |proc|
          proc.write(outarr[val])
          proc.close_write
          puts "--------------------------------" if val > 0
-        
-         proc.readlines.each { |x| 
-            if x.length > 1 
+
+         proc.readlines.each { |x|
+            if x.length > 1
                print (x.to_s.gsub("\n", ""))
-               print ("\n") if not [ "Identifier", "Alternative Name" ].any?{ |s| x.include? s } 
+               print ("\n") if not [ "Identifier", "Alternative Name" ].any?{ |s| x.include? s }
             end
          }
     end
@@ -218,7 +218,7 @@ function tlsCsr() { local file; for file in $*; do openssl req -in "$file"  -noo
 
 function common.crypto.init() {
    debug4 common.crypto.init %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-   [ ! -z $NO_commonCrypto ] && debug exiting common.crypto.sh && return 
+   [ ! -z $NO_commonCrypto ] && debug exiting common.crypto.sh && return
    sshSetup # from zsh.common.crypto.sh
 }
 
