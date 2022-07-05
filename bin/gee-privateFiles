@@ -3,7 +3,7 @@
 # Copyright © 2021 engel-ch@outlook.com
 # License: MIT
 # CHANGELOG
-# 1.0.0
+# 1.0.1
 # - check and load file file_dependencies.lst
 
 readonly _app=$(basename $0)
@@ -20,9 +20,9 @@ function so()
 # always show such a message.  If known terminal, print the message
 # in reverse video mode. This is the other way, not using escape sequences
 {
-   [ "$1" != on -a "$1" != off ] && return 
+   [ "$1" != on -a "$1" != off ] && return
     if [ "$TERM" = xterm -o "$TERM" = vt100 -o "$TERM" = xterm-256color  -o "$TERM" = screen ] ; then
-      [ "$1" = on ] && tput smso 
+      [ "$1" = on ] && tput smso
       [ "$1" = off ] && tput rmso
     fi
 }
@@ -39,7 +39,7 @@ function debug12()              { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:       
 
 # --- Exits
 
-# function error()        { err 'ERROR:' $*; return 0; } # similar to err but with ERROR prefix and possibility to include 
+# function error()        { err 'ERROR:' $*; return 0; } # similar to err but with ERROR prefix and possibility to include
 # Write an error message to stderr. We cannot use err here as the spaces would be removed.
 function error()        { so on; echo 'ERROR:'$* 1>&2;            so off ; return 0; }
 function error4()       { so on; echo 'ERROR:    '$* 1>&2;        so off ; return 0; }
@@ -90,7 +90,7 @@ function determineToBeEncryptedFiles() {
       debug4 working on $geeFile
       for entry in $(cat $geeFile | egrep -v '^[[:space:]]*#' | egrep -v '^$') ; do
          debug8 entry $entry
-         out="$out $(find $(dirname $geeFile)/ -name $entry -type f -print)"
+         out="$out $(find $(dirname $geeFile)/ -path $(dirname $geeFile)/$entry -type f -print)"
       done
    done
    debug4 collected output is $out
@@ -112,7 +112,7 @@ function showFile() {
             [ $(egrep '^\$ANSIBLE_VAULT;.*;AES256(;.*)?$' $file | wc -l) -eq 0 ] && echo $file
             ;;
    encrypt) debug4 showFile decrypted private files only
-            [ $(egrep '^\$ANSIBLE_VAULT;.*;AES256(;.*)?$' $file | wc -l) -eq 0 ] || echo $file 
+            [ $(egrep '^\$ANSIBLE_VAULT;.*;AES256(;.*)?$' $file | wc -l) -eq 0 ] || echo $file
             ;;
    *)       error 40 This should not happen, undefined mode in showFile $_mode
             ;;
@@ -163,7 +163,7 @@ function usage()
 function parseCLI() {
     while getopts "dhquep" options; do         # Loop: Get the next option;
         case "${options}" in                    # TIMES=${OPTARG}
-            d)    err Debug enabled ; debugSet     
+            d)    err Debug enabled ; debugSet
                   ;;
             q)    debug quiet mode; _quiet=TRUE
                   ;;
