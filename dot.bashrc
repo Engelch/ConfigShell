@@ -48,9 +48,9 @@ function so()
 # always show such a message.  If known terminal, print the message
 # in reverse video mode. This is the other way, not using escape sequences
 {
-   [ "$1" != on -a "$1" != off ] && return 
+   [ "$1" != on -a "$1" != off ] && return
     if [ "$TERM" = xterm -o "$TERM" = vt100 -o "$TERM" = xterm-256color  -o "$TERM" = screen ] ; then
-      [ "$1" = on ] && tput smso 
+      [ "$1" = on ] && tput smso
       [ "$1" = off ] && tput rmso
     fi
 }
@@ -77,7 +77,7 @@ function colBlink()     { printf "\e[5m"; return 0; }
 
 # --- Exits
 
-# function error()        { err 'ERROR:' $*; return 0; } # similar to err but with ERROR prefix and possibility to include 
+# function error()        { err 'ERROR:' $*; return 0; } # similar to err but with ERROR prefix and possibility to include
 # Write an error message to stderr. We cannot use err here as the spaces would be removed.
 function error()        { so on; echo 'ERROR:'$* 1>&2;            so off ; return 0; }
 function error4()       { so on; echo 'ERROR:    '$* 1>&2;        so off ; return 0; }
@@ -114,8 +114,8 @@ function tempDir()                      { mktemp -d "${TMPDIR:-/tmp/}$_app.YYYYY
 
 # user-specific pre/post/... configuration, duplicate in .bash_profile
 function loadSource() {
-   if [ -r "$HOME/.bashrc.$1" ] ; then debug loadSource .bashrc.$1 ; source "$HOME/.bashrc.$1" ; else 
-      debug4 loadSource FILE NOT FOUND $HOME/.bashrc.$1 
+   if [ -r "$HOME/.bashrc.$1" ] ; then debug loadSource .bashrc.$1 ; source "$HOME/.bashrc.$1" ; else
+      debug4 loadSource FILE NOT FOUND $HOME/.bashrc.$1
    fi
 }
 
@@ -152,7 +152,7 @@ function main() {
          setHistFile                      # history file permission, ownership, settings
 
          # source .bash_profile if it was not done before
-         [ -z "$BASH_ENV" -a -r ~/.bash_profile ] && . ~/.bash_profile && return 
+         [ -z "$BASH_ENV" -a -r ~/.bash_profile ] && . ~/.bash_profile && return
 
          # env.*.sh are loading in bash_profile
          for file in $PROFILES_CONFIG_DIR/Shell/common.*.sh $PROFILES_CONFIG_DIR/Shell/bash.*.sh; do
@@ -161,8 +161,8 @@ function main() {
                $(basename $file .sh).init # call the file-local initialiser
             else
                warning $file is not a plain file  1>&2
-            fi 
-         done 
+            fi
+         done
 
          # load os-specifics
          if [ -f "$PROFILES_CONFIG_DIR/Shell/os.$(uname).sh" ] ; then
@@ -171,7 +171,12 @@ function main() {
          else
             warning No OS-specific path file "$PROFILES_CONFIG_DIR/Shell/os.$(uname).sh" found
          fi
-         [ -z $NO_loadPost ]  && loadSource post
+         if [ -z $NO_loadPost ] ; then
+            loadSource post
+            for file in $HOME/.bashrc.d/*.sh ; do
+               [ -r "$file" ] && debug4 source "$file" && source "$file"
+            done
+         fi
          ;;
       *) #echo "This is a script";;
          debug non-interactive shell
