@@ -15,7 +15,7 @@
 # 1.1.0
 # - introducing new touch variable _detach
 
-VERSION=2.2.1
+VERSION=2.2.2
 
 function err()          { echo $* 1>&2; } # write to stderr
 function err4()          { echo '    '$* 1>&2; } # write to stderr
@@ -154,7 +154,7 @@ function checkDockerRegistry() {
   _dockerRegistryFile=./docker-registry
   if [ -f $_dockerRegistryFile ] ; then
     _registry=$(cat $_dockerRegistryFile | grep -v ^$ | grep -v '^#' | head -n1 | sed 's/[[:space:]]#.*//')
-  elif [ ! -z $DOCKERREGISTRY ] ; then
+  elif [ ! -z "$DOCKERREGISTRY" ] ; then
     _registry=$DOCKERREGISTRY
   fi
   unset _dockerRegistryFile
@@ -170,7 +170,7 @@ function checkVersionFile() {
   _ver=
   [ -f .version ] && _verfile=.version
   [ -f _version ] && _verfile=_version
-  [ ! -z $_verfile ] && _ver=$(cat $_verfile | grep -v '^$' | sed 's/#.*//' )
+  [ ! -z "$_verfile" ] && _ver=$(cat $_verfile | grep -v '^$' | sed 's/#.*//' )
   debug Version is $_ver
 }
 
@@ -192,7 +192,7 @@ function checkImageName() {
     [ $file = '_image_*'  ] && continue
     image=$(echo $file | sed -e "s/_image_//" | sed -e "s,_,/,g" | tr [A-Z] [a-z] )
   done
-  if [ -z $image ] ; then
+  if [ -z "$image" ] ; then
     image=$(basename $PWD | sed -e 's/ /_/g' | tr [A-Z] [a-z]) # as in dockerBuild
   fi
   unset file
@@ -227,7 +227,7 @@ function checkContainerName() {
     [ $file = '_name_*'  ] && continue
     name="--name $(echo $file | sed -e 's/^_name_//' | tr '[A-Z]' '[a-z]') $name"
   done
-  if [ -z $name ] ; then # if not set, set it to the directory name
+  if [ -z "$name" ] ; then # if not set, set it to the directory name
     name="--name "$(basename $PWD | sed -e 's/ /_/g' | tr [A-Z] [a-z]) # as in dockerBuild
   fi
   unset file
@@ -306,7 +306,8 @@ function modeExec() {
 function modeRun() {
   debug evaluateMode run
   shift # remove argument so that $* b4 supplied to command
-  [ ! -z $_ver ] && ver=:$_ver
+  ver=
+  [ ! -z "$_ver" ] && ver=:$_ver
   verbose $sudo docker run $rm $net $name $map $dirmap $_detach $* $image$ver
   $dry    $sudo docker run $rm $net $name $map $dirmap $_detach $* $image$ver
   res=$?
@@ -314,7 +315,8 @@ function modeRun() {
 
 function modeBuild() {
   debug evaluateMode build
-  [ ! -z $_ver ] && ver="-t $image:$_ver" && debug version is $image:$_ver
+  ver=
+  [ ! -z "$_ver" ] && ver="-t $image:$_ver" && debug version is $image:$_ver
   verbose docker build  -t $image:latest .
   $dry docker build     -t $image:latest .
   res=$?
@@ -330,7 +332,7 @@ function modeTag() {
   [ $resTmp -ne 0 ] && err ERROR running docker inspect: $_out && res=2 && return
   _sha=$(docker inspect --format='{{.Id}}' $image | sed 's/:/_/g')
   debug SHA checksum is $_sha
-  if [ -z $_sha ] ; then
+  if [ -z "$_sha" ] ; then
     err SHA could not be determined for the image
     res=1
     return
@@ -338,7 +340,7 @@ function modeTag() {
   debug Tagging for latest
   verbose docker tag $image $_registry/$image:latest
   $dry docker tag $image $_registry/$image:latest
-  if [ ! -z $_ver ] ; then
+  if [ ! -z "$_ver" ] ; then
     debug Version is defined, also tagging for '<<version>>'
     verbose docker tag $image $_registry/$image:$_ver
     $dry docker tag $image $_registry/$image:$_ver
