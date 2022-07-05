@@ -15,7 +15,7 @@
 # 1.1.0
 # - introducing new touch variable _detach
 
-VERSION=2.2.0
+VERSION=2.2.1
 
 function err()          { echo $* 1>&2; } # write to stderr
 function err4()          { echo '    '$* 1>&2; } # write to stderr
@@ -207,7 +207,7 @@ function checkVolumeMounts() {
   ##
   declare -g dirmap
   for file in _v*:* ; do
-    [ $file = '_v*'  ] && continue
+    [ $file = '_v*:*'  ] && continue
     srcmap=$(echo $file | sed 's/^_v//' | sed -e "s,:.*,," | sed "s,_,/,g" | sed -e s",^\.,$(pwd)," )
     dstmap=$(echo $file | sed 's/^_v//' | sed -e "s,.*:,," | sed "s,_,/,g" )
     # debug srcmap $srcmap dstmap $dstmap
