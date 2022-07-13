@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
 ########## RELEASE INFORMATION
+# 2.3
+#   - support for podmand by -2 option
 # 2.2
 #   set container name to directory name if not explicitly set (same as for image name)
 # 2.1
@@ -15,7 +17,7 @@
 # 1.1.0
 # - introducing new touch variable _detach
 
-VERSION=2.2.2
+VERSION=2.3.0
 
 function err()          { echo $* 1>&2; } # write to stderr
 function err4()          { echo '    '$* 1>&2; } # write to stderr
@@ -59,6 +61,7 @@ function usage() {
   echo SYNOPSIS
   echo '    '$(basename $0) '-D        # debug mode, more verbose than verbose'
   echo '    '$(basename $0) '-V        # show version number'
+  echo '    '$(basename $0) '-2  ...   # calling podman instead of docker'
   echo '    '$(basename $0) '-b  ...   # build image, further arguments'
   echo '    '$(basename $0) '-d ...    # detached run, implies -r'
   echo '    '$(basename $0) '-e ...    # exec in image'
@@ -76,12 +79,16 @@ function usage() {
 
 function parseCLI() {
     local currentOption
-    while getopts "DVbdehknprtuvao" options; do         # Loop: Get the next option;
+    declare -g docker ; docker=docker
+    while getopts "2DVbdehknprtuvao" options; do         # Loop: Get the next option;
         case "${options}" in                    # TIMES=${OPTARG}
             D)  err Debug \& verbose enabled ; debugSet ; verboseSet
                 ;;
             V)  debug version number; echo $VERSION
                 exit 0
+                ;;
+            2)  debug podman mode
+                docker=podman
                 ;;
             b)  debug build mode;
                 mode=build
@@ -294,8 +301,8 @@ function modeExec() {
   shift
   if [ ! -z "$name" ] ; then
     purename=$(echo $name | awk '{ print $2 }' )
-    verbose docker exec $* -it $purename ${DOCKERSHELL:-/bin/bash}
-    $dry docker  exec $* -it $purename ${DOCKERSHELL:-/bin/bash}
+    verbose $docker exec $* -it $purename ${DOCKERSHELL:-/bin/bash}
+    $dry $docker  exec $* -it $purename ${DOCKERSHELL:-/bin/bash}
     res=$?
   else
     err ERROR No clear image name.
@@ -308,8 +315,8 @@ function modeRun() {
   shift # remove argument so that $* b4 supplied to command
   ver=
   [ ! -z "$_ver" ] && ver=:$_ver
-  verbose $sudo docker run $rm $net $name $map $dirmap $_detach $* $image$ver
-  $dry    $sudo docker run $rm $net $name $map $dirmap $_detach $* $image$ver
+  verbose $sudo $docker run $rm $net $name $map $dirmap $_detach $* $image$ver
+  $dry    $sudo $docker run $rm $net $name $map $dirmap $_detach $* $image$ver
   res=$?
 }
 
@@ -317,8 +324,8 @@ function modeBuild() {
   debug evaluateMode build
   ver=
   [ ! -z "$_ver" ] && ver="-t $image:$_ver" && debug version is $image:$_ver
-  verbose docker build  -t $image:latest .
-  $dry docker build     -t $image:latest .
+  verbose $docker build  -t $image:latest .
+  $dry $docker build     -t $image:latest .
   res=$?
 }
 
@@ -328,9 +335,9 @@ function modeTag() {
   debug Docker registry is: $_registry
   _date=$(date +%y%m%d)
   debug Date is $_date
-  _out=$(docker inspect --format='{{.Id}}' $image 2>&1) ; resTmp=$?
-  [ $resTmp -ne 0 ] && err ERROR running docker inspect: $_out && res=2 && return
-  _sha=$(docker inspect --format='{{.Id}}' $image | sed 's/:/_/g')
+  _out=$($docker inspect --format='{{.Id}}' $image 2>&1) ; resTmp=$?
+  [ $resTmp -ne 0 ] && err ERROR running $docker inspect: $_out && res=2 && return
+  _sha=$($docker inspect --format='{{.Id}}' $image | sed 's/:/_/g')
   debug SHA checksum is $_sha
   if [ -z "$_sha" ] ; then
     err SHA could not be determined for the image
@@ -338,12 +345,12 @@ function modeTag() {
     return
   fi
   debug Tagging for latest
-  verbose docker tag $image $_registry/$image:latest
-  $dry docker tag $image $_registry/$image:latest
+  verbose $docker tag $image $_registry/$image:latest
+  $dry $docker tag $image $_registry/$image:latest
   if [ ! -z "$_ver" ] ; then
     debug Version is defined, also tagging for '<<version>>'
-    verbose docker tag $image $_registry/$image:$_ver
-    $dry docker tag $image $_registry/$image:$_ver
+    verbose $docker tag $image $_registry/$image:$_ver
+    $dry $docker tag $image $_registry/$image:$_ver
   else
     debug No version is defined, no further tagging.
   fi
@@ -354,8 +361,8 @@ function modeTag() {
   # debug docker tag $image $_registry/$image:$_date-$_sha
   # $dry docker tag $image $_registry/$image:$_date-$_sha
   debug Tagging for '<<sha>>'
-  verbose docker tag $image $_registry/$image:$_sha
-  $dry docker tag $image $_registry/$image:$_sha
+  verbose $docker tag $image $_registry/$image:$_sha
+  $dry $docker tag $image $_registry/$image:$_sha
   res=$?
 }
 
@@ -363,19 +370,19 @@ function modePush() {
   debug evaluateMode push
   [ -z $_registry ] && err Error, registry not set. && res=10 && return
   debug Docker registry is: $_registry
-  _err=$(docker inspect --format='{{.Id}}' $image 2>&1); resTmp=$?
+  _err=$($docker inspect --format='{{.Id}}' $image 2>&1); resTmp=$?
   [ $resTmp -ne 0 ] && err SHA could not be determined for the image: $_err && res=11 && return
-  _sha=$(docker inspect --format='{{.Id}}' $image | sed 's/:/_/g')
-  verbose docker push $_registry/$image:latest
-  $dry docker push $_registry/$image:latest
-  [ ! -z $_ver ] && $dry docker push $_registry/$image:$_ver
+  _sha=$($docker inspect --format='{{.Id}}' $image | sed 's/:/_/g')
+  verbose $docker push $_registry/$image:latest
+  $dry $docker push $_registry/$image:latest
+  [ ! -z $_ver ] && $dry $docker push $_registry/$image:$_ver
 
-  verbose docker push $_registry/$image:$_date
-  $dry docker push $_registry/$image:$_date
+  verbose $docker push $_registry/$image:$_date
+  $dry $docker push $_registry/$image:$_date
 
   debug SHA checksum is $_sha
-  verbose docker push $_registry/$image:$_sha
-  $dry docker push $_registry/$image:$_sha
+  verbose $docker push $_registry/$image:$_sha
+  $dry $docker push $_registry/$image:$_sha
   res=$(( res + $? )) # might be combined with res from modeTag
 }
 
@@ -386,8 +393,8 @@ function modeStartStopKill() {
   if [ ! -z "$name" ] ; then
     instance=$(echo $name | awk '{ print $2 }' ) # --name name0
     [ -z "$instance" ] && err ERROR, could not determine instance name. Nmae is $name && res=2 && return
-    verbose docker $cmd $instance
-    $dry docker  $cmd $instance
+    verbose $docker $cmd $instance
+    $dry $docker  $cmd $instance
     res=$?
   else
     err ERROR, istance name not detected.
