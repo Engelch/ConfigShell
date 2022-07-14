@@ -1,6 +1,6 @@
 debug4 LOADING bash.version.sh '%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'
 
-[ ! -z $NO_bashSetVersion ] && debug exiting bash.version.sh && return 
+[ ! -z $NO_bashSetVersion ] && debug exiting bash.version.sh && return
 
 # setVersion defines the version of this shell scripts. It creates an output with the current version number
 # if the version number changes.
@@ -11,7 +11,7 @@ function bashSetVersion() {
    # vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
    # vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
    # vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-   export BASH_RC_VERSION="4.9.1"
+   export BASH_RC_VERSION="4.10.0"
    debug BASH_RC_VERSION is $BASH_RC_VERSION
    # 3.8, 3.7
    # - new fn tlsServerCert with aliases tlsSrvCrt, tlsSrvCert

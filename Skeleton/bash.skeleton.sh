@@ -11,6 +11,7 @@
 # COPYRIGHT © 2022 Christian Engel (mailto:engel-ch@outlook.com) todo
 #
 # Skeleton:
+#   0.6   - echo4, echo8, repair exitIfErr
 #   0.5   - default option now -D by default
 #   0.4.1 - repaired debug4/8/12 echoing directly, no err call deleting spaces
 #   0.4.0 - debug4, debug8
@@ -41,7 +42,7 @@
 #########################################################################################
 # VARIABLES, CONSTANTS
 
-readonly bash_skeleton_version=0.5.1
+readonly bash_skeleton_version=0.6.0
 
 readonly _app=$(basename $0)
 readonly _appDir=$(dirname $0)
@@ -52,8 +53,8 @@ export VerboseFlag=${VerboseFlasg:-FALSE}
 
 #########################################################################################
 
-# so helps to write a message in reverse mode
 function so()
+# so helps to write a message in reverse mode
 # always show such a message.  If known terminal, print the message
 # in reverse video mode. This is the other way, not using escape sequences
 {
@@ -84,6 +85,9 @@ function colBold()      { printf '\e[1m'; return 0; }
 function colNormal()    { printf "\e[0m"; return 0; }
 function colBlink()     { printf "\e[5m"; return 0; }
 
+function echo4() 						{ echo '   '$* ; return 0; }
+function echo8() 						{ echo '       '$* ; return 0; }
+
 # --- Exits
 
 # function error()        { err 'ERROR:' $*; return 0; } # similar to err but with ERROR prefix and possibility to include
@@ -97,7 +101,7 @@ function warning()      { so on; echo 'WARNING:'$* 1>&2;          so off; return
 
 
 function errorExit()    { EXITCODE=$1 ; shift; error $* ; exit $EXITCODE; }
-function exitIfErr()    { a="$1"; b="$2"; shift; shift; [ "$a" -ne 0 ] && errorExit $b App returned $b $*; }
+function exitIfErr()    { a="$1"; b="$2"; shift; shift; [ "$a" -ne 0 ] && errorExit $b App returned $a $*; }
 
 function err()          { echo $* 1>&2; }                 # just write to stderr
 function err4()         { echo '   ' $* 1>&2; }           # just write to stderr

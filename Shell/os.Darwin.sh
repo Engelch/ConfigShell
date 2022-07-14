@@ -11,12 +11,13 @@ function setupOSX() {
    alias subl=sublime
    alias o=open
    alias vnc='open /System/Library/CoreServices/Applications/Screen\ Sharing.app'
+   alias cleandns='sudo killall -HUP mDNSResponder;sudo killall mDNSResponderHelper;sudo dscacheutil -flushcache'
    # root should use default tools, /opt and /usr/local is of secondary concern only.
    [ $UID -ne 0 ] && for _newApp in getopt curl openssl ; do
       which $_newApp | egrep '^/opt/homebrew|/usr/local' > /dev/null || warning $_newApp does not seem to be from homebrew.
    done
 
-   # useful only for Mac OS Silicon M1, 
+   # useful only for Mac OS Silicon M1,
    # still working but useless for the other platforms
    docker() {
       if [[ `uname -m` == "arm64" ]] && [[ "$1" == "run" || "$1" == "build" ]]; then
