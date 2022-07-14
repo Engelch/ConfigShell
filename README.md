@@ -135,9 +135,9 @@ Most of the shell scripts sourced by one of the above main-scripts are executed 
 | Filename | Purpose |
 | --- | --- |
 | bash.prompt_version.sh | Bash shell-prompt specific settings and version definition |
-| common.aliases.sh | Aliases available in all environments and on all OS |
+| common.aliases.sh | Aliases for all environments and  all OS |
 | common.crypto.sh  | Aliases and functions for crypto-, certificate-related topics |
-| common.diverse.sh | Aliases and functions not to fit anywhere else |
+| common.diverse.sh |  functions available in all environments and  all OS |
 | common.git.sh | git-related helpers |
 | common.go.sh  | golang-related helpers |
 | common.k8s.sh | Kubernetes (k8s) helpers |
