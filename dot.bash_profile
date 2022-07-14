@@ -6,7 +6,7 @@ export VerboseFlag=${VerboseFlasg:-FALSE}
 # shall begin with .bash and end in .path
 export PATHFILE="$HOME/.env.profile.path"
 
-###################################### 
+######################################
 # Skeleton functions, considered RO. v0.4.1
 
 # so helps to write a message in reverse mode
@@ -14,9 +14,9 @@ function so()
 # always show such a message.  If known terminal, print the message
 # in reverse video mode. This is the other way, not using escape sequences
 {
-   [ "$1" != on -a "$1" != off ] && return 
+   [ "$1" != on -a "$1" != off ] && return
     if [ "$TERM" = xterm -o "$TERM" = vt100 -o "$TERM" = xterm-256color  -o "$TERM" = screen ] ; then
-      [ "$1" = on ] && tput smso 
+      [ "$1" = on ] && tput smso
       [ "$1" = off ] && tput rmso
     fi
 }
@@ -43,7 +43,7 @@ function colBlink()     { printf "\e[5m"; return 0; }
 
 # --- Exits
 
-# function error()        { err 'ERROR:' $*; return 0; } # similar to err but with ERROR prefix and possibility to include 
+# function error()        { err 'ERROR:' $*; return 0; } # similar to err but with ERROR prefix and possibility to include
 # Write an error message to stderr. We cannot use err here as the spaces would be removed.
 function error()        { so on; echo 'ERROR:'$* 1>&2;            so off ; return 0; }
 function error4()       { so on; echo 'ERROR:    '$* 1>&2;        so off ; return 0; }
@@ -70,8 +70,8 @@ function exitIfDirsNotExisting()        { for dir in $*; do [ ! -d $dir ] && err
 
 # user-specific pre/post/... configuration
 function loadSource() {
-   if [ -r "$HOME/.bashrc.$1" ] ; then debug loadSource .bashrc.$1 ; source "$HOME/.bashrc.$1" ; else 
-      debug4 loadSource FILE NOT FOUND $HOME/.bashrc.$1 
+   if [ -r "$HOME/.bashrc.$1" ] ; then debug loadSource .bashrc.$1 ; source "$HOME/.bashrc.$1" ; else
+      debug4 loadSource FILE NOT FOUND $HOME/.bashrc.$1
    fi
 }
 
@@ -137,7 +137,7 @@ function setupPathDel() {
 function envVars() {
     export SHELL=$(which bash)       # fix for docker
     export BASH_ENV=TRUE    # must be set before loading .bashrc files
-    export LESS='-iR'       # -i := searches are case insensitive; 
+    export LESS='-iR'       # -i := searches are case insensitive;
                             # -R := Like -r, but only ANSI "color" escape sequences are output in "raw" form.
                             # The default is to display control characters using the caret notation.
     export PAGER=less
@@ -159,29 +159,31 @@ function envVars() {
 function main() {
     debug4 .bash_profile main..................
 
-
     # seem to be inherited to sub-shells
     set -o ignoreeof                             # prevent ^d logout
     set -o noclobber                             # overwrite protection, use >| to force
 
-    PATH=/bin:/usr/bin:/usr/local/bin loadSource env
+    PATH=/bin:/usr/bin:/usr/local/bin loadSource env # minimal reasonable path
 
     # PATH settings are environment variables. We do not want to do it for each individual sub-shell
     # PATHFILE must be set for these files (as done at BOF)
     [ $(echo $PATHFILE | wc -w ) -ne 1 ] && error something wrong about PATHFILE being $PATHFILE && return
     [ ! -f "$PATHFILE" ] && [ -z $NO_setupPath ] && setupPath # defined above in this file
-    
+
     envVars     # load environment variables (above), required for PROFILES_CONFIG_DIR below, must be done after PATH setup
 
     # OS- and tools-based environment setup files
+    export scriptcounter=0
     for file in $PROFILES_CONFIG_DIR/Shell/env.path.*.sh $PROFILES_CONFIG_DIR/Shell/env.os.$(uname).sh; do
         if [ -r $file ] ; then # required for the case if no such file exists
+            scriptcounter=$(( scriptcounter + 1 ))
+            debug $scriptcounter bash_profile sourcing $file............................
             source $file $HOME/.$(basename $file)
             $(basename $file .sh).init
         fi
     done
 
-    sourcePaths $HOME/.env.*.path   
+    sourcePaths $HOME/.env.*.path
 
     [ -z "$NO_bashrc" -a -f ~/.bashrc ] && . ~/.bashrc # start all the normal files
 }

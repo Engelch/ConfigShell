@@ -146,13 +146,14 @@ function main() {
 
    case $- in
       *i*) #  "This shell is interactive"
+         # source .bash_profile if it was not done before
+         # .bash_profile calls .bashrc; in such a case, stop .bashrc sourcing here
+         [ -z "$BASH_ENV" -a -r ~/.bash_profile ] && . ~/.bash_profile && return
+
          loadSource pre
          set -o ignoreeof                 # prevent ^d logout
          set -o noclobber                 # overwrite protection, use >| to force
          setHistFile                      # history file permission, ownership, settings
-
-         # source .bash_profile if it was not done before
-         [ -z "$BASH_ENV" -a -r ~/.bash_profile ] && . ~/.bash_profile && return
 
          # env.*.sh are loading in bash_profile
          for file in $PROFILES_CONFIG_DIR/Shell/common.*.sh $PROFILES_CONFIG_DIR/Shell/bash.*.sh; do

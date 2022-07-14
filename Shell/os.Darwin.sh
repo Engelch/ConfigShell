@@ -2,7 +2,7 @@
 
 # Darwin- alias OSX-specific settings of aliases and shell-functions
 function setupOSX() {
-   debug4 '>>>>' setupOSX
+   debug8 setupOSX............s
    export LS_COLOUR='-G'
    export LSCOLORS=Exfxcxdxbxegedabagacad # change directory colour 1st letter; see man ls(1)
    common.aliases.ls          # realias ls commands to reflect colour mode
@@ -59,7 +59,7 @@ function setupOSX() {
    sln()
    {
       if [ `ls -d *.sln 2>/dev/null | wc -l` -eq 1 ] ;
-      then debug opening *.sln ; open *.sln
+      then debug8 opening *.sln ; open *.sln
       else error multiple sln files/directories or none found.
       fi
    }
@@ -67,11 +67,11 @@ function setupOSX() {
 
 function setupOSX_PostgreSQL() {
    #POSTGRESQL specific
-   debug4 '>>>>' setupOSX_PostgreSQL '(non-docker installation)'
+   debug8 setupOSX_PostgreSQL '(non-docker installation)'.........
    if [ -d /Applications/Postgres.app/Contents ] ; then
       export PGDIR="$HOME/Library/Application Support/Postgres/" # PGDIR: directory of PGSQL configuration
       if [ `ls "$PGDIR" 2>/dev/null | tail -1 | wc -l` -gt 0 ] ; then
-         debug PostgreSQL installation found
+         debug12 PostgreSQL installation found
          PGVERSION=`ls "$PGDIR" | tail -1`
          export PGDATA="$PGDIR"$PGVERSION # PGDATA: directory of PGSQL data files
          if [ ! -d "$PGDATA" ] ; then
@@ -89,13 +89,13 @@ function setupOSX_PostgreSQL() {
 }
 
 function os.Darwin.init() {
-   debug4 LOADING os.Darwin.init %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+   debug4 os.Darwin.init %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    [ -z $NO_setupOSX ] && setupOSX
    [ -z $NO_setupOSX_PostgreSQL ] && setupOSX_PostgreSQL
 }
 
 function os.Darwin.del() {
-   debug4 LOADING os.Darwin.del %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+   debug4 os.Darwin.del %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 }
 
 # EOF

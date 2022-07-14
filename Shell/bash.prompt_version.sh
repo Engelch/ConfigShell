@@ -31,14 +31,21 @@ function enableBashCaseInsensitiveCompletion() {
    return 0
 }
 
-function bash.prompt.init() {
+function bash.prompt_version.init() {
+   debug4 bash.prompt_version.init '%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'
    alias root='sudo -i bash'        # CALCSHELL removed, should not be in .bash{rc,profile}
    [ -z $NO_enableBashCaseInsensitiveCompletion ] && enableBashCaseInsensitiveCompletion
    bashPrompt
+   #####################################
+   export BASH_RC_VERSION="4.11.1"
+   #####################################
+   debug BASH_RC_VERSION is $BASH_RC_VERSION
+   [ ! -z $BASH_MMONRC_VERSION ] && [ $BASH_MMONRC_VERSION != $BASH_RC_VERSION ] && echo new commonrc version $BASH_RC_VERSION. 1>&2
+   BASH_MMONRC_VERSION=$BASH_RC_VERSION
 }
 
-function bash.prompt.del() {
-   :
+function bash.prompt_version.del() {
+   debug4 bash.prompt_version.del '%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'
 }
 
 # EOF

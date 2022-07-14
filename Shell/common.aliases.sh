@@ -7,7 +7,7 @@ function common.aliases.ls() {
 
 function common.aliases.init() {
     debug4 common.aliases.init '%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'
-    [ ! -z $NO_commonAliases ] && debug exiting common.aliases.sh && return 
+    [ ! -z $NO_commonAliases ] && debug exiting common.aliases.sh && return
 
     alias ..='cd ..'
     alias .2='cd ../..'
@@ -17,6 +17,7 @@ function common.aliases.init() {
     alias .6='cd ../../../../../..'
     alias .7='cd ../../../../../../..'
     alias a=alias
+    # delete current directory if empty or only OSX file .DS_Store is contained
     alias brmd='[ -f .DS_Store ] &&  /bin/rm -f .DS_Store ; cd .. ; rmdir "$OLDPWD"'
     alias cm=cmake
     alias cp='cp -i'
@@ -30,7 +31,10 @@ function common.aliases.init() {
     alias fin='find . -name'      # search for a filename
     alias fini='find . -iname'    # search for a filename in case-insensitive mode
     alias h=history
-    alias hf='history | egrep -i '
+    unalias hf 2>/dev/null
+    function hf() {
+        history | egrep -i $*
+    }
     alias ipi='curl https://ipinfo.io'
     alias j=jobs
     alias l=less
@@ -63,6 +67,7 @@ function common.aliases.init() {
     alias whbl='tmux select-pane -P "fg=white,bg=black"'
     alias blwh='tmux select-pane -P "fg=black,bg=white"'
     # fg=169,bg=color233
+    common.aliases.ls   # potentially reloading/re-evaluated again for colourised-ls from os.$(uname).ls
 }
 
 function common.aliases.del() {
