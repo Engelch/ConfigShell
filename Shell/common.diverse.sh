@@ -56,7 +56,8 @@ function rlFull() {
     case "$SHELL" in
     *bash)  rmCache
             delPath
-            _otherFilesCount=$(ls $HOME/.*.path 2>&- | xargs basename | egrep -v '^.zsh.*' | wc -w)
+    
+            _otherFilesCount=$(ls -1 $HOME/.*.path 2>&- | egrep -v '^.zsh.*' | wc -w)
             [ "$_otherFilesCount" -gt 0 ] && err Missed $_otherFilesCount path files found: $_otherFiles
             debug RELOAD STARTING ========================================================
             source ~/.bash_profile
@@ -73,7 +74,7 @@ function rlFull() {
 # rmCache deletes cache files and calls the destructor functions
 function rmCache() {
     for file in $PROFILES_CONFIG_DIR/Shell/{common*.sh,bash*.sh,env.path*.sh,env.os.$(uname)*.sh,os.$(uname)*.sh} ; do
-        [ -f "$file" ] && $(basename $file .sh).del
+        [ -f "$file" ] && debug8 calling destructor $file && $(basename $file .sh).del
     done
 }
 

@@ -7,7 +7,8 @@ function setupGoPath() {
         export GOROOT=$HOME/sdk/$_go/
         debug8 Setting PATH for local go environment and GOROOT to $GOROOT
     fi
-    [ -z "$NO_GoSDK" -a -d "$HOME/.go/bin" ] && PATH=$HOME/.go/bin:$PATH && \
+    [ -z "$NO_GoSDK" -a -d "$HOME/.go/bin" ] && \
+        echo $HOME/.go/bin >| $GO_PATH_CACHE_FILE && \
         export GOROOT=$HOME/.go && \
         debug8 Setting PATH for local go environment and GOROOT to $GOROOT
 }
