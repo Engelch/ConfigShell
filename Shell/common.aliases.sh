@@ -33,7 +33,7 @@ function common.aliases.init() {
     alias h=history
     unalias hf 2>/dev/null
     function hf() {
-        history | egrep -i $*
+        history | egrep -i "$*"
     }
     alias ipi='curl https://ipinfo.io'
     alias j=jobs
