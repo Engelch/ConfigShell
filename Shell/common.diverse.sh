@@ -6,8 +6,8 @@ function ansibleListTags() {
 }
 
 # iho searches hosts.yml files. It can be called in 2 modes:
-# iho inventoryXYZ         # This will open all hosts*.yml files in less 
-# iho inventoryXYZ bla     # This will output all lines in the hosts*.yml files 
+# iho inventoryXYZ         # This will open all hosts*.yml files in less
+# iho inventoryXYZ bla     # This will output all lines in the hosts*.yml files
 #                          # that match bla (case-insensitive)
 
 export IHO_SURROUNDING_LINES=3 # can be adjusted in ~/.profile.post
@@ -16,8 +16,8 @@ export IHO_SURROUNDING_LINES=3 # can be adjusted in ~/.profile.post
 # Otherwise, use the 2nd argument as a search pattern in the found hosts*.yml files.
 function ansibleInventory() {
     if [ -z $2 ] ; then
-        find "$1/." -name hosts\*.yml -print | xargs cat | less 
-    else 
+        find "$1/." -name hosts\*.yml -print | xargs cat | less
+    else
         echo "find $1/. -name hosts\*.yml -print | xargs cat | egrep -i -C $IHO_SURROUNDING_LINES $2"
         find "$1/." -name hosts\*.yml -print | xargs cat | egrep -i -C $IHO_SURROUNDING_LINES "$2"
     fi
@@ -55,8 +55,9 @@ function rlFull() {
     debug START rlFull ========================================================
     case "$SHELL" in
     *bash)  rmCache
-            _otherFilesCount=$(ls $HOME/.*.path 2>&- | xargs basename | egrep -v '^.zsh.*' | wc -l)
-            [ "$_otherFilesCount" -gt 0 ] && err Missed path files found: echo $_otherFiles
+            delPath
+            _otherFilesCount=$(ls $HOME/.*.path 2>&- | xargs basename | egrep -v '^.zsh.*' | wc -w)
+            [ "$_otherFilesCount" -gt 0 ] && err Missed $_otherFilesCount path files found: $_otherFiles
             debug RELOAD STARTING ========================================================
             source ~/.bash_profile
             ;;
@@ -74,7 +75,6 @@ function rmCache() {
     for file in $PROFILES_CONFIG_DIR/Shell/{common*.sh,bash*.sh,env.path*.sh,env.os.$(uname)*.sh,os.$(uname)*.sh} ; do
         [ -f "$file" ] && $(basename $file .sh).del
     done
-    setupPathDel # todo can we remove special handling here
 }
 
 # If multiple users log in as user hadm, determine the real user logging in by identifying her/his SSH finger-print

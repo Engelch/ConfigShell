@@ -127,10 +127,10 @@ function setupPath() {
     unset _POTENTIAL_DIR
 }
 
-# setupPathDel deletes cached path file
-function setupPathDel() {
-    [ -f $PATHFILE ] && debug4 setupPathDel: removing PATHFILE $PATHFILE && /bin/rm -f $PATHFILE && return
-    debug4 setupPathDel: PATHFILE $PATHFILE not found.
+function delPath() {
+    # deleting default cache path file build up by setupPath
+    debug8 in delPath........
+    [ -f "$PATHFILE" ] && debug12 PATHFILE $PATHFILE found, removing && /bin/rm -f $PATHFILE
 }
 
 # envVars set environment variables for all (sub-)shells
@@ -163,7 +163,8 @@ function main() {
     set -o ignoreeof                             # prevent ^d logout
     set -o noclobber                             # overwrite protection, use >| to force
 
-    PATH=/bin:/usr/bin:/usr/local/bin loadSource env # minimal reasonable path
+    # old call to ~/.bashrc.env
+    # PATH=/bin:/usr/bin:/usr/local/bin loadSource env # minimal reasonable path
 
     # PATH settings are environment variables. We do not want to do it for each individual sub-shell
     # PATHFILE must be set for these files (as done at BOF)
