@@ -1,13 +1,15 @@
 function setupGoPath() {
-    # go sdk setup, NO_GoSDK might require a second load as loadSource pre is not executed before 
+    # go sdk setup, NO_GoSDK might require a second load as loadSource pre is not executed before
     if [ -z "$NO_GoSDK" -a -d "$HOME/sdk" ] ; then
         debug8 check for go SDK
         local -r _go=$(/bin/ls -1 $HOME/sdk/ | tail -n 1 | sed 's,/$,,')
         echo $HOME/sdk/$_go/bin >| $GO_PATH_CACHE_FILE
         export GOROOT=$HOME/sdk/$_go/
-        debug8  Setting PATH for local go environment and GOROOT to $GOROOT
-    fi        
-
+        debug8 Setting PATH for local go environment and GOROOT to $GOROOT
+    fi
+    [ -z "$NO_GoSDK" -a -d "$HOME/.go/bin" ] && PATH=$PATH:$HOME/.go/bin && \
+        export GOROOT=$HOME/.go && \
+        debug8 Setting PATH for local go environment and GOROOT to $GOROOT
 }
 
 GO_PATH_CACHE_FILE=$HOME/.env.go.path
@@ -18,7 +20,7 @@ function env.path.go.init() {
         export GOROOT=$(basename $(cat "$GO_PATH_CACHE_FILE") /bin)
     else
         setupGoPath
-    fi 
+    fi
 }
 
 

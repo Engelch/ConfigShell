@@ -22,9 +22,9 @@ function setupGo() {
     alias gore='execHelp release $*'
     alias goue='execHelp upx $*'
 
-    alias bpa=bumppatch
-    alias bmi=bumpminor
-    alias bma=bumpmajor
+    alias bpa='bumppatch ; version.sh'
+    alias bmi='bumpminor ; version.sh'
+    alias bma='bumpmajor ; version.sh'
 }
 
 # checkIfCurrentVersionExisting checks if a binary exists for the current version, architecture, and environment. If not,
@@ -76,7 +76,7 @@ function execHelp() {
 
 function common.go.init() {
     debug4 common.go.init %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    [ ! -z "$NO_commonGo" ] && debug4 exiting common.go.sh && return 
+    [ ! -z "$NO_commonGo" ] && debug4 exiting common.go.sh && return
     setupGo
     :
 }
