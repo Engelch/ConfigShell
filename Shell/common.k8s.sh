@@ -67,7 +67,7 @@ function k8Setup() {
       function k8logs() {
          local _pod=$(kubectl get po | grep -i "$1" | cut -d ' ' -f 1)
          kubectl logs "$2" $_pod # $2 for -f
-      }'
+      }
    }
 }
 
