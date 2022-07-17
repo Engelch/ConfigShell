@@ -4,7 +4,7 @@ export DebugFlag=${DebugFlag:-FALSE}
 export VerboseFlag=${VerboseFlasg:-FALSE}
 
 # shall begin with .bash and end in .path
-export PATHFILE="$HOME/.env.profile.path"
+export PATHFILE="$HOME/.env.00profile.path"
 
 ######################################
 # Skeleton functions, considered RO. v0.4.1
@@ -77,7 +77,8 @@ function loadSource() {
 
 # sourcePaths reads a file with paths (1 per line) and adds it to the current PATH
 function sourcePaths() {
-    debug8 sourcePaths: args $*
+    debug8 sourcePaths args: $*
+    debug8 sourcePaths PATH is at start: $PATH
     [ -z "$*" ] && error4 argument to sourcePaths is empty && return
 
     NEWPATH=$(grep -hv '^#' $@ 2>&- | grep -v '^$' | while read line ; do
@@ -86,15 +87,18 @@ function sourcePaths() {
             echo -n :$line
         done
     )
+    debug8 sourcePaths NEWPATH is now $NEWPATH
     NEWPATH=$(echo $NEWPATH | sed 's/^://')
     #debug8 NEWPATH $NEWPATH
-    PATH=$NEWPATH
+    #PATH=$NEWPATH
+    echo $NEWPATH
     unset NEWPATH
 }
 
 # setupPathInitial fills the path file (1st arg) which is not existing with the supplied path elements
 # line by line
 function setupPathInitial {
+    debug8 in setupPathInitial writing file $1
     file="$1" ; shift
     for pathElem in $* ; do
         echo $pathElem >> $file
@@ -107,23 +111,22 @@ function setupPath() {
     # set up initial path
     if [ $UID = 0 ] ; then
         debug8 root PATH initialisation
-        setupPathInitial $PATHFILE /sbin /usr/sbin /bin /usr/bin /usr/local/sbin /usr/local/bin
+        PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/sbin:/usr/local/bin
     else
-        debug8 normal user PATH init
-        setupPathInitial $PATHFILE . /bin /usr/local/bin /sbin /usr/sbin /bin /usr/bin
+        debug8 normal user PATH init, nothing
     fi
     # add directories if existing for all platforms
     for _POTENTIAL_DIR in \
         $HOME/go/bin $HOME/Library/Android/sdk/platform-tools /usr/local/share/dotnet /usr/local/go/bin \
-        $HOME/bin $HOME/.dotnet/tools $HOME/.rvm/bin /usr/local/google-cloud-sdk/ $HOME/google-cloud-sdk/ \
-        $HOME/.pub-cache/bin /opt/flutter/bin $HOME/.linkerd2/bin $HOME/.local/bin $HOME/google-cloud-sdk/bin \
-        $PROFILES_CONFIG_DIR/bin $PROFILES_CONFIG_DIR/bin_$(uname)-$(uname -m) /usr/local/google-cloud-sdk/bin \
+        $HOME/.dotnet/tools $HOME/.rvm/bin /usr/local/google-cloud-sdk/ $HOME/google-cloud-sdk/ \
+        $HOME/.pub-cache/bin /opt/flutter/bin $HOME/.linkerd2/bin $HOME/google-cloud-sdk/bin \
+        /usr/local/google-cloud-sdk/bin \
         /opt/android-studio/bin
     do
         debug8 checking for dir $_POTENTIAL_DIR
         [ -d "$_POTENTIAL_DIR/." ] && debug8 found path element $_POTENTIAL_DIR && echo $_POTENTIAL_DIR >> "$PATHFILE"
     done
-
+    debug8 setupPath PATHFILE is stage2: $(cat $PATHFILE)
     unset _POTENTIAL_DIR
 }
 
@@ -164,7 +167,7 @@ function main() {
     set -o noclobber                             # overwrite protection, use >| to force
 
     # old call to ~/.bashrc.env
-    # PATH=/bin:/usr/bin:/usr/local/bin loadSource env # minimal reasonable path
+    PATH=/bin:/usr/bin:/usr/local/bin   # initial path for executing these scripts, to be fully set later by these scripts
 
     # PATH settings are environment variables. We do not want to do it for each individual sub-shell
     # PATHFILE must be set for these files (as done at BOF)
@@ -184,7 +187,8 @@ function main() {
         fi
     done
 
-    sourcePaths $HOME/.env.*.path
+    NEWPATH=$(sourcePaths $HOME/.env.*.path)   # add the cached files with directories to the PATH env var
+    PATH=.:$HOME/bin:$HOME/.local/bin:$PROFILES_CONFIG_DIR/bin:$PROFILES_CONFIG_DIR/bin_$(uname)-$(uname -m):/usr/local/bin:$NEWPATH:/bin:/usr/bin:/sbin:/usr/sbin
 
     [ -z "$NO_bashrc" -a -f ~/.bashrc ] && . ~/.bashrc # start all the normal files
 }

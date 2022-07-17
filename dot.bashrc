@@ -149,7 +149,6 @@ function main() {
          # source .bash_profile if it was not done before
          # .bash_profile calls .bashrc; in such a case, stop .bashrc sourcing here
          [ -z "$BASH_ENV" -a -r ~/.bash_profile ] && . ~/.bash_profile && return
-
          loadSource pre
          set -o ignoreeof                 # prevent ^d logout
          set -o noclobber                 # overwrite protection, use >| to force
