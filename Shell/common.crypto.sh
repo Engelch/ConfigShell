@@ -50,68 +50,44 @@ function sshCertificate() { for file in $* ; do ssh-keygen -Lf "$file" ; done ; 
 
 function sshPriv2PubKey() { ssh-keygen -yf $1 ;  } # create public key out of private key
 
-
-function sshagent_findsockets {
-   debug8 common.crypto.sh sshagent_findsockets
-   res=$(find /tmp -uid $(id -u) -type s -name agent.\* 2>/dev/null | wc -l)
-   debug12 sshagent_findsockets, res: $res
-   [ "$res" -ne 0 ] && return 0 ;  return 1
+function start_ssh_agent() {
+   # start the ssh-agent and store the variable for ssh-add in a file for next shells
+   eval $(ssh-agent)
+   env | grep SSH_AUTH_SOCK >| $1
+   chmod 600 $1
+   ssh-add
 }
 
-function sshagent_testsocket {
-   debug8 common.crypto.sh sshagent_testsocket
-    [ ! -x "$(which ssh-add)" ] && echo "ssh-add is not available; agent testing aborted" && return 1
+function sshagent_init { 
+   #  ssh agent sockets can be attached to a ssh daemon process or an ssh-agent process.
+   debug8 common.crypto.sh sshagent_init
 
-    [ X"$1" != X ] && export SSH_AUTH_SOCK=$1
-
-    [ X"$SSH_AUTH_SOCK" = X ] && return 2
-
-    if [ -S $SSH_AUTH_SOCK ] ; then
-        ssh-add -l &> /dev/null
-        if [ $? = 2 ] ; then
-            debug12  "socket $SSH_AUTH_SOCK is dead! Deleting!"; rm -f $SSH_AUTH_SOCK; return 4
-        elif [ $? = 1 -a $(ssh-add -l  2>/dev/null | wc -l) -eq 0 ] ; then
-            ssh-add
-        else
-            debug12 "ssh-agent found: $SSH_AUTH_SOCK"; return 0
-        fi
-    else
-        debug12 "$SSH_AUTH_SOCK is not a socket!"; return 3
-    fi
-    debug12 exit at end of proc
-}
-
-function sshagent_init { #  ssh agent sockets can be attached to a ssh daemon process or an ssh-agent process.
-    debug8 common.crypto.sh sshagent_init
-    local AGENTFOUND=0
-    local agentsocket
-
-    if sshagent_testsocket ; then AGENTFOUND=1 ; fi # Attempt to find and use the ssh-agent in the current environment
-
-    # If there is no agent in the environment, search /tmp for possible agents to reuse before starting a fresh ssh-agent process.
-    if [ $AGENTFOUND = 0 ] ; then
-        debug12 No agent found
-         for agentsocket in $(sshagent_findsockets) ; do
-            debug12 Loop findsockets, agentsocket is $agentsocket
-            if [ $AGENTFOUND != 0 ] ; then debug12 agentfound, break ; break ; fi
-            if sshagent_testsocket $agentsocket ; then AGENTFOUND=1 ; fi
-         done
-         debug12 eval ssh-agent
-         eval `ssh-agent`
-      else
-        debug12 sshagent_init agent found
-    fi
-    debug12 now ssh-add if no identity loaded so far
-    if [[ $(ssh-add -l 2>/dev/null | grep  'no identities' | wc -l) -eq 1 ]] ; then
-      debug12 loading default key && ssh-add # load SSH default key
+   local -r ssh_auth_sock_file=$HOME/.ssh_auth_sock
+   if [ -r $ssh_auth_sock_file ] ; then
+      source $ssh_auth_sock_file # SSH_AUTH_SOCK to be read by this file
+      export SSH_AUTH_SOCK
+      ssh-add -l 2>/dev/null 1>&2 ; res=$?
+      case $res in 
+      0) # ssh-agent loaded, keys loaded
+         return 0
+         ;;
+      1) # ssh-agent loaded, but no identities loaded
+         ssh-add
+         ;;
+      2) # ssh-agent could not be contacted, starting
+         start_ssh_agent $ssh_auth_sock_file
+         ;;
+      *) error unhandled error in sshagent_init
+         ;;
+      esac
    else
-      debug12 Key found, not loading default key
+      start_ssh_agent $ssh_auth_sock_file
    fi
 }
 
 function sshSetup() {
    debug8 zcommonsh.crypto.sh sshSetup
-   alias sagent="sshagent_init"     # SSH setup
+    [ ! -x "$(which ssh-add)" ] && 1>&2 echo "ssh-add is not available; agent testing aborted" && return 1
    sshagent_init
 }
 
