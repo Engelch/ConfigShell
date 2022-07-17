@@ -27,11 +27,13 @@ function ansibleInventory() {
 
 function lat() { # better latex call
     local file
+    local _lat=${LATEX:-latex}
     for file in $*
     do
         CURRENT_FILE=$(basename "$file" .tex)
         CURRENT_FILE=$(basename "$CURRENT_FILE" .)
-        latex "${CURRENT_FILE}" && latex "${CURRENT_FILE}" && latex "${CURRENT_FILE}" && dvips "${CURRENT_FILE}"    # 3 times to get all references right
+        $_lat "${CURRENT_FILE}" && $_lat "${CURRENT_FILE}" && $_lat "${CURRENT_FILE}" &&  \
+        [ "$_lat" = latex ] && dvips "${CURRENT_FILE}"    # 3 times to get all references right, no dvips for pdflatex, xelatex
     done
 }
 
@@ -56,7 +58,7 @@ function rlFull() {
     case "$SHELL" in
     *bash)  rmCache
             delPath
-    
+
             _otherFilesCount=$(ls -1 $HOME/.*.path 2>&- | egrep -v '^.zsh.*' | wc -w)
             [ "$_otherFilesCount" -gt 0 ] && err Missed $_otherFilesCount path files found: $_otherFiles
             debug RELOAD STARTING ========================================================

@@ -15,6 +15,8 @@ function k8Setup() {
    alias k8gs='kubectl get services -o wide'
    alias k8ns='kubectl get ns'
    alias k8ga='kubectl get all -A -o wide'
+   alias kevents='kubectl get events --sort-by=.metadata.creationTimestamp'
+   alias k8ev=kevents
 
    function k8describe() {
       local _pod=$(kubectl get po | grep -i "$1" | cut -d ' ' -f 1)
@@ -49,7 +51,9 @@ function k8Setup() {
       echo  k8gs='kubectl get services -o wide'
       echo  k8ns='kubectl get ns'
       echo  k8ga='kubectl get all -A -o wide'
-      echo '
+      echo  kevents='kubectl get events --sort-by=.metadata.creationTimestamp'
+      echo  k8ev=kevents
+
       function k8describe() {
          local _pod=$(kubectl get po | grep -i "$1" | cut -d ' ' -f 1)
          shift
@@ -70,7 +74,7 @@ function k8Setup() {
 
 function common.k8s.init() {
    debug4 common.k8s.init %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-   [ ! -z $NO_commonK8s ] && debug exiting common.k8s.sh && return 
+   [ ! -z $NO_commonK8s ] && debug exiting common.k8s.sh && return
 }
 
 function common.k8s.del() {

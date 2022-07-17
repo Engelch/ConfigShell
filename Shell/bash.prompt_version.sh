@@ -37,7 +37,7 @@ function bash.prompt_version.init() {
    [ -z $NO_enableBashCaseInsensitiveCompletion ] && enableBashCaseInsensitiveCompletion
    bashPrompt
    #####################################
-   export BASH_RC_VERSION="4.12.0"
+   export BASH_RC_VERSION="4.13.0"
    #####################################
    debug BASH_RC_VERSION is $BASH_RC_VERSION
    [ ! -z $BASH_MMONRC_VERSION ] && [ $BASH_MMONRC_VERSION != $BASH_RC_VERSION ] && echo new commonrc version $BASH_RC_VERSION. 1>&2
