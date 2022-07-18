@@ -1,16 +1,16 @@
 #!/bin/bash
 
-# --u210902
+# --u2022-07-18 ce
 # Jump to home directory so that the output does not contain the path of the home directory.
 # Finally, just syntactic improvement.
 # build up list of directories from .gitCheck file
 if [ $# -gt 0 ] ; then
     dirs="$*"
 else
-    [ ! -f "$HOME/.gitCheck" ] && echo Cannot find $HOME/.gitCheck 1>&2 && exit 1
-    dirs="$(grep -v '^$' "$HOME/.gitCheck" | sed 's/#.*//')"
+    [ ! -f "$HOME/.$(basename $0)" ] && echo Cannot find $HOME/.$(basename $0) 1>&2 && exit 1
+    dirs="$(grep -v '^$' "$HOME/.$(basename $0)" | sed 's/#.*//')"
     cd
-fi 
+fi
 _filePath=
 for file in $dirs ; do
     [ ! -d "$file" ] && continue
