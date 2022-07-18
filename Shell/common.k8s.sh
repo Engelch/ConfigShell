@@ -69,12 +69,15 @@ function k8Setup() {
          kubectl logs "$2" $_pod # $2 for -f
       }
    }
+
+   alias k8s-help=k8help
 }
 
 
 function common.k8s.init() {
    debug4 common.k8s.init %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    [ ! -z $NO_commonK8s ] && debug exiting common.k8s.sh && return
+   k8Setup
 }
 
 function common.k8s.del() {

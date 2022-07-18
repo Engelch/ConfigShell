@@ -42,6 +42,8 @@ function gihelp() {
     echo 'function gipua() { for remoterepo in $(grep "^\[remote" $(git rev-parse --show-toplevel)/.git/config | sed -e "s/.remote \"//" -e s"/..$//") ; do git push --all $remoterepo ; git push --tags $* ; done ; }'
 }
 
+alias git-help=gihelp
+
 function lower() {
     echo $* | tr "[:upper:]" "[:lower:]"
 }
@@ -52,7 +54,7 @@ function upper() {
 
 function common.git.init() {
     debug4 common.git.init %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    [ ! -z $NO_gitCommon ] && debug exiting common.git.sh && return 
+    [ ! -z $NO_gitCommon ] && debug exiting common.git.sh && return
     debug8 setting up git...
     setupGit
     if [[ "$SHELL" =~ bash && $(lower $NO_gitCompletion) != true ]] ; then
@@ -66,7 +68,7 @@ function common.git.init() {
 
 function common.git.del() {
     debug4 common.git.del %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    if [ ! -z "$gitCompletionLoaded" ] ; then 
+    if [ ! -z "$gitCompletionLoaded" ] ; then
         debug8 removing completions for git, gitk
         complete -r git
         complete -r gitk

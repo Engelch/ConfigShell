@@ -5,6 +5,16 @@ function common.aliases.ls() {
     alias ls="/bin/ls    -hCF       $LS_COLOUR"
 }
 
+function configshell-help() {
+    echo ConfigShell is an OSS repository with mainly bash related aliases.
+    echo It also supports zsh, tmux, git, k8s, and tls/ssh-related topics.
+    echo
+    echo Further, dedicated help can be found with the commands:
+    echo
+    echo git-help
+    echo k8s-help
+}
+
 function common.aliases.init() {
     debug4 common.aliases.init '%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'
     [ ! -z $NO_commonAliases ] && debug exiting common.aliases.sh && return
