@@ -126,7 +126,7 @@ function setupPath() {
         debug8 checking for dir $_POTENTIAL_DIR
         [ -d "$_POTENTIAL_DIR/." ] && debug8 found path element $_POTENTIAL_DIR && echo $_POTENTIAL_DIR >> "$PATHFILE"
     done
-    debug8 setupPath PATHFILE is stage2: $(cat $PATHFILE)
+    debug8 setupPath PATHFILE is stage2: $([ -f $PATHFILE ] && cat $PATHFILE)
     unset _POTENTIAL_DIR
 }
 
