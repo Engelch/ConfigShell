@@ -7,8 +7,8 @@
 
 function debugSet()             { DebugFlag=TRUE; return 0; }
 function debugUnset()           { DebugFlag=; return 0; }
-function debugExecIfDebug()     { [ ! -z $DebugFlag ] && $*; return 0; }
-function debug()                { [ ! -z $DebugFlag ] && err 'DEBUG:' $* 1>&2 ; return 0; }
+function debugExecIfDebug()     { [ "$DebugFlag" = TRUE ] && $*; return 0; }
+function debug()                { [ "$DebugFlag" = TRUE ] && err 'DEBUG:' $* 1>&2 ; return 0; }
 
 function verbose()              { [ "$VerboseFlag" = TRUE ] && echo -n $* ; return 0; }
 function verbosenl()            { [ "$VerboseFlag" = TRUE ] && echo $* ; return 0; }
@@ -67,7 +67,7 @@ while getopts "dfh" o; do
 done
 shift $((OPTIND-1))
 
-#### check if the command-name is structured in such a way that we can 
+#### check if the command-name is structured in such a way that we can
 #### determine the release-type and target OS and architecture by it.
 
 declare -r numSeparatorsInCmd=2     # elements are separated by a dot; 2 => 3 elements
@@ -81,7 +81,7 @@ declare -r _appDir=$(cd $(dirname $0); /bin/pwd)
 declare -r _binDir=${BINDIR:-./build}
 declare -r _osDir=$(echo $0 | sed 's/.*\.//')
 declare -r _osType=$(echo $_osDir | sed 's/_.*//')
-# linux_arm5 introduced as support for CB1. 
+# linux_arm5 introduced as support for CB1.
 # Avoidance of the introduction of a further field to the command name.
 declare -r _osArch=$(echo $_osDir | sed 's/.*_//' | sed 's/arm5$/arm/') # cb1 arm5
 if [ $(echo $_osDir | sed 's/.*_//') = arm5  ] ; then
@@ -92,7 +92,7 @@ case $_releaseType in
     debug) declare -r _ldFlags=${LDFLAGS:-}
         ;;
     release) declare -r _ldFlags=${LDFLAGS:-"-ldflags -w -ldflags -s"}
-        ;; 
+        ;;
     upx) declare -r _ldFlags=${LDFLAGS:-"-ldflags -w -ldflags -s"}
         declare -r _upx=.upx
         [ ! command -v upx  > /dev/null 2>&1 ] && errorExit 20 upx command not found.
@@ -137,7 +137,7 @@ debugExecIfDebug read
 # cd ${_outputDir}
 
 #### do not overwrite an existing version if not _forceMode is set
-[[ -f ${_outputDir}/${_appName}-${_appVersion} && -z ${_forceMode} ]] && errorExit 10 Current version ${_appName}-${_appVersion} already exists. 
+[[ -f ${_outputDir}/${_appName}-${_appVersion} && -z ${_forceMode} ]] && errorExit 10 Current version ${_appName}-${_appVersion} already exists.
 
 echo env GOARCH=${_osArch} GOOS=${_osType} ${_goarm} go build ${_ldFlags} -o ${_outputDir}/${_appName}-${_appVersion}${_upx}
 env GOARCH=${_osArch} GOOS=${_osType} ${_goarm} go build ${_ldFlags} -o ${_outputDir}/${_appName}-${_appVersion}${_upx}

@@ -28,11 +28,10 @@ if [ -f "./versionFilePattern" ] ; then
    [ $(echo $_versionFilePattern | wc -w ) -ne 2 ] && 1>&2 echo 'Versionpattern file should be of the format <filename> <pattern>'
    _file=$(echo $_versionFilePattern | awk '{ print $1 }')
    _pattern=$(echo $_versionFilePattern | awk '{ print $2 }')
-   #echo _file $_file _pattern $_pattern
-   START="egrep $_pattern $_file /dev/null | grep -v '^$' | egrep -v '^[[:space:]]*#'"
+   START="egrep -i $_pattern $_file /dev/null | grep -v '^$' | egrep -v '^[[:space:]]*#'"
 else
    _versionFilePattern='*.go'
-   START="egrep -i$_egrepFlag 'app(\.)?Version[[:space:]]*=' $_versionFilePattern /dev/null | egrep '[0-9]+\.[0-9]+\.[0-9]+' | tail -n1"
+   START="egrep -Ri 'app.?version[[:space:]]*=' . | egrep "\.go:"  | egrep '[0-9]+\.[0-9]+\.[0-9]+' | tail -n1"
 fi
 
 

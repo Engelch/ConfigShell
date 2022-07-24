@@ -7,8 +7,8 @@
 
 function debugSet()             { DebugFlag=TRUE; return 0; }
 function debugUnset()           { DebugFlag=; return 0; }
-function debugExecIfDebug()     { [ ! -z $DebugFlag ] && $*; return 0; }
-function debug()                { [ ! -z $DebugFlag ] && err 'DEBUG:' $* 1>&2 ; return 0; }
+function debugExecIfDebug()     { [ "$DebugFlag" = TRUE ] && $*; return 0; }
+function debug()                { [ "$DebugFlag" = TRUE ] && err 'DEBUG:' $* 1>&2 ; return 0; }
 
 function verbose()              { [ "$VerboseFlag" = TRUE ] && echo -n $* ; return 0; }
 function verbosenl()            { [ "$VerboseFlag" = TRUE ] && echo $* ; return 0; }
@@ -50,7 +50,6 @@ function tempDir()                      { mktemp -d "${TMPDIR:-/tmp/}$_app.YYYYY
 # MAIN ====================================================================
 
 set -e      # exit if error
-
 
 _os=$(uname | tr "A-Z" "a-z")
 _arch=$(uname -m | tr "A-Z" "a-z")
