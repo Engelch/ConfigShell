@@ -68,15 +68,18 @@ function common.aliases.init() {
     alias tj='tmux join-pane -s'
     alias wh=which
 
-    alias prd='tmux select-pane -P "fg=white,bg=color052"' # colour values from https://upload.wikimedia.org/wikipedia/commons/1/15/Xterm_256color_chart.svg
-    alias prdloc='tmux select-pane -P "fg=red,bg=color016"' # colour values from https://upload.wikimedia.org/wikipedia/commons/1/15/Xterm_256color_chart.svg
-    alias prd2=prdloc
-    alias qul='tmux select-pane -P "fg=black,bg=color184"'
-    alias dvl='tmux select-pane -P "fg=white,bg=color017"'
-    alias loc='tmux select-pane -P "fg=white,bg=color237"'
-    alias whbl='tmux select-pane -P "fg=white,bg=black"'
-    alias blwh='tmux select-pane -P "fg=black,bg=white"'
-    # fg=169,bg=color233
+    # all colour-changes to tmux can easily be found using the shell's built-in completion. Older, shorter completions are kept for a while
+    alias tmux-prd='tmux select-pane -P "fg=white,bg=color052"' # colour values from https://upload.wikimedia.org/wikipedia/commons/1/15/Xterm_256color_chart.svg
+    alias tmux-prd2='tmux select-pane -P "fg=red,bg=color016"'  # colour values from https://upload.wikimedia.org/wikipedia/commons/1/15/Xterm_256color_chart.svg
+    alias prd2=tmux-prd2
+    alias tmux-qul='tmux select-pane -P "fg=black,bg=color184"'
+    alias qul=tmux-qul
+    alias tmux-dvl='tmux select-pane -P "fg=white,bg=color017"'
+    alias dvl=tmux-dvl
+    alias tmux-loc='tmux select-pane -P "fg=white,bg=color237"'
+    alias t mux-whbl='tmux select-pane -P "fg=white,bg=black"'
+    alias tmux-blwh='tmux select-pane -P "fg=black,bg=white"'   # fg=169,bg=color233
+
     common.aliases.ls   # potentially reloading/re-evaluated again for colourised-ls from os.$(uname).ls
 }
 
