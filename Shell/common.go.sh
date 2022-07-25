@@ -1,50 +1,71 @@
 
 function setupGo() {
-    alias gopad="checkIfCurrentVersionExisting debug patch"
+    # increase the version number if a binary is already existing,
+    # else compile with the current version number for this release
+
+    alias gopad="increaseVersionNumberIfRequiredAndCompile debug patch"
     alias gopd=gopad
     alias gopa=gopad
-    alias gopar="checkIfCurrentVersionExisting release patch"
 
-    alias gomid="checkIfCurrentVersionExisting debug minor"
+    alias gomid="increaseVersionNumberIfRequiredAndCompile debug minor"
     alias gomi="gomid"
-    alias gomir="checkIfCurrentVersionExisting release minor"
 
-    alias gomad="checkIfCurrentVersionExisting debug major"
+    alias gopar="increaseVersionNumberIfRequiredAndCompile release patch"
+
+    alias gomir="increaseVersionNumberIfRequiredAndCompile release minor"
+
+    alias gomad="increaseVersionNumberIfRequiredAndCompile debug major"
     alias goma="gomad"
-    alias gomar="checkIfCurrentVersionExisting release major"
 
+    alias gomar="increaseVersionNumberIfRequiredAndCompile release major"
+
+    # compile release or debug-build for the current architecture
     alias god=godebug
     alias gor=gorelease
 
-    alias exd=gode
+    # execute the lastest version of the binaries
     alias gode='execHelp debug $*'
-    alias exr=gore
     alias gore='execHelp release $*'
     alias goue='execHelp upx $*'
 
+    # increase and show the new version number
     alias bpa='bumppatch ; version.sh'
     alias bmi='bumpminor ; version.sh'
     alias bma='bumpmajor ; version.sh'
 }
 
-# checkIfCurrentVersionExisting checks if a binary exists for the current version, architecture, and environment. If not,
-# it shall not increase the version number. It is a helper function to be called by gopad, gomid, gomad. If you you for
-# example gopad and the compilation fails, then a next call for gopad would increase the version number further which is
-# often not the intention.
-# This script does not support cross compilation.
+function increaseVersionNumberIfRequiredAndCompile() {
+    checkIfCurrentVersionExisting $1 $2; res=$?
+    case $res in
+    0)  go$1
+        ;;
+    1)  bump$2 ; [ $? -ne 0 ] && echo ERRROR executing bump$2, stop && return 2
+        go$1
+        ;;
+    *) 1>&2 echo ERROR:unsupported exit code from checkIfCurrentVersionExisting $res
+        return 1
+        ;;
+    esac
+}
+
+
+# checkIfCurrentVersionExisting checks if a binary exists for the current version, architecture, and environment. Now,
+# It just returns the result as a return code.
+# checkIfCurrentVersionExisting ( debug | release )
 function checkIfCurrentVersionExisting() {
     if [ "$1" = debug -o "$1" = release ] ; then
         declare -r _releaseType=$1
     else
-        err Wrong call to checkIfCurrentVersionExisting with '$1' being $1
+        err Wrong call to checkIfCurrentVersionExisting with '$1' being $1 and should either be debug or release
         return
     fi
-    if [ "$2" = patch -o "$2" = minor -o "$2" = major ] ; then
-        declare -r _patch=$2
-    else
-        err Wrong call to checkIfCurrentVersionExisting increase type being $2
-        return
-    fi
+    # if [ "$2" = patch -o "$2" = minor -o "$2" = major ] ; then
+    #     declare -r _patch=$2
+    # else
+    #     err Wrong call to checkIfCurrentVersionExisting increase type being $2 and should be either major or minor or patch
+    #     return
+    # fi
+    version.sh > /dev/null ; [ $? -ne 0 ] && 1>&2 echo ERROR:could not determine version number with version.sh. && return 10
     declare -r _binDir=./build
     declare -r _hostarch=$(uname -m | tr "A-Z" "a-z" | sed 's/x86_64/amd64/')
     declare -r _hostostype=$(uname | tr "A-Z" "a-z")
@@ -58,8 +79,8 @@ function checkIfCurrentVersionExisting() {
     debug _outputDir $_outputDir
     debug _version $(version.sh)
     debug _checkname $_outputDir/${_appName}-$(version.sh)
-    [ -e $_checkname ] && echo version existing, increasing && echo bump$_patch && bump$_patch && echo go$_releaseType && go$_releaseType
-    [ ! -e $_checkname ] && echo version NOT existing && echo go$_releaseType && go$_releaseType
+    [ -e $_checkname ] && echo version existing && return 1     # && echo bump$_patch && bump$_patch && echo go$_releaseType && go$_releaseType
+    [ ! -e $_checkname ] && echo version NOT existing && return 0           # echo go$_releaseType && go$_releaseType
 }
 
 function execHelp() {

@@ -77,7 +77,7 @@ function common.aliases.init() {
     alias tmux-dvl='tmux select-pane -P "fg=white,bg=color017"'
     alias dvl=tmux-dvl
     alias tmux-loc='tmux select-pane -P "fg=white,bg=color237"'
-    alias t mux-whbl='tmux select-pane -P "fg=white,bg=black"'
+    alias tmux-whbl='tmux select-pane -P "fg=white,bg=black"'
     alias tmux-blwh='tmux select-pane -P "fg=black,bg=white"'   # fg=169,bg=color233
 
     common.aliases.ls   # potentially reloading/re-evaluated again for colourised-ls from os.$(uname).ls
