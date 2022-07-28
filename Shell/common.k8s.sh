@@ -11,13 +11,16 @@ function k8Setup() {
    alias k8cs='$KUBECTL config set-context' ##
    alias k8cu='$KUBECTL config use-context' ##
    alias k8cv='$KUBECTL config view' ##
+   alias k8gd='$KUBECTL get deploy -o wide' ##
    alias k8gn='$KUBECTL get nodes -o wide' ##
    alias k8gp='$KUBECTL get pods -o wide' ##
    alias k8gs='$KUBECTL get services -o wide' ##
    alias k8ns='$KUBECTL get ns' ##
    alias k8ga='$KUBECTL get all -A -o wide' ##
+   alias k8gaw='$KUBECTL get all -A' ##
    alias kevents='$KUBECTL get events --sort-by=.metadata.creationTimestamp' ##
    alias k8ev=kevents ##
+   alias k8events=kevents ##
 
    function k8describe() { ##
       ## k8describe just requires a unique part of the pod-name.
@@ -44,6 +47,7 @@ function k8Setup() {
       cat  $PROFILES_CONFIG_DIR/Shell/common.k8s.sh | grep -v '#####'  | grep '##' | sed 's/^[[:space:]]*##$//' | sed 's/^[[:space:]]*## /    /' | sed 's/^[[:space:]]*### /    ## /' |  sed 's/^[[:space:]]*#### /    # /'
    }
    alias k8s-help=k8help ##
+   alias k8-help=k8help
 }
 
 
