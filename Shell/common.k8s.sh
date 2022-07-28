@@ -16,8 +16,8 @@ function k8Setup() {
    alias k8gp='$KUBECTL get pods -o wide' ##
    alias k8gs='$KUBECTL get services -o wide' ##
    alias k8ns='$KUBECTL get ns' ##
-   alias k8ga='$KUBECTL get all -A -o wide' ##
-   alias k8gaw='$KUBECTL get all -A' ##
+   alias k8ga='$KUBECTL get all -A' ##
+   alias k8gaw='$KUBECTL get all -A -o wide' ##
    alias kevents='$KUBECTL get events --sort-by=.metadata.creationTimestamp' ##
    alias k8ev=kevents ##
    alias k8events=kevents ##
