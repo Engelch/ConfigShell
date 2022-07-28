@@ -36,7 +36,7 @@ function k8Setup() {
    function k8logs() { ##
       ## k8logs just requires a unique part of the pod-name. -f can be specified.
       local _pod=$($KUBECTL get po | grep -i "$1" | cut -d ' ' -f 1)
-      $KUBECTL logs "$2" $_pod # $2 for -f
+      $KUBECTL logs $2 $_pod # $2 for -f
    }
 
    # help file to show all k8s commands
