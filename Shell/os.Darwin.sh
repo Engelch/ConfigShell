@@ -12,6 +12,7 @@ function setupOSX() {
    alias o=open
    alias vnc='open /System/Library/CoreServices/Applications/Screen\ Sharing.app'
    alias cleandns='sudo killall -HUP mDNSResponder;sudo killall mDNSResponderHelper;sudo dscacheutil -flushcache'
+   alias dns-clean=cleandns # name detectable by service
    # root should use default tools, /opt and /usr/local is of secondary concern only.
    [ $UID -ne 0 ] && for _newApp in getopt curl openssl ; do
       which $_newApp | egrep '^/opt/homebrew|/usr/local' > /dev/null || warning $_newApp does not seem to be from homebrew.
