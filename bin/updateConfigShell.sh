@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-readonly flagFile=$HOME/.updateConfigShell
+flagFile=$HOME/.updateConfigShell
 
 function isOlderThanHours() {
     # $1 hours, uint, >0
