@@ -19,7 +19,7 @@ function isOlderThanHours() {
 }
 
 function updateConfigShell() {
-    echo doing updateConfigShell $*
+    echo -n doing updateConfigShell $* ..... ' '
     [ ! -d "$1" ] && 1>&2 echo supplied argument not a directory $1 && return 10
     if [ -f $flagFile ] ; then
         isOlderThanHours 4 $flagFile && cd "$1" && git pull ; res=$?
