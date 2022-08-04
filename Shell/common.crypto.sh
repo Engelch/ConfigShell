@@ -58,7 +58,7 @@ function start_ssh_agent() {
    ssh-add
 }
 
-function sshagent_init { 
+function sshagent_init {
    #  ssh agent sockets can be attached to a ssh daemon process or an ssh-agent process.
    debug8 common.crypto.sh sshagent_init
 
@@ -67,17 +67,21 @@ function sshagent_init {
       source $ssh_auth_sock_file # SSH_AUTH_SOCK to be read by this file
       export SSH_AUTH_SOCK
       ssh-add -l 2>/dev/null 1>&2 ; res=$?
-      case $res in 
+      case $res in
       0) # ssh-agent loaded, keys loaded
+         debug8 ... ssh-agent and keys found
          return 0
          ;;
       1) # ssh-agent loaded, but no identities loaded
+         debug8 ... ssh-agent found but no keys
          ssh-add
          ;;
       2) # ssh-agent could not be contacted, starting
+         debug8 ... ssh-agent not found
          start_ssh_agent $ssh_auth_sock_file
          ;;
       *) error unhandled error in sshagent_init
+         debug8 ... error in sshagent_init, unknown return value
          ;;
       esac
    else
