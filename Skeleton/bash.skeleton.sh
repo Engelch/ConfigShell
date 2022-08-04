@@ -114,6 +114,17 @@ function exitIfPlainFilesNotExisting()  { for file in $*; do [ ! -f $file ] && e
 function exitIfFilesNotExisting()       { for file in $*; do [ ! -e $file ] && errorExit 255 'file not found:'$file 1>&2; done }
 function exitIfDirsNotExisting()        { for dir in $*; do [ ! -d $dir ] && errorExit 252 "$APP:ERROR:directory not found:"$dir; done }
 
+
+function binaryFoundInPath() {
+   command -v "$1" 2>/dev/null 1>&2 && return 0
+   return 1
+}
+
+function binaryNotFoundInPath() {
+   command -v "$1" 2>/dev/null 1>&2 || return 0
+   return 1
+}
+
 # --- Temporary file/directory  creation
 # -- file creation -- TMP1=$(tempFile); TMP2=$(tempFile) ;;;; trap "rm -f $TMP1 $TMP2" EXIT
 # -- directory creation -- TMPDIR=$(tempDir) ;;;;;  trap "rm -fr $TMPDIR;" EXIT
