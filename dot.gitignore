@@ -4,6 +4,6 @@ coverage.out
 .touchfile
 *.tfstate
 .terraform
-terraform.tfstate.backup
 *.backup
 *~
+*.bak
