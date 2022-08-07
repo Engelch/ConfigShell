@@ -2,6 +2,8 @@ function common.aliases.ls() {
     alias la="/bin/ls    -aCF       $LS_COLOUR"
     alias ll="/bin/ls    -lhF       $LS_COLOUR"
     alias lla="/bin/ls   -laF       $LS_COLOUR"
+    alias lld="/bin/ls   -ldF       $LS_COLOUR"
+    alias llad="/bin/ls  -ladF      $LS_COLOUR"
     alias ls="/bin/ls    -hCF       $LS_COLOUR"
 }
 
