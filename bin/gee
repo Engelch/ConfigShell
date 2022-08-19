@@ -5,15 +5,15 @@
 #
 # DESCRIPTION: <see usage function below>
 #
-# CHANGELOG: 
+# CHANGELOG:
 # - 1.0.0: initial
 #
 # COPYRIGHT © 2022 Christian Engel (mailto:engel-ch@outlook.com)
 #
-# Skeleton: 
+# Skeleton:
 # << deleted >>
 #
-# LICENSE: MIT 
+# LICENSE: MIT
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this
 # software and associated documentation files (the "Software"), to deal in the Software
@@ -49,9 +49,9 @@ function so()
 # always show such a message.  If known terminal, print the message
 # in reverse video mode. This is the other way, not using escape sequences
 {
-   [ "$1" != on -a "$1" != off ] && return 
+   [ "$1" != on -a "$1" != off ] && return
     if [ "$TERM" = xterm -o "$TERM" = vt100 -o "$TERM" = xterm-256color  -o "$TERM" = screen ] ; then
-      [ "$1" = on ] && tput smso 
+      [ "$1" = on ] && tput smso
       [ "$1" = off ] && tput rmso
     fi
 }
@@ -68,7 +68,7 @@ function debug12()              { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:       
 
 # --- Exits
 
-# function error()        { err 'ERROR:' $*; return 0; } # similar to err but with ERROR prefix and possibility to include 
+# function error()        { err 'ERROR:' $*; return 0; } # similar to err but with ERROR prefix and possibility to include
 # Write an error message to stderr. We cannot use err here as the spaces would be removed.
 function error()        { so on; echo 'ERROR:'$* 1>&2;            so off ; return 0; }
 function error4()       { so on; echo 'ERROR:    '$* 1>&2;        so off ; return 0; }
@@ -105,44 +105,51 @@ function tempDir()                      { mktemp -d "${TMPDIR:-/tmp/}$_app.YYYYY
 function usage()
 {
     err DESCRIPTION
-    err4 wrapper for gee functionality. Any short form of the commands are possible.
-    err4 UPPER case names in synopsis are considered to be non-terminals,
-    err4 others are terminals.
+    err4 allow encryption of files in a git repository. Solve some problems with
+    err4 git crypt, git secret, and git secrets.
     err
     err SYNOPSIS
-    err4 $_app '[-D] ENCRYPT <<pwFile>>'
-    err8 'ENCRYPT ::= e | en | enc | encr | encry | encryp | encrypt | encrypted'
+    err4 $_app '[-D] gee init <<pwFile>>'
+    err8 Put git repository under git gee => install a prehook
+    err8 and specify the password file for en- and decryption.
     err
-    err4 $_app '[-D] DECRYPT <<pwFile>>'
-    err8 'DECRYPT ::= d|de|dec|decr|decry|decryp|decrypt| u | unencrypt'
+    err4 $_app gee add '<<file>> ...'
+    err8 - Put file under git.
+    err8 - The current contents will be copied to '<<file>>.gee' and will be encrypted
+    err8 - The current '<<file>>' will be put in .gitignore
+    err8 - Potentially already existing version of '<<file>>' in index will be removed rm --cached
     err
-    err4 $_app '[-D] LST [-q]'
-    err4 $_app '[-D] LST -p | p | -e | e | prv | priv | private | encrypted'
-    err4 $_app '[-D] LST -u | u | -d | d | dec | decr | decrypted | unenc | unencrypt | unencrypted'
-    err8 'LST ::= l|li|lis|list|lst'
+    err4 git commit ...
+    err8 - gee checks for all .gee files if the ignored file without the suffix is younger than the .gee file
+    err8   if existing. If so, it blocks the commit.
     err
-    err4 $_app '-h'
+    err4 git gee unencrypt '<<file>> ...'
+    err8 - creates an uencrypted version of the file. If no argument is given, it does so for all .gee files.
+    err8 - No difference if the file is specified with .gee or without it.
     err
-    err VERSION
-    err4 $_appVersion
+    err4 git gee encrypt '<<file>> ...'
+    err8 todo force mode?
+    err8 - encrypts the specificied files.
+    err8 - No difference if the file is specified with .gee or without it.
     err
-    err OPTIONS
+    err4 git gee list
+    err8 - list files under git gee
+    err
+    err4 git gee version
+    err8 - list the current version of git gee and exits
+    err
+    err4 git gee help
+    err8 - show this help and exits. Same as git gee -h
+    err
+    err4 GLOBAL OPTIONS
     err4 '-D      ::= enable debug output'
     err4 '-h      ::= show usage message and exit with exit code 1'
-    err4 'encrypt file ::= encrypt all private, non-encrypted files with the given pw-file'
-    err4 'decrypt file ::= decrypt all private, encrypted files with the given pw-file'
-    err4 'list    ::= list all private files and show their encryption status'
-    err4 'list -q ::= list all private files without their encryption status'
-    err4 'list -e ::= list only encrypted, private files'
-    err4 'list -p ::= list only encrypted, private files'
-    err4 'list -d ::= list only unencrypted, private files'
-    err4 'list -u ::= list only unencrypted, private files'
 }
 
 function parseCLI() {
     while getopts "Dh" options; do         # Loop: Get the next option;
         case "${options}" in                    # TIMES=${OPTARG}
-            D)  err Debug enabled ; debugSet     
+            D)  err Debug enabled ; debugSet
                 ;;
             h)  usage ; exit 1
                 ;;
@@ -155,26 +162,26 @@ function parseCLI() {
 
 function parseListCLI() {
     debug4 parseListCLI $* ......................
-    case $1 in 
+    case $1 in
     -q|q|quiet)  debug8 quiet mode in list CLI
         _quiet=-q
         shift
         parseListCLI $*
         ;;
-    -d|d|dec|decr|decrypt|decrypted|-u|u|unenc|unencrypt|unencrypted)  
+    -d|d|dec|decr|decrypt|decrypted|-u|u|unenc|unencrypt|unencrypted)
         debug8 decrypted mode in list CLI
         [ "$_encryptedOnly" = TRUE ] && errorExit 20 encrypted und decrypted mode together
         _unencryptedOnly=TRUE
-        shift 
+        shift
         parseListCLI $*
         ;;
-    -e|e|enc|encr|encry|encryp|encrypt|encrypted|-p|p|prv|priv|private)  
+    -e|e|enc|encr|encry|encryp|encrypt|encrypted|-p|p|prv|priv|private)
         debug8 decrypted mode in list CLI
         [ "$_unencryptedOnly" = TRUE ] && errorExit 21 encrypted und decrypted mode together
         _encryptedOnly=TRUE
-        shift 
+        shift
         parseListCLI $*
-        ;;                
+        ;;
     esac
 }
 
@@ -186,44 +193,83 @@ function checkPreCommitHookExisting() {
     return 0
 }
 
+function exitIfNotInGitRepo() {
+    git rev-parse --show-toplevel &>/dev/null || errorExit 11 Not in a git repository
+}
+
+function exitIfNotInGitGeeRepo() {
+    [ ! -f $(git rev-parse --show-toplevel)/.git/gee ] && errorExit 12 Not a git gee repository
+}
+
 function main() {
     exitIfBinariesNotFound tput basename dirname readlink git pwd
-    exitIfFilesNotExisting "$_appDir"/gee-encrypt "$_appDir"/gee-privateFiles
-    parseCLI $* 
+    #exitIfFilesNotExisting "$_appDir"/gee-encrypt "$_appDir"/gee-privateFiles
+    parseCLI $* # help already handled
     shift $(($OPTIND - 1))  # not working inside parseCLI
     debug args after CLI parsing are $*
-    checkPreCommitHookExisting ; res=$? ; [ $res -ne 0 ] && return $res
-    cd "$(git rev-parse --show-toplevel)"
+
     _mode=$1
     case $_mode in
-    l|li|lis|list|lst)
-        debug list mode
+    a|add)
+        debug add mode
+        exitIfNotInGitRepo
+        exitIfNotInGitGeeRepo
         shift
-        parseListCLI $*
-        debug4 parsing result quiet $_quiet, _unencryptedOnly $_unencryptedOnly, _encryptedOnly $_encryptedOnly 
-        if [ ! -z "$_unencryptedOnly" ] ; then
-            "$_appDir"/gee-privateFiles -u
-        elif [ ! -z "$_encryptedOnly" ] ; then
-            "$_appDir"/gee-privateFiles -e
-        else
-            "$_appDir"/gee-privateFiles $_quiet
-        fi
+        for file in $* ; do
+            debug adding file $file to gee
+        done
+        ;;
+    init)
+        debug init mode
+        exitIfNotInGitRepo
+        cd $(git rev-parse --show-toplevel)
+        [ ! -f ../$(basename $PWD).gee.pw ] && errorExit 20 Password file ../$(basename $PWD).gee.pw not found
+        [ ! -r ../$(basename $PWD).gee.pw ] && errorExit 21 Password file ../$(basename $PWD).gee.pw not readable
+        touch $(git rev-parse --show-toplevel)/.git/gee
+        # todo install hook
+        echo todo install hook
+        ;;
+    l|list|lst)
+        debug list mode
+        # checkPreCommitHookExisting ; res=$? ; [ $res -ne 0 ] && return $res
+        shift
+            #git rev-parse --show-toplevel &>/dev/null || errorExit 1 Not in a git repository
+    #cd "$(git rev-parse --show-toplevel)"
+
+        # parseListCLI $*
+        # debug4 parsing result quiet $_quiet, _unencryptedOnly $_unencryptedOnly, _encryptedOnly $_encryptedOnly
+        # if [ ! -z "$_unencryptedOnly" ] ; then
+        #     "$_appDir"/gee-privateFiles -u
+        # elif [ ! -z "$_encryptedOnly" ] ; then
+        #     "$_appDir"/gee-privateFiles -e
+        # else
+        #     "$_appDir"/gee-privateFiles $_quiet
+        # fi
         ;;
     e|en|enc|encr|encry|encryp|encrypt|encrypted)
         debug encrypt mode
-        shift
-        "$_appDir"/gee-encrypt -e $*
+            #git rev-parse --show-toplevel &>/dev/null || errorExit 1 Not in a git repository
+    #cd "$(git rev-parse --show-toplevel)"
+
+        # checkPreCommitHookExisting ; res=$? ; [ $res -ne 0 ] && return $res
+        # shift
+        # "$_appDir"/gee-encrypt -e $*
         ;;
     d|de|dec|decr|decry|decryp|decrypt|u|un|une|unen|unencr|unencry|unencryp|unencrypt|unencrypted)
         debug decrypt mode
-        shift
-        "$_appDir"/gee-encrypt -d $*
-        ;; 
-    *)  usage; exit 2
+            #git rev-parse --show-toplevel &>/dev/null || errorExit 1 Not in a git repository
+    #cd "$(git rev-parse --show-toplevel)"
+
+        # checkPreCommitHookExisting ; res=$? ; [ $res -ne 0 ] && return $res
+        # shift
+        # "$_appDir"/gee-encrypt -d $*
+        ;;
+    *)  [ -z "$_mode" ] && exit 0
+        errorExit 10 unknown sub-command to git gee $_mode
         ;;
     esac
     return 0
-}    
+}
 
 main $*
 
