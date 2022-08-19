@@ -38,7 +38,7 @@
 
 readonly _app=$(basename $0)
 readonly _appDir=$(dirname $(readlink -f $0))
-readonly _appVersion="1.0.3" # use semantic versioning
+readonly _appVersion="2.0.0" # use semantic versioning
 export DebugFlag=${DebugFlag:-FALSE}
 
 #########################################################################################
@@ -138,8 +138,8 @@ function usage()
     err4 git gee version
     err8 - list the current version of git gee and exits
     err
-    err4 git gee help
-    err8 - show this help and exits. Same as git gee -h
+    err4 git gee help '| git gee h | git gee -h'
+    err8 - show this help and exits.
     err
     err4 GLOBAL OPTIONS
     err4 '-D      ::= enable debug output'
@@ -204,7 +204,7 @@ function exitIfNotInGitGeeRepo() {
 function main() {
     exitIfBinariesNotFound tput basename dirname readlink git pwd
     #exitIfFilesNotExisting "$_appDir"/gee-encrypt "$_appDir"/gee-privateFiles
-    parseCLI $* # help already handled
+    parseCLI $*
     shift $(($OPTIND - 1))  # not working inside parseCLI
     debug args after CLI parsing are $*
 
@@ -218,6 +218,10 @@ function main() {
         for file in $* ; do
             debug adding file $file to gee
         done
+        ;;
+    h|help)
+        usage
+        exit 2
         ;;
     init)
         debug init mode
@@ -263,6 +267,10 @@ function main() {
         # checkPreCommitHookExisting ; res=$? ; [ $res -ne 0 ] && return $res
         # shift
         # "$_appDir"/gee-encrypt -d $*
+        ;;
+    version)
+        echo $_appVersion
+        exit 0
         ;;
     *)  [ -z "$_mode" ] && exit 0
         errorExit 10 unknown sub-command to git gee $_mode
