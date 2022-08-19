@@ -66,6 +66,10 @@ function debug4()               { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:    ' $
 function debug8()               { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:        ' $* 1>&2 ; return 0; }
 function debug12()              { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:            ' $* 1>&2 ; return 0; }
 
+function verbose()              { [ "$VerboseFlag" = TRUE ] && echo -n $* ; return 0; }
+function verbosenl()            { [ "$VerboseFlag" = TRUE ] && echo $* ; return 0; }
+function verboseSet()           { VerboseFlag=TRUE; return 0; }
+
 # --- Exits
 
 # function error()        { err 'ERROR:' $*; return 0; } # similar to err but with ERROR prefix and possibility to include
@@ -147,11 +151,13 @@ function usage()
 }
 
 function parseCLI() {
-    while getopts "Dh" options; do         # Loop: Get the next option;
+    while getopts "Dhv" options; do         # Loop: Get the next option;
         case "${options}" in                    # TIMES=${OPTARG}
             D)  err Debug enabled ; debugSet
                 ;;
             h)  usage ; exit 1
+                ;;
+            v)  verboseSet
                 ;;
             *)  err Help with $_app -h
                 exit 2  # Exit abnormally.
@@ -201,6 +207,14 @@ function exitIfNotInGitGeeRepo() {
     [ ! -f $(git rev-parse --show-toplevel)/.git/gee ] && errorExit 12 Not a git gee repository
 }
 
+function git-root-relative-path () {
+    local _gitroot
+    local _absfile
+    gitroot="$(git rev-parse --show-toplevel)"
+    _absfile=$(readlink -f "$1")
+    echo $_absfile | sed s,$gitroot/,,
+}
+
 function main() {
     exitIfBinariesNotFound tput basename dirname readlink git pwd
     #exitIfFilesNotExisting "$_appDir"/gee-encrypt "$_appDir"/gee-privateFiles
@@ -215,8 +229,23 @@ function main() {
         exitIfNotInGitRepo
         exitIfNotInGitGeeRepo
         shift
+        gitroot="$(git rev-parse --show-toplevel)"
         for file in $* ; do
-            debug adding file $file to gee
+            [ ! -e $file ] && errorExit 40 $file does not seem to exist
+            [ ! -f $file ] && errorExit 41 $file is not a plain file
+            [ -e $file.gee ] && errorExit 42 $file.gee already exists
+            _gitFile=$(git-root-relative-path $file)
+            if [ $(egrep $_gitFile "$gitroot/.gitignore" 2>/dev/null | wc -l) -gt 0 ] ; then
+                1>&2 echo WARNING: file $file already in .gitignore
+                [ ! -f "$file.gee" ] && errorExit 43 File in gitignore but no related gee file found.
+                continue
+            fi
+            #echo $_gitFile >> "$gitroot/.gitignore"
+            #git rm --cached $file &>/dev/null # remove file if potentially in index
+            #cp $file $file.gee
+            _geePwFile=$(dirname $gitroot)/$(basename $(git rev-parse --show-toplevel)).gee.pw
+            echo $_geePwFile
+            #ansible-vault encrypt --vault-password-file=. $file.gee
         done
         ;;
     h|help)
@@ -227,45 +256,41 @@ function main() {
         debug init mode
         exitIfNotInGitRepo
         cd $(git rev-parse --show-toplevel)
-        [ ! -f ../$(basename $PWD).gee.pw ] && errorExit 20 Password file ../$(basename $PWD).gee.pw not found
-        [ ! -r ../$(basename $PWD).gee.pw ] && errorExit 21 Password file ../$(basename $PWD).gee.pw not readable
-        touch $(git rev-parse --show-toplevel)/.git/gee
+        [ ! -f ../$(basename $PWD).gee.pw ] && errorExit 30 Password file ../$(basename $PWD).gee.pw not found
+        [ ! -r ../$(basename $PWD).gee.pw ] && errorExit 31 Password file ../$(basename $PWD).gee.pw not readable
+        [ -f .gitignore ] && [ $(egrep '.gee$' .gitignore | wc -l) -gt 0 ] && errorExit 32 .gee files seem to be in .gitignore, please check
+        touch $(git rev-parse --show-toplevel)/.git/gee # make it detectable that gee is applied
         # todo install hook
         echo todo install hook
         ;;
     l|list|lst)
         debug list mode
-        # checkPreCommitHookExisting ; res=$? ; [ $res -ne 0 ] && return $res
         shift
-            #git rev-parse --show-toplevel &>/dev/null || errorExit 1 Not in a git repository
-    #cd "$(git rev-parse --show-toplevel)"
-
-        # parseListCLI $*
-        # debug4 parsing result quiet $_quiet, _unencryptedOnly $_unencryptedOnly, _encryptedOnly $_encryptedOnly
-        # if [ ! -z "$_unencryptedOnly" ] ; then
-        #     "$_appDir"/gee-privateFiles -u
-        # elif [ ! -z "$_encryptedOnly" ] ; then
-        #     "$_appDir"/gee-privateFiles -e
-        # else
-        #     "$_appDir"/gee-privateFiles $_quiet
-        # fi
+        exitIfNotInGitRepo
+        verbosenl Listing from from git root directory:$(git rev-parse --show-toplevel)
+        cd "$(git rev-parse --show-toplevel)"
+        find . -type f -name '*.gee'
         ;;
     e|en|enc|encr|encry|encryp|encrypt|encrypted)
         debug encrypt mode
+        exitIfNotInGitRepo
+        exitIfNotInGitGeeRepo
             #git rev-parse --show-toplevel &>/dev/null || errorExit 1 Not in a git repository
     #cd "$(git rev-parse --show-toplevel)"
 
         # checkPreCommitHookExisting ; res=$? ; [ $res -ne 0 ] && return $res
-        # shift
         # "$_appDir"/gee-encrypt -e $*
         ;;
     d|de|dec|decr|decry|decryp|decrypt|u|un|une|unen|unencr|unencry|unencryp|unencrypt|unencrypted)
         debug decrypt mode
+        exitIfNotInGitRepo
+        exitIfNotInGitGeeRepo
+        shift
             #git rev-parse --show-toplevel &>/dev/null || errorExit 1 Not in a git repository
-    #cd "$(git rev-parse --show-toplevel)"
+        #cd "$(git rev-parse --show-toplevel)"
 
         # checkPreCommitHookExisting ; res=$? ; [ $res -ne 0 ] && return $res
-        # shift
+
         # "$_appDir"/gee-encrypt -d $*
         ;;
     version)
