@@ -123,7 +123,7 @@ function usage()
     err8 - The current '<<file>>' will be put in .gitignore
     err8 - Potentially already existing version of '<<file>>' in index will be removed rm --cached
     err
-    err4 $_app '(clean | c) [ -f | --force ]' 
+    err4 $_app '(clean | c) [ -f | --force ]'
     err8 delete the unencrypted versions of gee files if they are older than the correspondig gee files.
     err8 In force mode, delete the unencrypted files even if they are younger thane the correspondig gee files.
     err
@@ -186,7 +186,7 @@ function exitIfNotInGitRepo() {
 }
 
 function exitIfNotInGitGeeRepo() {
-    echo $gitroot/.git/gee 
+    echo $gitroot/.git/gee
     [ ! -f $gitroot/.git/gee ] && errorExit 12 Not a git gee repository
 }
 
@@ -254,7 +254,7 @@ function initMode() {
 
 function endecryptFile2() {
     debug encryptFile $*
-    local _mode=$1 ; shift 
+    local _mode=$1 ; shift
     [ -z "$1" ] && errorExit 60 missing pw argument to encryptFile
     local _pw=$1
     shift
@@ -286,7 +286,8 @@ function addMode() {
     for file in $* ; do
         [ ! -e $file ] && errorExit 40 $file does not seem to exist
         [ ! -f $file ] && errorExit 41 $file is not a plain file
-        gitFile=$(git-root-relative-path $file)
+        [ -f $file.gee ] && errorExit 42 $file.gee already existing
+        local gitFile=$(git-root-relative-path $file)
         if [ $(egrep $gitFile $gitignore 2>/dev/null | wc -l) -gt 0 ] ; then
             1>&2 echo WARNING: file $file already in .gitignore
             [ ! -f "$file.gee" ] && errorExit 43 File in gitignore but no related gee file found.
@@ -302,8 +303,24 @@ function addMode() {
 }
 
 function clearMode() {
-    # todo    
+    # todo
     initDefaultVars
+}
+
+function decryptModeFile() {
+    local file=$1
+    debug decryptModeFile processing file $file
+    _basefile=$(basename $file .gee)    # make sure, we have the correspondig gee file
+    _geefile=$_basefile.gee    # make sure, we have the correspondig gee file
+    [ ! -f $_geefile ] && errorExit 70 decryptModeFile file $_geefile does not exist for decryption
+    if [ ! -f $_basefile -o $_geefile -nt $_basefile -o "$_force" = TRUE ] ; then
+        /bin/cp -f $_geefile $_basefile
+        decryptFile $_basefile
+        eval $(stat -s $_geefile)
+
+    else
+        1>&2 echo WARNING: not decrypting $_geefile as the correspondig unencrypted file is younger
+    fi
 }
 
 function decryptMode() {
@@ -313,11 +330,32 @@ function decryptMode() {
     exitIfNotInGitGeeRepo
     exitIfBinariesNotFound ansible-vault
     shift
+    if [ "$1" = -f -o "$1" = --force ] ; then _force=TRUE ; shift ; else _force= ; fi
         #git rev-parse --show-toplevel &>/dev/null || errorExit 1 Not in a git repository
     #cd "$gitroot"
 
     # checkPreCommitHookExisting ; res=$? ; [ $res -ne 0 ] && return $res
 
+}
+
+function encryptModeFile() {
+    local file=$1
+    debug encryptModeFile processing file $file
+    _basefile=$(basename $file .gee)
+    debug basefile is $_basefile
+    if [ -f $_basefile ] ; then
+        debug basefile existing
+        if [ $_basefile -nt $file -o ! "$_force" = TRUE ] ; then
+            echo -n Encrypting file $file ' '
+            /bin/cp -f $_basefile $file
+            encryptFile $geePwFile $file
+            git add $file
+        else
+            echo $file newer than $_basefile
+        fi
+    else
+        echo NO $_basefile for $file
+    fi
 }
 
 function encryptMode() {
@@ -329,9 +367,14 @@ function encryptMode() {
     shift
     if [ "$1" = -f -o "$1" = --force ] ; then _force=TRUE ; shift ; else _force= ; fi # in force mode, encrypt file anyway if unencrypted version exists
     if [ -z "$*" ] ; then # all gee file mode
-        :
+        cd "$gitroot"
+        for file in $(find . -type f -name '*.gee' -print) ; do
+            encryptModeFile $file
+        done
     else # specificed gee file mode
-        :
+        for file in $* ; do
+            encryptModeFile $file
+        done
     fi
 }
 
