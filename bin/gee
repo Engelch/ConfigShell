@@ -90,7 +90,7 @@ function err4()         { echo '   ' $* 1>&2; }           # just write to stderr
 function err8()         { echo '       ' $* 1>&2; }       # just write to stderr
 function err12()        { echo '           ' $* 1>&2; }   # just write to stderr
 
-# --- Existance checks
+# --- Existence checks
 function exitIfBinariesNotFound()       { for file in $@; do [ $(command -v "$file") ] || errorExit 253 binary not found: $file; done }
 function exitIfPlainFilesNotExisting()  { for file in $*; do [ ! -f $file ] && errorExit 254 'plain file not found:'$file 1>&2; done }
 function exitIfFilesNotExisting()       { for file in $*; do [ ! -e $file ] && errorExit 255 'file not found:'$file 1>&2; done }
@@ -109,7 +109,7 @@ function tempDir()                      { mktemp -d "${TMPDIR:-/tmp/}$_app.YYYYY
 function usage()
 {
     err DESCRIPTION
-    err4 allow encryption of files in a git repository. Solve some problems with
+    err4 $_app allows for the encryption of files in a git repository. Solve some problems with
     err4 git crypt, git secret, and git secrets.
     err
     err SYNOPSIS
@@ -117,37 +117,44 @@ function usage()
     err8 Put git repository under git gee => install a prehook
     err8 and specify the password file for en- and decryption.
     err
-    err4 $_app gee add '<<file>> ...'
+    err4 $_app '( add | a )' '<<file>> ...'
     err8 - Put file under git.
     err8 - The current contents will be copied to '<<file>>.gee' and will be encrypted
     err8 - The current '<<file>>' will be put in .gitignore
     err8 - Potentially already existing version of '<<file>>' in index will be removed rm --cached
     err
-    err4 git commit ...
-    err8 - gee checks for all .gee files if the ignored file without the suffix is younger than the .gee file
-    err8   if existing. If so, it blocks the commit.
+    err4 $_app '(clean | c) [ -f | --force ]' 
+    err8 delete the unencrypted versions of gee files if they are older than the correspondig gee files.
+    err8 In force mode, delete the unencrypted files even if they are younger thane the correspondig gee files.
     err
-    err4 git gee unencrypt '<<file>> ...'
-    err8 - creates an uencrypted version of the file. If no argument is given, it does so for all .gee files.
+    err4 $_app '( unencrypt | u | un | unenc | unencr )' '<<file>> ...'
+    err8 - creates an unencrypted version of the file. If no argument is given, it does so for all .gee files.
     err8 - No difference if the file is specified with .gee or without it.
     err
-    err4 git gee encrypt '<<file>> ...'
+    err4 $_app '( e | enc | encr | encrypt)' '[ -f | --force ] <<file>> ...'
     err8 todo force mode?
     err8 - encrypts the specificied files.
     err8 - No difference if the file is specified with .gee or without it.
+    err8 - -f force mode
     err
-    err4 git gee list
+    err4 $_app '( list | lst | l )'
     err8 - list files under git gee
     err
-    err4 git gee version
+    err4 $_app version
     err8 - list the current version of git gee and exits
     err
-    err4 git gee help '| git gee h | git gee -h'
-    err8 - show this help and exits.
+    err4 $_app '( help | h | -h )'
+    err8 - show this help and exits with exit code 1.
+    err
+    err4 git commit '[ -n ]' ...
+    err8 - gee checks for all .gee files if the ignored file without the suffix is younger than the .gee file
+    err12   if existing. If so, it blocks the commit.
+    err8 -n prevents the checks and commits anyway.
     err
     err4 GLOBAL OPTIONS
-    err4 '-D      ::= enable debug output'
-    err4 '-h      ::= show usage message and exit with exit code 1'
+    err8 '-D      ::= enable debug output'
+    err8 '-v      ::= verbose mode'
+    err8 '-h      ::= show usage message and exit with exit code 1'
 }
 
 function parseCLI() {
@@ -166,33 +173,8 @@ function parseCLI() {
     done
 }
 
-function parseListCLI() {
-    debug4 parseListCLI $* ......................
-    case $1 in
-    -q|q|quiet)  debug8 quiet mode in list CLI
-        _quiet=-q
-        shift
-        parseListCLI $*
-        ;;
-    -d|d|dec|decr|decrypt|decrypted|-u|u|unenc|unencrypt|unencrypted)
-        debug8 decrypted mode in list CLI
-        [ "$_encryptedOnly" = TRUE ] && errorExit 20 encrypted und decrypted mode together
-        _unencryptedOnly=TRUE
-        shift
-        parseListCLI $*
-        ;;
-    -e|e|enc|encr|encry|encryp|encrypt|encrypted|-p|p|prv|priv|private)
-        debug8 decrypted mode in list CLI
-        [ "$_unencryptedOnly" = TRUE ] && errorExit 21 encrypted und decrypted mode together
-        _encryptedOnly=TRUE
-        shift
-        parseListCLI $*
-        ;;
-    esac
-}
-
 function checkPreCommitHookExisting() {
-    readonly _hook=$(git rev-parse --show-toplevel)/.git/hooks/pre-commit
+    readonly _hook=$gitroot/.git/hooks/pre-commit
     [ -e "$_hook" -a ! -f "$_hook" ] && error Other object type with name $_hook && return 1
     [ ! -f "$_hook" ] && error Hook $_hook not found. && return 2
     [ ! -r "$_hook" ] && error Hook $_hook not readable. && return 3
@@ -204,104 +186,202 @@ function exitIfNotInGitRepo() {
 }
 
 function exitIfNotInGitGeeRepo() {
-    [ ! -f $(git rev-parse --show-toplevel)/.git/gee ] && errorExit 12 Not a git gee repository
+    echo $gitroot/.git/gee 
+    [ ! -f $gitroot/.git/gee ] && errorExit 12 Not a git gee repository
 }
 
 function git-root-relative-path () {
-    local _gitroot
-    local _absfile
-    gitroot="$(git rev-parse --show-toplevel)"
+    local absfile
     _absfile=$(readlink -f "$1")
     echo $_absfile | sed s,$gitroot/,,
 }
 
+function initDefaultVars() {
+    declare -gr gitroot="$(git rev-parse --show-toplevel)"
+    declare -gr gitignore="$gitroot/.gitignore"
+    declare -gr geePwFile=$(dirname $gitroot)/$(basename $gitroot).gee.pw
+    debug initDefaultVars gitroot $gitroot gitignore $gitignore geePwFile $geePwFile
+}
+
+function createPreCommit() {
+    # single-quotes around ENDINIT prevents evaluation of vars inside here document
+    cat  >| .git/hooks/pre-commit <<'ENDINIT'
+#!/usr/bin/env bash
+
+# --- debug: Conditional debugging. All commands begin w/ debug.
+
+function debugSet()             { DebugFlag=TRUE; return 0; }
+function debug()                { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:'$* 1>&2 ; return 0; }
+
+function initDefaultVars() {
+    declare -gr gitroot="$(git rev-parse --show-toplevel)"
+    declare -gr geePwFile=$(dirname "$gitroot")/$(basename "$gitroot").gee.pw
+}
+
+function main() {
+    initDefaultVars
+    cd "$gitroot"
+    debug pre-commit starting from $(pwd)
+    for file in $(find . -name '*.gee' -type f -print) ; do
+        debug working on $file
+        _noGeeFile=$(basename $file .gee)
+        _noGeeDir=$(dirname $file)
+        if [ -f "$_noGeeDir/$_noGeeFile"  ] ; then
+            [ "$_noGeeDir/$_noGeeFile" -nt "$file"  ] && 1>&2 echo $file older than unencrypted file && exit 1
+        fi
+    done
+}
+
+main $*
+ENDINIT
+    res=$? && chmod 755 .git/hooks/pre-commit
+    return $?
+}
+
+function initMode() {
+    debug init mode
+    exitIfNotInGitRepo
+    initDefaultVars
+    cd $gitroot
+    [ ! -f $geePwFile ] && errorExit 30 Password file $geePwFile not found
+    [ ! -r $geePwFile ] && errorExit 31 Password file $geePwFile not readable
+    [ -f .gitignore ] && [ $(egrep '.gee$' .gitignore | wc -l) -gt 0 ] && errorExit 32 .gee files seem to be in .gitignore, please check
+    [ -f .git/hooks/pre-commit ] && errorExit 33 pre-commit already existing.
+    createPreCommit ; res=$?
+    [ $res -eq 0 ] && touch $gitroot/.git/gee && return 0 # make it detectable that gee is applied
+    return 39
+}
+
+function endecryptFile2() {
+    debug encryptFile $*
+    local _mode=$1 ; shift 
+    [ -z "$1" ] && errorExit 60 missing pw argument to encryptFile
+    local _pw=$1
+    shift
+    [ -z "$1" ] && errorExit 61 missing file argument to encryptFile
+    TMP1=$(tempFile) ; trap "/bin/rm -f $TMP1" EXIT
+    for file in $* ; do
+        /bin/cp -f $file $TMP1 ; [ $? -ne 0 ] && echo copying file error
+        echo -n "Procssesing file $file "
+        ansible-vault $_mode --vault-password-file $_pw $TMP1 ; [ $? -ne 0 ] && echo encrypting file error
+        /bin/mv -f $TMP1 $file ; [ $? -ne 0 ] && echo moving processed file error
+    done
+}
+
+function encryptFile() {
+    endecryptFile2 encrypt $*
+}
+
+function decryptFile() {
+    endecryptFile2 decrypt $*
+}
+
+function addMode() {
+    debug add mode
+    exitIfNotInGitRepo
+    initDefaultVars
+    exitIfNotInGitGeeRepo
+    exitIfBinariesNotFound ansible-vault
+    shift
+    for file in $* ; do
+        [ ! -e $file ] && errorExit 40 $file does not seem to exist
+        [ ! -f $file ] && errorExit 41 $file is not a plain file
+        gitFile=$(git-root-relative-path $file)
+        if [ $(egrep $gitFile $gitignore 2>/dev/null | wc -l) -gt 0 ] ; then
+            1>&2 echo WARNING: file $file already in .gitignore
+            [ ! -f "$file.gee" ] && errorExit 43 File in gitignore but no related gee file found.
+            continue
+        fi
+        echo $gitFile >> "$gitroot/.gitignore"
+        git add "$gitroot/.gitignore"
+        git rm --cached $file &>/dev/null # remove file if potentially in index
+        cp $file $file.gee
+        encryptFile $geePwFile $file.gee
+        git add $file.gee
+    done
+}
+
+function clearMode() {
+    # todo    
+    initDefaultVars
+}
+
+function decryptMode() {
+    debug decrypt mode
+    exitIfNotInGitRepo
+    initDefaultVars
+    exitIfNotInGitGeeRepo
+    exitIfBinariesNotFound ansible-vault
+    shift
+        #git rev-parse --show-toplevel &>/dev/null || errorExit 1 Not in a git repository
+    #cd "$gitroot"
+
+    # checkPreCommitHookExisting ; res=$? ; [ $res -ne 0 ] && return $res
+
+}
+
+function encryptMode() {
+    debug encrypt mode
+    exitIfNotInGitRepo
+    initDefaultVars
+    exitIfNotInGitGeeRepo
+    exitIfBinariesNotFound ansible-vault
+    shift
+    if [ "$1" = -f -o "$1" = --force ] ; then _force=TRUE ; shift ; else _force= ; fi # in force mode, encrypt file anyway if unencrypted version exists
+    if [ -z "$*" ] ; then # all gee file mode
+        :
+    else # specificed gee file mode
+        :
+    fi
+}
+
+function listMode() {
+    debug list mode
+    shift
+    exitIfNotInGitRepo
+    initDefaultVars
+    verbosenl Listing from from git root directory:$gitroot
+    cd "$gitroot"
+    find . -type f -name '*.gee'
+}
+
 function main() {
     exitIfBinariesNotFound tput basename dirname readlink git pwd
-    #exitIfFilesNotExisting "$_appDir"/gee-encrypt "$_appDir"/gee-privateFiles
     parseCLI $*
     shift $(($OPTIND - 1))  # not working inside parseCLI
     debug args after CLI parsing are $*
 
-    _mode=$1
-    case $_mode in
+    case $1 in
     a|add)
-        debug add mode
-        exitIfNotInGitRepo
-        exitIfNotInGitGeeRepo
-        shift
-        gitroot="$(git rev-parse --show-toplevel)"
-        for file in $* ; do
-            [ ! -e $file ] && errorExit 40 $file does not seem to exist
-            [ ! -f $file ] && errorExit 41 $file is not a plain file
-            [ -e $file.gee ] && errorExit 42 $file.gee already exists
-            _gitFile=$(git-root-relative-path $file)
-            if [ $(egrep $_gitFile "$gitroot/.gitignore" 2>/dev/null | wc -l) -gt 0 ] ; then
-                1>&2 echo WARNING: file $file already in .gitignore
-                [ ! -f "$file.gee" ] && errorExit 43 File in gitignore but no related gee file found.
-                continue
-            fi
-            #echo $_gitFile >> "$gitroot/.gitignore"
-            #git rm --cached $file &>/dev/null # remove file if potentially in index
-            #cp $file $file.gee
-            _geePwFile=$(dirname $gitroot)/$(basename $(git rev-parse --show-toplevel)).gee.pw
-            echo $_geePwFile
-            #ansible-vault encrypt --vault-password-file=. $file.gee
-        done
+        addMode $*
+        ;;
+    c|clear)
+        clearMode $*
         ;;
     h|help)
         usage
-        exit 2
+        exit 1
         ;;
     init)
-        debug init mode
-        exitIfNotInGitRepo
-        cd $(git rev-parse --show-toplevel)
-        [ ! -f ../$(basename $PWD).gee.pw ] && errorExit 30 Password file ../$(basename $PWD).gee.pw not found
-        [ ! -r ../$(basename $PWD).gee.pw ] && errorExit 31 Password file ../$(basename $PWD).gee.pw not readable
-        [ -f .gitignore ] && [ $(egrep '.gee$' .gitignore | wc -l) -gt 0 ] && errorExit 32 .gee files seem to be in .gitignore, please check
-        touch $(git rev-parse --show-toplevel)/.git/gee # make it detectable that gee is applied
-        # todo install hook
-        echo todo install hook
+        initMode $*
         ;;
     l|list|lst)
-        debug list mode
-        shift
-        exitIfNotInGitRepo
-        verbosenl Listing from from git root directory:$(git rev-parse --show-toplevel)
-        cd "$(git rev-parse --show-toplevel)"
-        find . -type f -name '*.gee'
+        listMode $*
         ;;
     e|en|enc|encr|encry|encryp|encrypt|encrypted)
-        debug encrypt mode
-        exitIfNotInGitRepo
-        exitIfNotInGitGeeRepo
-            #git rev-parse --show-toplevel &>/dev/null || errorExit 1 Not in a git repository
-    #cd "$(git rev-parse --show-toplevel)"
-
-        # checkPreCommitHookExisting ; res=$? ; [ $res -ne 0 ] && return $res
-        # "$_appDir"/gee-encrypt -e $*
+        encryptMode $*
         ;;
     d|de|dec|decr|decry|decryp|decrypt|u|un|une|unen|unencr|unencry|unencryp|unencrypt|unencrypted)
-        debug decrypt mode
-        exitIfNotInGitRepo
-        exitIfNotInGitGeeRepo
-        shift
-            #git rev-parse --show-toplevel &>/dev/null || errorExit 1 Not in a git repository
-        #cd "$(git rev-parse --show-toplevel)"
-
-        # checkPreCommitHookExisting ; res=$? ; [ $res -ne 0 ] && return $res
-
-        # "$_appDir"/gee-encrypt -d $*
+        decryptMode $*
         ;;
     version)
         echo $_appVersion
         exit 0
         ;;
-    *)  [ -z "$_mode" ] && exit 0
-        errorExit 10 unknown sub-command to git gee $_mode
+    *)  [ -z "$1" ] && exit 0
+        errorExit 10 unknown sub-command to git gee $1
         ;;
     esac
-    return 0
 }
 
 main $*
