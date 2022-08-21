@@ -165,20 +165,8 @@ function git-root-relative-path () {
     echo $_absfile | sed s,$gitroot/,,
 }
 
-function parseCLI() {
-    while getopts "Dhv" options; do         # Loop: Get the next option;
-        case "${options}" in                    # TIMES=${OPTARG}
-            D)  err Debug enabled ; debugSet
-                ;;
-            h)  usage ; exit 1
-                ;;
-            v)  verboseSet
-                ;;
-            *)  err Help with $_app -h
-                exit 2  # Exit abnormally.
-                ;;
-        esac
-    done
+function exitIfNotInGitRepo() {
+    git rev-parse --show-toplevel &>/dev/null || errorExit 11 Not in a git repository
 }
 
 function mtime() {
@@ -196,16 +184,31 @@ function mtimeSet() {
 
 }
 
+#############################################################################################
+#############################################################################################
+
+function parseCLI() {
+    while getopts "Dhv" options; do         # Loop: Get the next option;
+        case "${options}" in                    # TIMES=${OPTARG}
+            D)  err Debug enabled ; debugSet
+                ;;
+            h)  usage ; exit 1
+                ;;
+            v)  verboseSet
+                ;;
+            *)  err Help with $_app -h
+                exit 2  # Exit abnormally.
+                ;;
+        esac
+    done
+}
+
 function checkPreCommitHookExisting() {
     readonly _hook=$gitroot/.git/hooks/pre-commit
     [ -e "$_hook" -a ! -f "$_hook" ] && error Other object type with name $_hook && return 1
     [ ! -f "$_hook" ] && error Hook $_hook not found. && return 2
     [ ! -r "$_hook" ] && error Hook $_hook not readable. && return 3
     return 0
-}
-
-function exitIfNotInGitRepo() {
-    git rev-parse --show-toplevel &>/dev/null || errorExit 11 Not in a git repository
 }
 
 function exitIfNotInGitGeeRepo() {
@@ -263,6 +266,8 @@ ENDINIT
     res=$? && chmod 755 .git/hooks/pre-commit
     return $?
 }
+
+#############################################################################################
 
 function initMode() {
     debug init mode
@@ -323,25 +328,23 @@ function addMode() {
     for file in $* ; do
         [ ! -e $file ] && errorExit 40 $file does not seem to exist
         [ ! -f $file ] && errorExit 41 $file is not a plain file
-        [[ $file =~ .*.gee ]] && errorExit 44 not adding .gee files
-        [ -f $file.gee ] && errorExit 42 $file.gee already existing
+        [[ $file =~ .*.gee ]] && errorExit 42 not adding .gee files
+        [ -f $file.gee ] && errorExit 43 $file.gee already existing
         local gitFile=$(git-root-relative-path $file)
         if [ $(egrep $gitFile $gitignore 2>/dev/null | wc -l) -gt 0 ] ; then
             1>&2 echo WARNING: file $file already in .gitignore
-            [ ! -f "$file.gee" ] && errorExit 43 File in gitignore but no related gee file found.
-            continue
+        else
+            echo /$gitFile >> "$gitroot/.gitignore"
+            git add "$gitroot/.gitignore" || errorExit 44 adding .gitignore
         fi
-        echo /$(git-root-relative-path $file) >> "$gitroot/.gitignore"
-        git add "$gitroot/.gitignore"
         git rm --cached $file &>/dev/null # remove file if potentially in index
-        TMP2=$(tempFile) ; trap "/bin/rm -f $TMP2 &>/dev/null" EXIT
-        cp $file $TMP2
-        encryptFile $geePwFile $TMP2 || errorExit 45 error encrypting file $file as $TMP2
-        mv -f $TMP2 $file.gee || errorExit 46 error moving encrypted file $file.gee into place
-        debug adding $file.gee
-        git add $(git-root-relative-path $file.gee) || errorExit 47 error adding encrypted file to index 
+        encryptFile $geePwFile $file $file.gee || errorExit 45 error encrypting file $file as $TMP2
+        debug4 adding $file.gee
+        git add $file.gee || errorExit 46 error adding encrypted file to index 
     done
 }
+
+#############################################################################################
 
 function cleanMode() {
     debug clean mode
@@ -349,25 +352,28 @@ function cleanMode() {
     initDefaultVars
     exitIfNotInGitGeeRepo
     shift
-    if [ "$1" = -f -o "$1" = --force ] ; then _force=TRUE ; shift ; else _force= ; fi
+    if [ "$1" = -f -o "$1" = --force ] ; then _force=TRUE ; else _force= ; fi
     cd $gitroot
     local basefile
     for file in $(find . -name \*.gee  -type f -print ) ; do 
-        basefile=$(basename $file .gee)
+        basefile=$(dirname $file)/$(basename $file .gee)
         if [ -f $basefile ] ; then
             if [ $basefile -nt $file ] ; then 
                 if [ "$_force" = TRUE ] ; then 
-                    /bin/rm -f $basefile 
+                    /bin/rm -f $basefile || errorExit 91 error deleting file $basefile 
                 else
                     errorExit 90 clean mode file $basefile newer than $file 
                 fi 
             else 
-                /bin/rm -f $basefile
+                /bin/rm -f $basefile || errorExit 92 error deleting file $basefile
             fi 
         fi 
     done            
 }
 
+#############################################################################################
+
+# decryptModeFile is a helper for decryptMode
 function decryptModeFile() {
     local file=$1
     debug decryptModeFile processing file $file
@@ -375,8 +381,7 @@ function decryptModeFile() {
     _geefile=$(dirname $file)/$(basename $file .gee).gee    # make sure, we have the correspondig gee file
     [ ! -f $_geefile ] && errorExit 70 decryptModeFile file $_geefile does not exist for decryption
     if [ ! -f $_basefile -o $_geefile -nt $_basefile -o "$_force" = TRUE ] ; then
-        /bin/cp -f $_geefile $_basefile
-        decryptFile $geePwFile $_basefile
+        decryptFile $geePwFile $_geefile $_basefile || errorExit 71 while decrypting file $_geefile
         touch -r $_geefile $_basefile
     else
         1>&2 echo WARNING: not decrypting $_geefile as the correspondig unencrypted file is younger
@@ -403,23 +408,23 @@ function decryptMode() {
     fi
 }
 
+#############################################################################################
+
+# encryptModeFile called with non .gee suffix
 function encryptModeFile() {
     local file=$1
     debug encryptModeFile processing file $file
-    _basefile=$(dirname $file)/$(basename $file .gee)
-    debug4 basefile is $_basefile
-    if [ -f $_basefile ] ; then
-        debug4 basefile existing
-        if [ $_basefile -nt $file -o ! "$_force" = TRUE ] ; then
-            echo -n Encrypting file $file ' '
-            /bin/cp -f $_basefile $file
-            encryptFile $geePwFile $file
-            git add $file
+    if [ -f $file ] ; then
+        debug4 $file existing
+        if [ $file -nt $file.gee -o ! "$_force" = TRUE ] ; then
+            debug4 Encrypting file $file ' '
+            encryptFile $geePwFile $file $file.gee || errorExit 100 encrypting file $file to $file.gee
+            git add $file.gee ||  errorExit 101 adding $file.gee to index
         else
-            echo $file newer than $_basefile
+            echo $file not newer than $file.gee, no change, continuing
         fi
     else
-        echo NO $_basefile for $file
+        echo NO $file for $file.gee, continuing
     fi
 }
 
@@ -438,11 +443,13 @@ function encryptMode() {
         done
     else # specificed gee file mode
         for file in $* ; do
-            _geefile=$(basename $file .gee).gee     # use the gee version of a file
+            _geefile=$(dirname $file)/$(basename $file .gee)     # use the gee version of a file
             encryptModeFile $file
         done
     fi
 }
+
+#############################################################################################
 
 function listMode() {
     debug list mode
@@ -462,6 +469,9 @@ function listMode() {
         echo
     done
 }
+
+#############################################################################################
+#############################################################################################
 
 function main() {
     exitIfBinariesNotFound tput basename dirname readlink git pwd
