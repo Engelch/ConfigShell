@@ -214,10 +214,15 @@ function exitIfNotInGitGeeRepo() {
 }
 
 function initDefaultVars() {
-    declare -gr gitroot="$(git rev-parse --show-toplevel)"
-    declare -gr gitignore="$gitroot/.gitignore"
-    declare -gr geePwFile=$(dirname $gitroot)/$(basename $gitroot).gee.pw
-    debug initDefaultVars gitroot $gitroot gitignore $gitignore geePwFile $geePwFile
+    if [ -z "$geeInitDefaultVars" ] ; then 
+        declare -gr gitroot="$(git rev-parse --show-toplevel)"
+        declare -gr gitignore="$gitroot/.gitignore"
+        declare -gr geePwFile=$(dirname $gitroot)/$(basename $gitroot).gee.pw
+        declare -gr geeInitDefaultVars=TRUE
+        debug initDefaultVars gitroot $gitroot gitignore $gitignore geePwFile $geePwFile
+    else 
+        debug initDefaultVars already set
+    fi
 }
 
 function createPreCommit() {
@@ -288,9 +293,10 @@ function endecryptFile2() {
     for file in $* ; do
         /bin/cp -f $file $TMP1 ; [ $? -ne 0 ] && echo copying file error
         echo -n "Procssesing file $file "
-        ansible-vault $_mode --vault-password-file $_pw $TMP1 ; [ $? -ne 0 ] && echo encrypting file error
-        /bin/mv -f $TMP1 $file ; [ $? -ne 0 ] && echo moving processed file error
+        ansible-vault $_mode --vault-password-file $_pw $TMP1 ; [ $? -ne 0 ] && errorExit 64 encrypting file $TMP1 
+        /bin/mv -f $TMP1 $file ; [ $? -ne 0 ] && errorExit 65 moving encrypted file $TMP1 back 
     done
+    return 0
 }
 
 function encryptFile() {
@@ -322,13 +328,15 @@ function addMode() {
             [ ! -f "$file.gee" ] && errorExit 43 File in gitignore but no related gee file found.
             continue
         fi
-        echo $(git-root-relative-path gitFile) >> "$gitroot/.gitignore"
+        echo /$(git-root-relative-path $file) >> "$gitroot/.gitignore"
         git add "$gitroot/.gitignore"
         git rm --cached $file &>/dev/null # remove file if potentially in index
-        cp $file $file.gee
-        encryptFile $geePwFile $file.gee
+        TMP2=$(tempFile) ; trap "/bin/rm -f $TMP2 &>/dev/null" EXIT
+        cp $file $TMP2
+        encryptFile $geePwFile $TMP2 || errorExit 45 error encrypting file $file as $TMP2
+        mv -f $TMP2 $file.gee || errorExit 46 error moving encrypted file $file.gee into place
         debug adding $file.gee
-        git add $(git-root-relative-path $file.gee)
+        git add $(git-root-relative-path $file.gee) || errorExit 47 error adding encrypted file to index 
     done
 }
 
@@ -395,10 +403,10 @@ function decryptMode() {
 function encryptModeFile() {
     local file=$1
     debug encryptModeFile processing file $file
-    _basefile=$(basename $file .gee)
-    debug basefile is $_basefile
+    _basefile=$(dirname $file)/$(basename $file .gee)
+    debug4 basefile is $_basefile
     if [ -f $_basefile ] ; then
-        debug basefile existing
+        debug4 basefile existing
         if [ $_basefile -nt $file -o ! "$_force" = TRUE ] ; then
             echo -n Encrypting file $file ' '
             /bin/cp -f $_basefile $file
@@ -444,7 +452,7 @@ function listMode() {
     local file
     for file in $(find . -type f -name '*.gee' -print) ; do 
         echo -n $file 
-        _basefile=$(basename $file .gee) 
+        _basefile=$(dirname $file)/$(basename $file .gee) 
         [ -f $_basefile ] && found=1 && echo -n " ($_basefile existing"
         [ $_basefile -nt $file ] && echo ', modified)' && continue
         [ $found -eq 1 ] && echo -n ')' && found=0 
