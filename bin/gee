@@ -97,7 +97,7 @@ function exitIfFilesNotExisting()       { for file in $*; do [ ! -e $file ] && e
 function exitIfDirsNotExisting()        { for dir in $*; do [ ! -d $dir ] && errorExit 252 "$APP:ERROR:directory not found:"$dir; done }
 
 # --- Temporary file/directory  creation
-# -- file creation -- TMP1=$(tempFile); TMP2=$(tempFile) ;;;; trap "rm -f $TMP1 $TMP2" EXIT
+# -- file creation -- TMP1=$(tempFile); TMP2=$(tempFile) ;;;; trap "/bin/rm -f $TMP1 $TMP2 &>/dev/null" EXIT
 # -- directory creation -- TMPDIR=$(tempDir) ;;;;;  trap "rm -fr $TMPDIR;" EXIT
 #
 function tempFile()                     { mktemp ${TMPDIR:-/tmp/}$_app.XXXXXXXX; }
@@ -280,29 +280,32 @@ function initMode() {
 
 ######################################################################################################
 
+# endecryptFile2 syntax: (encrypt|decrypt) pw src-file dest-file
 function endecryptFile2() {
     debug encryptFile $*
-    local _mode=$1 ; shift
-    [ -z "$1" ] && errorExit 60 missing pw argument to endecryptFile2
-    [ ! -f "$1" ] && errorExit 62 pw file not a plain file 
-    local _pw=$1
-    shift
-    [ -z "$1" ] && errorExit 61 missing file argument to endecryptFile2
-    TMP1=$(tempFile) ; trap "/bin/rm -f $TMP1" EXIT
-    local file
-    for file in $* ; do
-        /bin/cp -f $file $TMP1 ; [ $? -ne 0 ] && echo copying file error
-        echo -n "Procssesing file $file "
-        ansible-vault $_mode --vault-password-file $_pw $TMP1 ; [ $? -ne 0 ] && errorExit 64 encrypting file $TMP1 
-        /bin/mv -f $TMP1 $file ; [ $? -ne 0 ] && errorExit 65 moving encrypted file $TMP1 back 
-    done
+    local _mode=$1
+    local _pw=$2
+    local _src=$3
+    local _dest=$4
+    [ $# -ne 4 ] && errorExit 60 wrong number of arguments to endecryptFile2 $#, $*
+    [ "$_mode" != encrypt -a "$_mode" != decrypt ] && errorExit 61 undefined mode for endecryptFile2 $_mode
+    [ ! -f "$_pw" ] && errorExit 62 pw file not a plain file 
+    [ ! -f "$_src" ] && errorExit 63 src file not a plain file
+
+    TMP1=$(tempFile) ; trap "/bin/rm -f $TMP1 &>/dev/null" EXIT # create temporary file so that destination never holds file in unencrypted way
+    /bin/cp -f $_src $TMP1      || errorExit 65 error creating temporary file 
+    echo -n "Procssesing file $_src " # as ansible-vault always creates output, let's look it nice
+    ansible-vault $_mode --vault-password-file $_pw $TMP1   || errorExit 66 encrypting file $TMP1 
+    /bin/mv -f $TMP1 $_dest        || errorExit 67 moving encrypted file $TMP1 back 
     return 0
 }
 
+# encryptFile is a wrapper for endecryptFile2 to reduce code duplication as routines are identical except for $_mode
 function encryptFile() {
     endecryptFile2 encrypt $*
 }
 
+# decryptFile is a wrapper for endecryptFile2 to reduce code duplication as routines are identical except for $_mode
 function decryptFile() {
     endecryptFile2 decrypt $*
 }
