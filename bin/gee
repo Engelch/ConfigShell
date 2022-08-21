@@ -1,5 +1,5 @@
-# vim: set expandtab: ts=3: sw=3
 #!/usr/bin/env bash
+# vim: set expandtab: ts=3: sw=3
 #
 # TITLE: $_app
 #
@@ -172,7 +172,7 @@ function exitIfNotInGitRepo() {
 function mtime() {
     ## mtime, return modification time of a file in epoch, UTC
     [ -z "$1" ] && errorExit 80 mtime, no argument specified
-    [ ! -e $1 ] && errorExit 81 mtime, argument not a file 
+    [ ! -e $1 ] && errorExit 81 mtime, argument not a file
     date -u -r "$1" +%s    # OK for OSX, Linux
 }
 
@@ -180,7 +180,7 @@ function mtimeSet() {
     ## mtimeSet, set the modification time of a file in epoch, UTC
     [ -z "$1" ] && errorExit 85 mtimeSet, no argument specified
     _time=$1
-    [ ! -e "$2" ] && errorExit 86 mtimeSet, argument not a file   
+    [ ! -e "$2" ] && errorExit 86 mtimeSet, argument not a file
 
 }
 
@@ -217,13 +217,13 @@ function exitIfNotInGitGeeRepo() {
 }
 
 function initDefaultVars() {
-    if [ -z "$geeInitDefaultVars" ] ; then 
+    if [ -z "$geeInitDefaultVars" ] ; then
         declare -gr gitroot="$(git rev-parse --show-toplevel)"
         declare -gr gitignore="$gitroot/.gitignore"
         declare -gr geePwFile=$(dirname $gitroot)/$(basename $gitroot).gee.pw
         declare -gr geeInitDefaultVars=TRUE
         debug initDefaultVars gitroot $gitroot gitignore $gitignore geePwFile $geePwFile
-    else 
+    else
         debug initDefaultVars already set
     fi
 }
@@ -294,14 +294,14 @@ function endecryptFile2() {
     local _dest=$4
     [ $# -ne 4 ] && errorExit 60 wrong number of arguments to endecryptFile2 $#, $*
     [ "$_mode" != encrypt -a "$_mode" != decrypt ] && errorExit 61 undefined mode for endecryptFile2 $_mode
-    [ ! -f "$_pw" ] && errorExit 62 pw file not a plain file 
+    [ ! -f "$_pw" ] && errorExit 62 pw file not a plain file
     [ ! -f "$_src" ] && errorExit 63 src file not a plain file
 
     TMP1=$(tempFile) ; trap "/bin/rm -f $TMP1 &>/dev/null" EXIT # create temporary file so that destination never holds file in unencrypted way
-    /bin/cp -f $_src $TMP1      || errorExit 65 error creating temporary file 
+    /bin/cp -f $_src $TMP1      || errorExit 65 error creating temporary file
     echo -n "Procssesing file $_src " # as ansible-vault always creates output, let's look it nice
-    ansible-vault $_mode --vault-password-file $_pw $TMP1   || errorExit 66 encrypting file $TMP1 
-    /bin/mv -f $TMP1 $_dest        || errorExit 67 moving encrypted file $TMP1 back 
+    ansible-vault $_mode --vault-password-file $_pw $TMP1   || errorExit 66 encrypting file $TMP1
+    /bin/mv -f $TMP1 $_dest        || errorExit 67 moving encrypted file $TMP1 back
     return 0
 }
 
@@ -340,7 +340,7 @@ function addMode() {
         git rm --cached $file &>/dev/null # remove file if potentially in index
         encryptFile $geePwFile $file $file.gee || errorExit 45 error encrypting file $file as $TMP2
         debug4 adding $file.gee
-        git add $file.gee || errorExit 46 error adding encrypted file to index 
+        git add $file.gee || errorExit 46 error adding encrypted file to index
     done
 }
 
@@ -355,20 +355,20 @@ function cleanMode() {
     if [ "$1" = -f -o "$1" = --force ] ; then _force=TRUE ; else _force= ; fi
     cd $gitroot
     local basefile
-    for file in $(find . -name \*.gee  -type f -print ) ; do 
+    for file in $(find . -name \*.gee  -type f -print ) ; do
         basefile=$(dirname $file)/$(basename $file .gee)
         if [ -f $basefile ] ; then
-            if [ $basefile -nt $file ] ; then 
-                if [ "$_force" = TRUE ] ; then 
-                    /bin/rm -f $basefile || errorExit 91 error deleting file $basefile 
+            if [ $basefile -nt $file ] ; then
+                if [ "$_force" = TRUE ] ; then
+                    /bin/rm -f $basefile || errorExit 91 error deleting file $basefile
                 else
-                    errorExit 90 clean mode file $basefile newer than $file 
-                fi 
-            else 
+                    errorExit 90 clean mode file $basefile newer than $file
+                fi
+            else
                 /bin/rm -f $basefile || errorExit 92 error deleting file $basefile
-            fi 
-        fi 
-    done            
+            fi
+        fi
+    done
 }
 
 #############################################################################################
@@ -383,6 +383,8 @@ function decryptModeFile() {
     if [ ! -f $_basefile -o $_geefile -nt $_basefile -o "$_force" = TRUE ] ; then
         decryptFile $geePwFile $_geefile $_basefile || errorExit 71 while decrypting file $_geefile
         touch -r $_geefile $_basefile
+    elif [ $(mtime $_basefile) = $(mtime $_geefile) ] ; then
+        1>&2 echo No action: .gee file and related file have the same age: $_basefile
     else
         1>&2 echo WARNING: not decrypting $_geefile as the correspondig unencrypted file is younger
     fi
@@ -396,13 +398,13 @@ function decryptMode() {
     exitIfBinariesNotFound ansible-vault
     shift
     if [ "$1" = -f -o "$1" = --force ] ; then _force=TRUE ; shift ; else _force= ; fi
-    local file 
+    local file
     if [ -z "$*" ] ; then # all gee file mode
-        for file in $(find $gitroot -name \*.gee  -type f -print ) ; do 
+        for file in $(find $gitroot -name \*.gee  -type f -print ) ; do
             decryptModeFile $file
         done
-    else 
-        for file in $* ; do 
+    else
+        for file in $* ; do
             decryptModeFile $file
         done
     fi
@@ -416,7 +418,8 @@ function encryptModeFile() {
     debug encryptModeFile processing file $file
     if [ -f $file ] ; then
         debug4 $file existing
-        if [ $file -nt $file.gee -o ! "$_force" = TRUE ] ; then
+        [ ! -f $file.gee ] && errorExit 100 required .gee file created by gee add does not exist for $file
+        if [ $file -nt $file.gee -o "$_force" = TRUE ] ; then
             debug4 Encrypting file $file ' '
             encryptFile $geePwFile $file $file.gee || errorExit 100 encrypting file $file to $file.gee
             git add $file.gee ||  errorExit 101 adding $file.gee to index
@@ -460,12 +463,12 @@ function listMode() {
     cd "$gitroot"
     local found=0
     local file
-    for file in $(find . -type f -name '*.gee' -print) ; do 
-        echo -n $file 
-        _basefile=$(dirname $file)/$(basename $file .gee) 
+    for file in $(find . -type f -name '*.gee' -print) ; do
+        echo -n $file
+        _basefile=$(dirname $file)/$(basename $file .gee)
         [ -f $_basefile ] && found=1 && echo -n " ($_basefile existing"
         [ $_basefile -nt $file ] && echo ', modified)' && continue
-        [ $found -eq 1 ] && echo -n ')' && found=0 
+        [ $found -eq 1 ] && echo -n ')' && found=0
         echo
     done
 }
