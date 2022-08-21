@@ -1,5 +1,5 @@
-#!/usr/bin/env bash
 # vim: set expandtab: ts=3: sw=3
+#!/usr/bin/env bash
 #
 # TITLE: $_app
 #
@@ -157,6 +157,14 @@ function usage()
     err8 '-h      ::= show usage message and exit with exit code 1'
 }
 
+function git-root-relative-path () {
+    initDefaultVars
+    local absfile
+    [ -z "$1" ] && errorExit 90 missing argument to git-root-relative-path
+    _absfile=$(readlink -f "$1")
+    echo $_absfile | sed s,$gitroot/,,
+}
+
 function parseCLI() {
     while getopts "Dhv" options; do         # Loop: Get the next option;
         case "${options}" in                    # TIMES=${OPTARG}
@@ -173,6 +181,21 @@ function parseCLI() {
     done
 }
 
+function mtime() {
+    ## mtime, return modification time of a file in epoch, UTC
+    [ -z "$1" ] && errorExit 80 mtime, no argument specified
+    [ ! -e $1 ] && errorExit 81 mtime, argument not a file 
+    date -u -r "$1" +%s    # OK for OSX, Linux
+}
+
+function mtimeSet() {
+    ## mtimeSet, set the modification time of a file in epoch, UTC
+    [ -z "$1" ] && errorExit 85 mtimeSet, no argument specified
+    _time=$1
+    [ ! -e "$2" ] && errorExit 86 mtimeSet, argument not a file   
+
+}
+
 function checkPreCommitHookExisting() {
     readonly _hook=$gitroot/.git/hooks/pre-commit
     [ -e "$_hook" -a ! -f "$_hook" ] && error Other object type with name $_hook && return 1
@@ -186,14 +209,8 @@ function exitIfNotInGitRepo() {
 }
 
 function exitIfNotInGitGeeRepo() {
-    echo $gitroot/.git/gee
+    debug exitIfNotInGitGeeRepo, checking for existence of $gitroot/.git/gee
     [ ! -f $gitroot/.git/gee ] && errorExit 12 Not a git gee repository
-}
-
-function git-root-relative-path () {
-    local absfile
-    _absfile=$(readlink -f "$1")
-    echo $_absfile | sed s,$gitroot/,,
 }
 
 function initDefaultVars() {
@@ -227,9 +244,13 @@ function main() {
         _noGeeFile=$(basename $file .gee)
         _noGeeDir=$(dirname $file)
         if [ -f "$_noGeeDir/$_noGeeFile"  ] ; then
-            [ "$_noGeeDir/$_noGeeFile" -nt "$file"  ] && 1>&2 echo $file older than unencrypted file && exit 1
+            [ "$_noGeeDir/$_noGeeFile" -nt $file ] || 1>&2 echo $file older than unencrypted file && exit 1
+            debug geeFile newer or equal to "$_noGeeDir/$_noGeeFile"
+        else
+           debug non-gee file for "$_noGeeDir/$_noGeeFile" not found
         fi
     done
+    exit 0
 }
 
 main $*
@@ -252,14 +273,18 @@ function initMode() {
     return 39
 }
 
+######################################################################################################
+
 function endecryptFile2() {
     debug encryptFile $*
     local _mode=$1 ; shift
-    [ -z "$1" ] && errorExit 60 missing pw argument to encryptFile
+    [ -z "$1" ] && errorExit 60 missing pw argument to endecryptFile2
+    [ ! -f "$1" ] && errorExit 62 pw file not a plain file 
     local _pw=$1
     shift
-    [ -z "$1" ] && errorExit 61 missing file argument to encryptFile
+    [ -z "$1" ] && errorExit 61 missing file argument to endecryptFile2
     TMP1=$(tempFile) ; trap "/bin/rm -f $TMP1" EXIT
+    local file
     for file in $* ; do
         /bin/cp -f $file $TMP1 ; [ $? -ne 0 ] && echo copying file error
         echo -n "Procssesing file $file "
@@ -276,6 +301,8 @@ function decryptFile() {
     endecryptFile2 decrypt $*
 }
 
+######################################################################################################
+
 function addMode() {
     debug add mode
     exitIfNotInGitRepo
@@ -283,9 +310,11 @@ function addMode() {
     exitIfNotInGitGeeRepo
     exitIfBinariesNotFound ansible-vault
     shift
+    local file
     for file in $* ; do
         [ ! -e $file ] && errorExit 40 $file does not seem to exist
         [ ! -f $file ] && errorExit 41 $file is not a plain file
+        [[ $file =~ .*.gee ]] && errorExit 44 not adding .gee files
         [ -f $file.gee ] && errorExit 42 $file.gee already existing
         local gitFile=$(git-root-relative-path $file)
         if [ $(egrep $gitFile $gitignore 2>/dev/null | wc -l) -gt 0 ] ; then
@@ -293,31 +322,51 @@ function addMode() {
             [ ! -f "$file.gee" ] && errorExit 43 File in gitignore but no related gee file found.
             continue
         fi
-        echo $gitFile >> "$gitroot/.gitignore"
+        echo $(git-root-relative-path gitFile) >> "$gitroot/.gitignore"
         git add "$gitroot/.gitignore"
         git rm --cached $file &>/dev/null # remove file if potentially in index
         cp $file $file.gee
         encryptFile $geePwFile $file.gee
-        git add $file.gee
+        debug adding $file.gee
+        git add $(git-root-relative-path $file.gee)
     done
 }
 
-function clearMode() {
-    # todo
+function cleanMode() {
+    debug clean mode
+    exitIfNotInGitRepo
     initDefaultVars
+    exitIfNotInGitGeeRepo
+    shift
+    if [ "$1" = -f -o "$1" = --force ] ; then _force=TRUE ; shift ; else _force= ; fi
+    cd $gitroot
+    local basefile
+    for file in $(find . -name \*.gee  -type f -print ) ; do 
+        basefile=$(basename $file .gee)
+        if [ -f $basefile ] ; then
+            if [ $basefile -nt $file ] ; then 
+                if [ "$_force" = TRUE ] ; then 
+                    /bin/rm -f $basefile 
+                else
+                    errorExit 90 clean mode file $basefile newer than $file 
+                fi 
+            else 
+                /bin/rm -f $basefile
+            fi 
+        fi 
+    done            
 }
 
 function decryptModeFile() {
     local file=$1
     debug decryptModeFile processing file $file
-    _basefile=$(basename $file .gee)    # make sure, we have the correspondig gee file
-    _geefile=$_basefile.gee    # make sure, we have the correspondig gee file
+    _basefile=$(dirname $file)/$(basename $file .gee)    # make sure, we have the correspondig gee file
+    _geefile=$(dirname $file)/$(basename $file .gee).gee    # make sure, we have the correspondig gee file
     [ ! -f $_geefile ] && errorExit 70 decryptModeFile file $_geefile does not exist for decryption
     if [ ! -f $_basefile -o $_geefile -nt $_basefile -o "$_force" = TRUE ] ; then
         /bin/cp -f $_geefile $_basefile
-        decryptFile $_basefile
-        eval $(stat -s $_geefile)
-
+        decryptFile $geePwFile $_basefile
+        touch -r $_geefile $_basefile
     else
         1>&2 echo WARNING: not decrypting $_geefile as the correspondig unencrypted file is younger
     fi
@@ -331,11 +380,16 @@ function decryptMode() {
     exitIfBinariesNotFound ansible-vault
     shift
     if [ "$1" = -f -o "$1" = --force ] ; then _force=TRUE ; shift ; else _force= ; fi
-        #git rev-parse --show-toplevel &>/dev/null || errorExit 1 Not in a git repository
-    #cd "$gitroot"
-
-    # checkPreCommitHookExisting ; res=$? ; [ $res -ne 0 ] && return $res
-
+    local file 
+    if [ -z "$*" ] ; then # all gee file mode
+        for file in $(find $gitroot -name \*.gee  -type f -print ) ; do 
+            decryptModeFile $file
+        done
+    else 
+        for file in $* ; do 
+            decryptModeFile $file
+        done
+    fi
 }
 
 function encryptModeFile() {
@@ -373,6 +427,7 @@ function encryptMode() {
         done
     else # specificed gee file mode
         for file in $* ; do
+            _geefile=$(basename $file .gee).gee     # use the gee version of a file
             encryptModeFile $file
         done
     fi
@@ -385,7 +440,16 @@ function listMode() {
     initDefaultVars
     verbosenl Listing from from git root directory:$gitroot
     cd "$gitroot"
-    find . -type f -name '*.gee'
+    local found=0
+    local file
+    for file in $(find . -type f -name '*.gee' -print) ; do 
+        echo -n $file 
+        _basefile=$(basename $file .gee) 
+        [ -f $_basefile ] && found=1 && echo -n " ($_basefile existing"
+        [ $_basefile -nt $file ] && echo ', modified)' && continue
+        [ $found -eq 1 ] && echo -n ')' && found=0 
+        echo
+    done
 }
 
 function main() {
@@ -398,8 +462,8 @@ function main() {
     a|add)
         addMode $*
         ;;
-    c|clear)
-        clearMode $*
+    c|clean)
+        cleanMode $*
         ;;
     h|help)
         usage
