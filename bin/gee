@@ -38,7 +38,7 @@
 
 readonly _app=$(basename $0)
 readonly _appDir=$(dirname $(readlink -f $0))
-readonly _appVersion="2.0.0" # use semantic versioning
+readonly _appVersion="2.1.0" # use semantic versioning
 export DebugFlag=${DebugFlag:-FALSE}
 
 #########################################################################################
@@ -117,33 +117,33 @@ function usage()
     err8 Put git repository under git gee => install a prehook
     err8 and specify the password file for en- and decryption.
     err
-    err4 $_app '( add | a )' '<<file>> ...'
+    err4 $_app 'a[dd]' '<<file>> ...'
     err8 - Put file under git.
     err8 - The current contents will be copied to '<<file>>.gee' and will be encrypted
     err8 - The current '<<file>>' will be put in .gitignore
     err8 - Potentially already existing version of '<<file>>' in index will be removed rm --cached
     err
-    err4 $_app '(clean | c) [ -f | --force ]'
+    err4 $_app 'c[lean] [ -f | --force ]'
     err8 delete the unencrypted versions of gee files if they are older than the correspondig gee files.
     err8 In force mode, delete the unencrypted files even if they are younger thane the correspondig gee files.
     err
-    err4 $_app '( unencrypt | u | un | unenc | unencr )' '<<file>> ...'
+    err4 $_app '( u[n[e[n[c[r[y[p[t]]]]]]]] | d[e[c[r[y[p[t]]]]]] )' '<<file>> ...'
     err8 - creates an unencrypted version of the file. If no argument is given, it does so for all .gee files.
     err8 - No difference if the file is specified with .gee or without it.
     err
-    err4 $_app '( e | enc | encr | encrypt)' '[ -f | --force ] <<file>> ...'
+    err4 $_app 'e[n[c[r[y[p[t]]]]]]' '[ -f | --force ] <<file>> ...'
     err8 todo force mode?
     err8 - encrypts the specificied files.
     err8 - No difference if the file is specified with .gee or without it.
     err8 - -f force mode
     err
-    err4 $_app '( list | lst | l )'
+    err4 $_app '( l[i[st]] | lst )'
     err8 - list files under git gee
     err
     err4 $_app version
     err8 - list the current version of git gee and exits
     err
-    err4 $_app '( help | h | -h )'
+    err4 $_app '( h[elp] | -h )'
     err8 - show this help and exits with exit code 1.
     err
     err4 git commit '[ -n ]' ...
@@ -416,18 +416,20 @@ function decryptMode() {
 function encryptModeFile() {
     local file=$1
     debug encryptModeFile processing file $file
-    if [ -f $file ] ; then
-        debug4 $file existing
-        [ ! -f $file.gee ] && errorExit 100 required .gee file created by gee add does not exist for $file
-        if [ $file -nt $file.gee -o "$_force" = TRUE ] ; then
-            debug4 Encrypting file $file ' '
-            encryptFile $geePwFile $file $file.gee || errorExit 100 encrypting file $file to $file.gee
-            git add $file.gee ||  errorExit 101 adding $file.gee to index
+    _basefile=$(dirname $file)/$(basename $file .gee)    # make sure, we have the correspondig gee file
+    _geefile=$(dirname $file)/$(basename $file .gee).gee    # make sure, we have the correspondig gee file
+    if [ -f $_basefile ] ; then
+        debug4 $_basefile existing
+        [ ! -f $_geefile ] && errorExit 100 required .gee file created by gee add does not exist for $_basefile
+        if [ $_basefile -nt $_geefile -o "$_force" = TRUE ] ; then
+            debug4 Encrypting file $_basefile ' '
+            encryptFile $geePwFile $_basefile $_geefile || errorExit 100 encrypting file $_basefile to $_geefile
+            git add $_geefile ||  errorExit 101 adding _geefile to index
         else
-            echo $file not newer than $file.gee, no change, continuing
+            echo $_basefile not newer than $_geefile, no change, continuing
         fi
     else
-        echo NO $file for $file.gee, continuing
+        echo NO $_basefile for $_geefile, continuing
     fi
 }
 
@@ -438,6 +440,7 @@ function encryptMode() {
     exitIfNotInGitGeeRepo
     exitIfBinariesNotFound ansible-vault
     shift
+    local file
     if [ "$1" = -f -o "$1" = --force ] ; then _force=TRUE ; shift ; else _force= ; fi # in force mode, encrypt file anyway if unencrypted version exists
     if [ -z "$*" ] ; then # all gee file mode
         cd "$gitroot"
@@ -446,7 +449,6 @@ function encryptMode() {
         done
     else # specificed gee file mode
         for file in $* ; do
-            _geefile=$(dirname $file)/$(basename $file .gee)     # use the gee version of a file
             encryptModeFile $file
         done
     fi
@@ -496,13 +498,13 @@ function main() {
     init)
         initMode $*
         ;;
-    l|list|lst)
+    l|li|list|lst)
         listMode $*
         ;;
     e|en|enc|encr|encry|encryp|encrypt|encrypted)
         encryptMode $*
         ;;
-    d|de|dec|decr|decry|decryp|decrypt|u|un|une|unen|unencr|unencry|unencryp|unencrypt|unencrypted)
+    d|de|dec|decr|decry|decryp|decrypt|u|un|une|unen|unencr|unencry|unencryp|unencrypt)
         decryptMode $*
         ;;
     version)

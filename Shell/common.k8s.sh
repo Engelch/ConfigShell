@@ -26,24 +26,30 @@ function k8Setup() {
    alias k8ev=kevents ##
    alias k8events=kevents ##
 
-   function k8describe() { ##
+   function k8describe() { ## supports -n namespace
       ## k8describe just requires a unique part of the pod-name.
-      local _pod=$($KUBECTL get po | grep -i "$1" | cut -d ' ' -f 1)
+      local _namespace=""
+      [ "$1" = -n ] && shift && _namespace="-n $1" && shift
+      local _pod=$($KUBECTL get po $_namespace | grep -i "$1" | cut -d ' ' -f 1)
       shift
-      $KUBECTL describe $_pod $*
+      $KUBECTL describe $_namespace $_pod $*
    }
 
-   function k8exec() { ##
+   function k8exec() { ## supports -n namespace
       ## k8exec just requires a unique part of the pod-name.
-      local _pod=$($KUBECTL get po | grep -i "$1" | cut -d ' ' -f 1)
+      local _namespace=""
+      [ "$1" = -n ] && shift && _namespace="-n $1" && shift
+      local _pod=$($KUBECTL get po $_namespace | grep -i "$1" | cut -d ' ' -f 1)
       shift
-      $KUBECTL exec -it $_pod -- $*
+      $KUBECTL exec $_namespace -it $_pod -- $*
    }
 
-   function k8logs() { ##
+   function k8logs() { ## supports -n namespace
       ## k8logs just requires a unique part of the pod-name. -f can be specified.
-      local _pod=$($KUBECTL get po | grep -i "$1" | cut -d ' ' -f 1)
-      $KUBECTL logs $2 $_pod # $2 for -f
+      local _namespace=""
+      [ "$1" = -n ] && shift && _namespace="-n $1" && shift
+      local _pod=$($KUBECTL get po $_namespace | grep -i "$1" | cut -d ' ' -f 1)
+      $KUBECTL logs $_namespace $2 $_pod # $2 for -f
    }
 
    # help file to show all k8s commands
