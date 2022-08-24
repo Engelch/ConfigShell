@@ -17,6 +17,28 @@ function sencrypt() {
    done
 }
 
+# This version only asks once for the pw for multiple files. This can be risky in multi-user environments as the passphrase is readable in
+# the process table. But, it can help to save a lot of typing :-)
+function sencrypt2() {
+   local file
+   local keep=
+   local force=
+   local pw=
+   local pw2
+   [ $1 = -f ] && force=True && shift
+   [ $1 = -k ] && keep=True && shift
+   [ $1 = -f ] && force=True && shift # all 4 forms (1) -f -k (2) -k -f (3) -kf (4) -fk
+   [ $1 = -kf -o $1 = -fk ] && keep=True && force=True && shift
+   read -esp "Enter passphrase:" pw
+   read -esp "Enter passphrase again:" pw2
+   [ "$pw" != "$pw2" ] && error passwords differ && exit 1
+   for file in $* ; do
+      [ ! -z $force ] && /bin/rm -f $file.asc 2>/dev/null
+      [ -f $file.asc ] && error target file already exists for $file. && continue
+      echo $pw | gpg -c --passphrase-fd 0 --batch --yes -o $file.asc $file && [ -z $keep ] && /bin/rm -f $file
+   done
+}
+
 function sdecrypt() {
    local file
    local force=
