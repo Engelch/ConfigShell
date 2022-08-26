@@ -12,8 +12,10 @@ function isOlderThanHours() {
     local fileMTime=$(date  -u -r $2 '+%s')
     local hoursInSecs=$(( $1 * 3600 ))
     local fileAndHours=$(( $fileMTime + $hoursInSecs ))
-    #echo current $currentTime, fileMTime $fileMTime, hoursInSecs $hoursInSecs, file+hours $fileAndHours
+    #1>&2 echo current $currentTime, fileMTime $fileMTime, hoursInSecs $hoursInSecs, file+hours $fileAndHours
     [ $fileAndHours -ge $currentTime ] && return 1
+    # [ $fileAndHours -ge $currentTime ] && 1>&2 echo file not older than n hours, no action && return 1
+    #1>&2 echo file is older than n hours, should upgrade
     return 0
 }
 
@@ -22,7 +24,8 @@ function conditionalUpdateGitRepo() {
     echo -n doing updateConfigShell $* ..... ' '
     [ ! -d "$1" ] && 1>&2 echo supplied argument not a directory $1 && return 10
     if [ -f $flagFile ] ; then
-        if [ $(isOlderThanHours ${UPDATE_CONFIGSHELL_FREQUENCE:-4} $flagFile) ] ; then
+        isOlderThanHours ${UPDATE_CONFIGSHELL_FREQUENCE:-4} $flagFile; res=$?
+        if [ $res -eq 0 ] ; then
             echo upgrading...
             cd "$1"
             git pull
@@ -34,7 +37,7 @@ function conditionalUpdateGitRepo() {
             res=0
         fi
     else
-        echo upgrading
+        echo upgrading no flag-file existing
         touch $flagFile 
         cd "$1" 
         git pull
