@@ -38,7 +38,7 @@
 
 readonly _app=$(basename $0)
 readonly _appDir=$(dirname $(readlink -f $0))
-readonly _appVersion="2.1.0" # use semantic versioning
+readonly _appVersion="2.1.1" # use semantic versioning
 export DebugFlag=${DebugFlag:-FALSE}
 
 #########################################################################################
@@ -252,7 +252,7 @@ function main() {
         _noGeeFile=$(basename $file .gee)
         _noGeeDir=$(dirname $file)
         if [ -f "$_noGeeDir/$_noGeeFile"  ] ; then
-            [ "$_noGeeDir/$_noGeeFile" -nt $file ] || 1>&2 echo $file older than unencrypted file && exit 1
+            [ "$_noGeeDir/$_noGeeFile" -nt $file ] && 1>&2 echo "$_noGeeDir/$_noGeeFile" newer than $file && exit 1
             debug geeFile newer or equal to "$_noGeeDir/$_noGeeFile"
         else
            debug non-gee file for "$_noGeeDir/$_noGeeFile" not found
