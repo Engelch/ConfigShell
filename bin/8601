@@ -1,1 +1,12 @@
+#!/usr/bin/env bash
+
+function usage() {
+    1>&2 echo "ABOUT"
+    1>&2 echo "    Show the current time in ISO-8601 format."
+    1>&2 echo
+    1>&2 echo "SYNOPSIS"
+    1>&2 echo "    $(basename $0)"' [ -h | --help ]'
+}
+
+[ "$1" = -h -o "$1" = --help ] && usage && exit 1
 date -u '+%Y-%m-%d_%H:%M:%S_%Z'
