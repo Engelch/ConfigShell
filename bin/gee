@@ -38,7 +38,7 @@
 
 readonly _app=$(basename $0)
 readonly _appDir=$(dirname $(readlink -f $0))
-readonly _appVersion="2.1.1" # use semantic versioning
+readonly _appVersion="2.1.2" # use semantic versioning
 export DebugFlag=${DebugFlag:-FALSE}
 
 #########################################################################################
@@ -109,13 +109,16 @@ function tempDir()                      { mktemp -d "${TMPDIR:-/tmp/}$_app.YYYYY
 function usage()
 {
     err DESCRIPTION
-    err4 $_app allows for the encryption of files in a git repository. Solve some problems with
+    err4 $_app allows for the encryption of files in a git repository. It solves some problems with
     err4 git crypt, git secret, and git secrets.
     err
     err SYNOPSIS
-    err4 $_app '[-D] gee init <<pwFile>>'
+    err4 $_app '[-D] gee init'
     err8 Put git repository under git gee => install a prehook
     err8 and specify the password file for en- and decryption.
+    err8 The password file must follow the convention:
+    err12 If the git-root directory is /a/b/, then
+    err12 the password file must be /a/b.gee.pw
     err
     err4 $_app 'a[dd]' '<<file>> ...'
     err8 - Put file under git.
