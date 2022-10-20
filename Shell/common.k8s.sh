@@ -57,7 +57,8 @@ function k8Setup() {
       cat  $PROFILES_CONFIG_DIR/Shell/common.k8s.sh | grep -v '#####'  | grep '##' | sed 's/^[[:space:]]*##$//' | sed 's/^[[:space:]]*## /    /' | sed 's/^[[:space:]]*### /    ## /' |  sed 's/^[[:space:]]*#### /    # /'
    }
    alias k8-help=k8help ##
-   source <(kubectl completion bash) && complete -o default -F __start_kubectl k && complete -o default -F __start_kubectl k8
+   command -v kubectl &>/dev/null && source <(kubectl completion bash) && complete -o default -F __start_kubectl k && complete -o default -F __start_kubectl k8
+   return 0
 }
 
 
