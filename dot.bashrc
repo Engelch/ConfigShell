@@ -119,22 +119,28 @@ function loadSource() {
    fi
 }
 
-# setHistFile sets the HISTFILE to to effective users home-directory/.bash_history file
-function setHistFile() {
-   debug4 ......................... in setHistFile
+# setHistFileUserShell sets the HISTFILE to individual files for each terminal. The related ssf command searches in all created
+# history files.
+function setHistFileUserShell() {
+   debug4 ......................... in setHistFileUserShell
       # Avoid duplicates
-   export HISTCONTROL=ignoredups:erasedups
-   export HISTSIZE=100000
-   export HISTFILESIZE=100000
+
+   export HISTCONTROL=ignoredups:erasedups:ignorespace
+   export HISTSIZE=1000
+   export HISTFILESIZE=10000
+    export HISTTIMEFORMAT='%Y-%m-%d_%H%M%S: '
    # When the shell exits, append to the history file instead of overwriting it
    shopt -s histappend
-   export HISTFILE=$(eval echo ~$USER/.bash_history)
+    [[ -d ~/.history ]] || mkdir ~/.history && debug8 creating history directory
+    [[ -d ~/.history ]] && chmod 0700 ~/.history && debug8 setting history directory permission
+   # previous version export HISTFILE=$(eval echo ~$USER/.bash_history)
+    HISTFILE=~/.history/history.$(date +%y%b%d-%H%M%S).$$
    debug8 HISTFILE is $HISTFILE
-   [ -f $HISTFILE ] && debug8 histfile existing && \
-      local histfileUser=$(ls -l $HISTFILE | awk '{ print $3 } ') && \
+   #[ -f $HISTFILE ] && debug8 histfile existing && \
+#      local histfileUser=$(ls -l $HISTFILE | awk '{ print $3 } ') && \
       USER=${USER:-root} # fix for docker
       SHELL=${SHELL:-$(ps a | grep $$ | sed -n "/^ *$$/p" | awk '{ print $NF }')} # fix for docker
-     [ $histfileUser != $USER ] && echo ownship of history file must be corrected from user $histfileUser to user $USER && sudo chown $USER $HISTFILE
+#     [ $histfileUser != $USER ] && echo ownship of history file must be corrected from user $histfileUser to user $USER && sudo chown $USER $HISTFILE
 }
 
 ############################################################################
@@ -152,7 +158,7 @@ function main() {
          loadSource pre
          set -o ignoreeof                 # prevent ^d logout
          set -o noclobber                 # overwrite protection, use >| to force
-         setHistFile                      # history file permission, ownership, settings
+         setHistFileUserShell                      # history file permission, ownership, settings
 
          # env.*.sh are loading in bash_profile
          for file in $PROFILES_CONFIG_DIR/Shell/common.*.sh $PROFILES_CONFIG_DIR/Shell/bash.*.sh; do
