@@ -134,13 +134,14 @@ function setHistFileUserShell() {
     [[ -d ~/.history ]] || mkdir ~/.history && debug8 creating history directory
     [[ -d ~/.history ]] && chmod 0700 ~/.history && debug8 setting history directory permission
    # previous version export HISTFILE=$(eval echo ~$USER/.bash_history)
-    HISTFILE=~/.history/history.$(date +%y%b%d-%H%M%S).$$
+    [[ "$HISTFILE" == '' ||  "$HISTFILE" =~ bash_history ]] && HISTFILE=~/.history/history.$(date +%y%b%d-%H%M%S).$$
    debug8 HISTFILE is $HISTFILE
    #[ -f $HISTFILE ] && debug8 histfile existing && \
 #      local histfileUser=$(ls -l $HISTFILE | awk '{ print $3 } ') && \
       USER=${USER:-root} # fix for docker
       SHELL=${SHELL:-$(ps a | grep $$ | sed -n "/^ *$$/p" | awk '{ print $NF }')} # fix for docker
 #     [ $histfileUser != $USER ] && echo ownship of history file must be corrected from user $histfileUser to user $USER && sudo chown $USER $HISTFILE
+    [ $(du -sk ~/.history/ | cut -f1 ) -gt 99099 ] && echo Please consider deleting some files from ~/.history
 }
 
 ############################################################################
