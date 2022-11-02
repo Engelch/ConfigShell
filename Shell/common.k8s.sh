@@ -14,6 +14,8 @@ function k8Setup() {
    alias k8gd='$KUBECTL get deploy -o wide' ##
    alias k8gn='$KUBECTL get nodes -o wide' ##
    alias k8gp='$KUBECTL get pods -o wide' ##
+   alias k8gpa='$KUBECTL get pods -A -o wide' ##
+   alias k8gpA=k8gpa
    alias k8gs='$KUBECTL get services -o wide' ##
    alias k8ns='$KUBECTL get ns' ##
    alias k8ga='$KUBECTL get all' ##

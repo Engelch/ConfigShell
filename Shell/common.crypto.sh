@@ -196,8 +196,9 @@ function tlsCert2LeafSubject() {
 alias  tlsSrvCrt=tlsServerCert
 alias  tlsSrvCert=tlsServerCert
 function tlsServerCert() {
-    # gnutls-cli --print-cert $1  < /dev/null  > $1.pem
-    [ -z $1 ] && return 0
+   # tlsServerCert expects a hostname as its first argument. The argument can contain http:// or https:// which will
+   # be removed from the call.
+    [ -z $1 ] && 1>&2 echo no argument specified && return 1
     url=$1
     # strip potential leading ^http.?://
     [[ $url =~ ^http.?:// ]] && url=$(echo $url | sed 's,^.*://,,')
