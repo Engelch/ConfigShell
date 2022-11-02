@@ -47,7 +47,7 @@ readonly bash_skeleton_version=0.6.0
 readonly _app=$(basename $0)
 readonly _appDir=$(dirname $0)
 readonly _absoluteAppDir=$(cd $_appDir; /bin/pwd)
-readonly _appVersion="0.0.1" # use semantic versioning
+readonly _appVersion="0.1.0" # use semantic versioning
 export DebugFlag=${DebugFlag:-FALSE}
 export VerboseFlag=${VerboseFlasg:-FALSE}
 
@@ -206,14 +206,17 @@ function checkCertExpiry() {
         debug4 expiry_date in epoch is $expire_epoch
         timeleft=`expr $expire_epoch - $today_epoch`
         debug4 seconds left before expiry is $timeleft
-        if [[ $timeleft -le $epoch_warning ]]; then #WARN
-            echo "Certificate expiring in" $(( timeleft / 86400 )) days
-            return 1
-        fi
+
         if [[ $today_epoch -ge $expire_epoch ]]; then #EXPIRE
             echo "Certificate is expired."
             return 2
         fi
+
+        if [[ $timeleft -le $epoch_warning ]]; then #WARN
+            echo "Certificate expiring in" $(( timeleft / 86400 )) days
+            return 1
+        fi
+
         debug4 All ok
         # not expiring in $epoch_warning days
         return 0
