@@ -131,6 +131,7 @@ function setHistFileUserShell() {
     export HISTTIMEFORMAT='%Y-%m-%d_%H%M%S: '
    # When the shell exits, append to the history file instead of overwriting it
    shopt -s histappend
+    [ -f ~/.history ] && /bin/rm -f ~/.history
     [[ -d ~/.history ]] || mkdir ~/.history && debug8 creating history directory
     [[ -d ~/.history ]] && chmod 0700 ~/.history && debug8 setting history directory permission
    # previous version export HISTFILE=$(eval echo ~$USER/.bash_history)
