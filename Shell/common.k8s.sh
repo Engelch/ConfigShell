@@ -27,6 +27,8 @@ function k8Setup() {
    alias kevents='$KUBECTL get events --sort-by=.metadata.creationTimestamp' ##
    alias k8ev=kevents ##
    alias k8events=kevents ##
+   alias k8eva='kevents -A'
+   alias k8evA=k8eva
 
    function k8describe() { ## supports -n namespace
       ## k8describe just requires a unique part of the pod-name.
@@ -38,18 +40,26 @@ function k8Setup() {
    }
 
    function k8exec() { ## supports -n namespace
-      ## k8exec just requires a unique part of the pod-name.
+      ## k8exec just requires a unique part of the pod-name in the given or the default namespace
+      ## options: -n namespace
+      ## arguments, optional: command, default: /bin/bash
       local _namespace=""
       [ "$1" = -n ] && shift && _namespace="-n $1" && shift
       local _pod=$($KUBECTL get po $_namespace | grep -i "$1" | cut -d ' ' -f 1)
       shift
-      $KUBECTL exec $_namespace -it $_pod -- $*
+      cmd=
+      [ "$*" = "" ] && cmd=/bin/bash
+      $KUBECTL exec $_namespace -it $_pod -- $cmd $*
    }
 
    function k8logs() { ## supports -n namespace
       ## k8logs just requires a unique part of the pod-name. -f can be specified.
+      ## options: -f
       local _namespace=""
+      local follow=
+      [ "$1" = -f ] && shift && follow=-f
       [ "$1" = -n ] && shift && _namespace="-n $1" && shift
+      [ "$1" = -f ] && shift && follow=-f
       local _pod=$($KUBECTL get po $_namespace | grep -i "$1" | cut -d ' ' -f 1)
       $KUBECTL logs $_namespace $2 $_pod # $2 for -f
    }
