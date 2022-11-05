@@ -61,7 +61,7 @@ function k8Setup() {
       [ "$1" = -n ] && shift && _namespace="-n $1" && shift
       [ "$1" = -f ] && shift && follow=-f
       local _pod=$($KUBECTL get po $_namespace | grep -i "$1" | cut -d ' ' -f 1)
-      $KUBECTL logs $_namespace $2 $_pod # $2 for -f
+      $KUBECTL logs $_namespace $follow $_pod
    }
 
    # help file to show all k8s commands
