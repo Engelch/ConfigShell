@@ -6,6 +6,8 @@ function k8Setup() {
    alias dih='docker image history' ##
    alias k=$KUBECTL  ##
    alias k8=$KUBECTL ##
+   alias k8af='$KUBECTL apply -f '
+   alias k8df='$KUBECTL destroy -f '
    alias k8c='$KUBECTL config ' ##
    alias k8cg='$KUBECTL config get-contexts' ##
    alias k8cs='$KUBECTL config set-context' ##
