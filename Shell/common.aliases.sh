@@ -29,6 +29,7 @@ function common.aliases.init() {
     alias .6='cd ../../../../../..'
     alias .7='cd ../../../../../../..'
     alias a=alias
+    alias af='alias | ei '
     # delete current directory if empty or only OSX file .DS_Store is contained
     alias brmd='[ -f .DS_Store ] &&  /bin/rm -f .DS_Store ; cd .. ; rmdir "$OLDPWD"'
     alias cm=cmake
@@ -40,6 +41,7 @@ function common.aliases.init() {
     alias eir='egrep -iR'
     alias enf='env | egrep -i '   # search the environment in case-insensitive mode
     alias er='egrep -R'
+    alias f='fgrep'
     alias fin='find . -name'      # search for a filename
     alias fini='find . -iname'    # search for a filename in case-insensitive mode
     alias h=history
