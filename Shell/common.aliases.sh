@@ -61,6 +61,7 @@ function common.aliases.init() {
     alias po=popd
     alias pu='pushd .'
     alias rl="source ~/.$(basename $SHELL)rc"          # see also rlFull
+    alias rlp="cd $PROFILES_CONFIG_DIR; git pull; rl; cd -" # pull configdir and reload
     alias rm='rm -i'                    # life assurance
     alias rmtex='/bin/rm -f *.log *.aux *.dvi *.loc *.toc'   # remove temporary LaTeX/TeX files
     alias rm~='find . -name \*~ -print -exec /bin/rm {} \; ; find . -name \*.bak -print -exec /bin/rm {} \;'
