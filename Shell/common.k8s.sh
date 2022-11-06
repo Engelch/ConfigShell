@@ -6,8 +6,8 @@ function k8Setup() {
    alias dih='docker image history' ##
    alias k=$KUBECTL  ##
    alias k8=$KUBECTL ##
-   alias k8af='$KUBECTL apply -f '
-   alias k8df='$KUBECTL destroy -f '
+   alias k8af='$KUBECTL apply -f' ##
+   alias k8df='$KUBECTL delete -f' ##
    alias k8c='$KUBECTL config ' ##
    alias k8cg='$KUBECTL config get-contexts' ##
    alias k8cs='$KUBECTL config set-context' ##
@@ -15,26 +15,26 @@ function k8Setup() {
    alias k8cv='$KUBECTL config view' ##
    alias k8gd='$KUBECTL get deploy -o wide' ##
    alias k8gda='$KUBECTL get deploy -o wide -A' ##
-   alias k8gdA=k8gda
+   alias k8gdA=k8gda ##
    alias k8gn='$KUBECTL get nodes -o wide' ##
    alias k8gp='$KUBECTL get pods -o wide' ##
    alias k8gpa='$KUBECTL get pods -A -o wide' ##
-   alias k8gpA=k8gpa
+   alias k8gpA=k8gpa ##
    alias k8gs='$KUBECTL get services -o wide' ##
    alias k8gsa='$KUBECTL get services -o wide -A' ##
-   alias k8gsA=k8gsa
+   alias k8gsA=k8gsa ##
    alias k8ns='$KUBECTL get ns' ##
    alias k8ga='$KUBECTL get all' ##
    alias k8gaA='$KUBECTL get all -A' ##
-   alias k8gaa=k8gaA
+   alias k8gaa=k8gaA ##
    alias k8gaw='$KUBECTL get all -A -o wide' ##
-   alias k8gaaw=k8gaw
-   alias k8gaAw=k8gaw
+   alias k8gaaw=k8gaw ##
+   alias k8gaAw=k8gaw ##
    alias kevents='$KUBECTL get events --sort-by=.metadata.creationTimestamp' ##
    alias k8ev=kevents ##
    alias k8events=kevents ##
-   alias k8eva='kevents -A'
-   alias k8evA=k8eva
+   alias k8eva='kevents -A' ##
+   alias k8evA=k8eva ##
 
    function k8describe() { ## supports -n namespace
       ## k8describe just requires a unique part of the pod-name.
