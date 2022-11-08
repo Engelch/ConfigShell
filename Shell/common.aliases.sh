@@ -86,6 +86,11 @@ function common.aliases.init() {
     alias tmux-blwh='tmux select-pane -P "fg=black,bg=white"'   # fg=169,bg=color233
 
     common.aliases.ls   # potentially reloading/re-evaluated again for colourised-ls from os.$(uname).ls
+
+    function cd() {
+        command cd $*
+        [ -r ./00DIR.txt -a -z "$NO_CD_OUTPUT" ] && cat ./00DIR.txt
+    }
 }
 
 function common.aliases.del() {
