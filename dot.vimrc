@@ -1,7 +1,7 @@
 
 scriptencoding utf-8
 
-" ========================================================== 
+" ==========================================================
 filetype plugin indent on
 
 set autowrite
@@ -37,6 +37,7 @@ filetype on
 :set autoindent    " turns it on"
 :set smartindent   " does the right thing (mostly) in programs"
 :set cindent       " stricter rules for C programs"
+autocmd FileType yaml setlocal ts=2 sts=2 sw=2 expandtab
 
 :set backup       " makes tilde file backups"
 :set mouse=a      " allow mouse to change cursor position"
