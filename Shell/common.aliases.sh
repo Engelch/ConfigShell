@@ -47,7 +47,7 @@ function common.aliases.init() {
     alias h=history
     unalias hf 2>/dev/null
     function hf() {
-        cat ~/.history/history.* | egrep -i "$*"
+        IFS=$'\n' ; select name in $(cat ~/.history/history.* | egrep -i $* | uniq | egrep -v '^hf') ; do [ "$name" = . -o "$name" = q -o -z "$name" ] &&  break ; eval $name ; break ; done
     }
     alias ipi='curl https://ipinfo.io'
     alias j=jobs
