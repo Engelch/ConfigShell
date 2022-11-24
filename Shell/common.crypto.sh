@@ -208,9 +208,32 @@ function tlsServerCert() {
 
 # ------ Keys
 # show fingerprint of private RSA key
-function tlsRsaPrvFingerprint() { local output="/dev/null" ; [ "$1" = -v ] &&  output="/dev/stdout" && shift ; local file; for file in $*; do /bin/echo -n "$file:" > $output; openssl rsa -modulus -noout -in "$file" | openssl sha256 | sed 's/.*stdin)= //'; done; }
+#function tlsRsaPrvFingerprint() { local output="/dev/null" ; [ "$1" = -v ] &&  output="/dev/stdout" && shift ; local file; for file in $*; do /bin/echo -n "$file:" > $output; openssl rsa -modulus -noout -in "$file" | openssl sha256 | sed 's/.*stdin)= //'; done; }
+function tlsRsaPrvFingerprint() {
+    openssl  rsa  -noout -modulus -text -in $1 | \
+        egrep '(Modulus=|Exponent:)' | \
+        sed -E 's/Exponent: [0-9]+ \(//' | \
+        sed 's/)//' | \
+        sed 's/Modulus=//' | \
+        sed 's/0x//' | \
+        tr  '\n' ',' | \
+        sed -E 's/.$//' | \
+        sed 's/^public//' | \
+        sed 's/,privateExponent://' | \
+        sha256sum | \
+        awk '{ print $1 }'
+}
+
 # show fingerprint of public RSA key
-function tlsRsaPubFingerprint() { local output="/dev/null" ; [ "$1" = -v ] &&  output="/dev/stdout" && shift ; local file; for file in $*; do /bin/echo -n "$file:" > $output; openssl rsa -modulus -noout -pubin -in "$file" | openssl sha256 | sed 's/.*stdin)= //'; done; }
+#function tlsRsaPubFingerprint() { local output="/dev/null" ; [ "$1" = -v ] &&  output="/dev/stdout" && shift ; local file; for file in $*; do /bin/echo -n "$file:" > $output; openssl rsa -modulus -noout -pubin -in "$file" | openssl sha256 | sed 's/.*stdin)= //'; done; }
+function tlsRsaPubFingerprint() {
+       openssl rsa -modulus -text -noout -pubin -in $1  | \
+        egrep '^(Modulus=|Exponent:)' | sed -E 's/Exponent: [0-9]+ \(//' | \
+        sed 's/)//' | sed 's/Modulus=//' | sed 's/0x//' | \
+        tr  '\n' ',' | sed -E 's/.$//' | \
+        sha256sum | \
+        awk '{ print $1 }'
+}
 
 function tlsRsaPrv2PubKey() { openssl rsa -in $1 -pubout; }
 
