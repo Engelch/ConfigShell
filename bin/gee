@@ -38,7 +38,7 @@
 
 readonly _app=$(basename $0)
 readonly _appDir=$(dirname $(readlink -f $0))
-readonly _appVersion="2.1.2" # use semantic versioning
+readonly _appVersion="2.2.0" # use semantic versioning
 export DebugFlag=${DebugFlag:-FALSE}
 
 #########################################################################################
@@ -142,6 +142,9 @@ function usage()
     err
     err4 $_app '( l[i[st]] | lst )'
     err8 - list files under git gee
+    err
+    err4 $_app '( s | status )'
+    err8 - list files which are modified and have to be reencrypted. git status does not always tell the full story.
     err
     err4 $_app version
     err8 - list the current version of git gee and exits
@@ -460,6 +463,7 @@ function encryptMode() {
 #############################################################################################
 
 function listMode() {
+    # created dependency by gee s
     debug list mode
     shift
     exitIfNotInGitRepo
@@ -502,13 +506,16 @@ function main() {
         initMode $*
         ;;
     l|li|list|lst)
-        listMode $*
+        listMode $* # created dependency by gee s
         ;;
     e|en|enc|encr|encry|encryp|encrypt|encrypted)
         encryptMode $*
         ;;
     d|de|dec|decr|decry|decryp|decrypt|u|un|une|unen|unencr|unencry|unencryp|unencrypt)
         decryptMode $*
+        ;;
+    s|status)
+        git gee l | egrep --color ', modified\)$' # must be changed if the output format of l is changed
         ;;
     version)
         echo $_appVersion
