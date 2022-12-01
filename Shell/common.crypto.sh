@@ -84,6 +84,8 @@ function sshagent_init {
    #  ssh agent sockets can be attached to a ssh daemon process or an ssh-agent process.
    debug8 common.crypto.sh sshagent_init
 
+   [ -n "${SSH_AUTH_SOCK}" ] && [ -n "${SSH_TTY}" ] && return
+
    local -r ssh_auth_sock_file=$HOME/.ssh_auth_sock
    if [ -r $ssh_auth_sock_file ] ; then
       source $ssh_auth_sock_file # SSH_AUTH_SOCK to be read by this file

@@ -88,8 +88,7 @@ function common.aliases.init() {
     common.aliases.ls   # potentially reloading/re-evaluated again for colourised-ls from os.$(uname).ls
 
     function cd() {
-        command cd $*
-        [ -r ./00DIR.txt -a -z "$NO_CD_OUTPUT" ] && cat ./00DIR.txt
+        command cd $* && [ -r ./00DIR.txt -a -z "$NO_CD_OUTPUT" ] && cat ./00DIR.txt
     }
 }
 
