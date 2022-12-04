@@ -88,7 +88,13 @@ function common.aliases.init() {
     common.aliases.ls   # potentially reloading/re-evaluated again for colourised-ls from os.$(uname).ls
 
     function cd() {
-        command cd $* && [ -r ./00DIR.txt -a -z "$NO_CD_OUTPUT" ] && cat ./00DIR.txt
+        command cd $*; res=$?
+        if [ $res -eq 0 ] ; then
+            [ -r ./00DIR.txt -a -z "$NO_CD_OUTPUT" ] && cat ./00DIR.txt
+            [ -r ./00DIR.sh -a -x ./00DIR.sh ] && echo executing 00DIR.sh && ./00DIR.sh
+            [ -r ./00DIR.sh -a ! -x ./00DIR.sh ] && echo Warning, detected 00DIR.sh, but it is not executable
+            [ -r ./00DIR.source.sh ] && echo sourcing 00DIR.source.sh && source ./00DIR.source.sh
+        fi
     }
 }
 
