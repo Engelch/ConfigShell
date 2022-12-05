@@ -173,13 +173,13 @@ function err12() { echo '           ' $* 1>&2; } # just write to stderr
 
 # --- Existence checks
 # shellcheck disable=SC2086
-function exitIfBinariesNotFound() { for file in "$@"; do command -v "$file" || errorExit 253 binary not found: $file; done; }
+function exitIfBinariesNotFound() { for file in "$@"; do command -v "$file" || errorExit 253 "binary not found: $file"; done; }
 # shellcheck disable=SC2086
-function exitIfPlainFilesNotExisting() { for file in "$@"; do [ ! -f $file ] && errorExit 254 'plain file not found:'$file 1>&2; done; }
+function exitIfPlainFilesNotExisting() { for file in "$@"; do [ ! -f $file ] && errorExit 254 "plain file not found: $file" 1>&2; done; }
 # shellcheck disable=SC2086
-function exitIfFilesNotExisting() { for file in "$@"; do [ ! -e $file ] && errorExit 255 'file not found:'$file 1>&2; done; }
+function exitIfFilesNotExisting() { for file in "$@"; do [ ! -e $file ] && errorExit 255 "file not found: $file" 1>&2; done; }
 # shellcheck disable=SC2086
-function exitIfDirsNotExisting() { for dir in "$@"; do [ ! -d $dir ] && errorExit 252 "$APP:ERROR:directory not found:"$dir; done; }
+function exitIfDirsNotExisting() { for dir in "$@"; do [ ! -d $dir ] && errorExit 252 "$APP:ERROR:directory not found: $dir"; done; }
 
 # --- Temporary file/directory  creation
 # -- file creation -- TMP1=$(tempFile); TMP2=$(tempFile) ;;;; trap "/bin/rm -f $TMP1 $TMP2 &>/dev/null" EXIT
@@ -251,14 +251,14 @@ function usage() {
 function git-root-relative-path() {
     initDefaultVars
     local _absfile
-    [ -z "$1" ] && errorExit 90 missing argument to git-root-relative-path
-    _absfile=$(readlink -f "$1")
+    [ -z "$1" ] && errorExit 90 "missing argument to git-root-relative-path"
+    local -r _absfile=$(readlink -f "$1")
     # shellcheck disable=SC2001
     echo "$_absfile" | sed "s,$gitroot/,,"
 }
 
 function exitIfNotInGitRepo() {
-    git rev-parse --show-toplevel &>/dev/null || errorExit 11 Not in a git repository
+    git rev-parse --show-toplevel &>/dev/null || errorExit 11 "Not in a git repository"
 }
 
 function mtime() {
@@ -283,7 +283,7 @@ function parseCLI() {
     while getopts "Dhv" options; do # Loop: Get the next option;
         case "${options}" in        # TIMES=${OPTARG}
         D)
-            err Debug enabled
+            err "Debug enabled"
             debugSet
             ;;
         h)
@@ -295,7 +295,7 @@ function parseCLI() {
             ;;
         *)
             # shellcheck disable=SC2086
-            err Help with $_app -h
+            err "Help with $_app -h"
             exit 2 # Exit abnormally.
             ;;
         esac
@@ -303,7 +303,7 @@ function parseCLI() {
 }
 
 function checkPreCommitHookExisting() {
-    readonly _hook=$gitroot/.git/hooks/pre-commit
+    local -r _hook="$gitroot/.git/hooks/pre-commit"
     [ -e "$_hook" ] && [ ! -f "$_hook" ] && error "Other object type with name $_hook" && return 1
     [ ! -f "$_hook" ] && error "Hook $_hook not found." && return 2
     [ ! -r "$_hook" ] && error "Hook $_hook not readable." && return 3
@@ -374,7 +374,7 @@ ENDINIT
 #############################################################################################
 
 function initMode() {
-    debug init mode
+    debug "init mode"
     exitIfNotInGitRepo
     initDefaultVars
     cd "$gitroot" || return
@@ -393,10 +393,10 @@ function initMode() {
 # endecryptFile2 syntax: (encrypt|decrypt) pw src-file dest-file
 function endecryptFile2() {
     debug "encryptFile $*"
-    local _mode=$1
-    local _pw=$2
-    local _src=$3
-    local _dest=$4
+    local -r _mode=$1
+    local -r _pw=$2
+    local -r _src=$3
+    local -r _dest=$4
     [ $# -ne 4 ] && errorExit 60 "wrong number of arguments to endecryptFile2 $#, $*"
     [ "$_mode" != encrypt ] && [ "$_mode" != decrypt ] && errorExit 61 "undefined mode for endecryptFile2 $_mode"
     [ ! -f "$_pw" ] && errorExit 62 "pw file not a plain file"
@@ -406,7 +406,7 @@ function endecryptFile2() {
     # Shellcheck warns about single quotes to delay expansion, but expanding here is fine
     # shellcheck disable=SC2064
     trap "/bin/rm -f \"$TMP1\" &>/dev/null" EXIT # create temporary file so that destination never holds file in unencrypted way
-    /bin/cp -f "$_src" "$TMP1" || errorExit 65 error creating temporary file
+    /bin/cp -f "$_src" "$TMP1" || errorExit 65 "error creating temporary file"
     echo -n "Processing file $_src ->" # as ansible-vault always creates output, let's look it nice
     ansible-vault "$_mode" --vault-password-file "$_pw" "$TMP1" || errorExit 66 "encrypting file $TMP1"
     /bin/mv -f "$TMP1" "$_dest" || errorExit 67 "moving encrypted file $TMP1 back"
@@ -426,13 +426,12 @@ function decryptFile() {
 ######################################################################################################
 
 function addMode() {
-    debug add mode
+    debug "add mode"
     exitIfNotInGitRepo
     initDefaultVars
     exitIfNotInGitGeeRepo
     exitIfBinariesNotFound ansible-vault
     shift
-    local file
     for file in "$@"; do
         [ ! -e "$file" ] && errorExit 40 "$file does not seem to exist"
         [ ! -f "$file" ] && errorExit 41 "$file is not a plain file"
@@ -448,14 +447,14 @@ function addMode() {
         git rm --cached "$file" &>/dev/null # remove file if potentially in index
         encryptFile "$geePwFile" "$file" "$file.gee" || errorExit 45 "error encrypting file $file as $TMP1"
         debug4 "adding $file.gee"
-        git add "$file.gee" || errorExit 46 error adding encrypted file to index
+        git add "$file.gee" || errorExit 46 "error adding encrypted file to index"
     done
 }
 
 #############################################################################################
 
 function cleanMode() {
-    debug clean mode
+    debug "clean mode"
     exitIfNotInGitRepo
     initDefaultVars
     exitIfNotInGitGeeRepo
@@ -483,25 +482,25 @@ function cleanMode() {
 
 # decryptModeFile is a helper for decryptMode
 function decryptModeFile() {
-    local file=$1
+    local -r file=$1
     debug "decryptModeFile processing file $file"
-    _basefile="$(dirname "$file")/$(basename "$file" .gee)"    # make sure, we have the correspondig gee file
-    _geefile="$(dirname "$file")/$(basename "$file" .gee).gee" # make sure, we have the correspondig gee file
+    local -r _basefile="$(dirname "$file")/$(basename "$file" .gee)"    # make sure, we have the correspondig gee file
+    local -r _geefile="$(dirname "$file")/$(basename "$file" .gee).gee" # make sure, we have the correspondig gee file
     [ ! -f "$_geefile" ] && errorExit 70 "decryptModeFile file $_geefile does not exist for decryption"
     if [ ! -f "$_basefile" ] || [ "$_geefile" -nt "$_basefile" ] || [ "$_force" = TRUE ]; then
         decryptFile "$geePwFile" "$_geefile" "$_basefile" || errorExit 71 "while decrypting file $_geefile"
         touch -r "$_geefile" "$_basefile"
     elif [ "$(mtime "$_basefile")" = "$(mtime "$_geefile")" ]; then
         # shellcheck disable=SC2086
-        echo 1>&2 No action: .gee file and related file have the same age: $_basefile
+        echo 1>&2 "No action: .gee file and related file have the same age: $_basefile"
     else
         # shellcheck disable=SC2086
-        echo 1>&2 WARNING: not decrypting $_geefile as the correspondig unencrypted file is younger
+        echo 1>&2 "WARNING: not decrypting $_geefile as the correspondig unencrypted file is younger"
     fi
 }
 
 function decryptMode() {
-    debug decrypt mode
+    debug "decrypt mode"
     exitIfNotInGitRepo
     initDefaultVars
     exitIfNotInGitGeeRepo
@@ -527,10 +526,10 @@ function decryptMode() {
 
 # encryptModeFile called with non .gee suffix
 function encryptModeFile() {
-    local file=$1
+    local -r file=$1
     debug "encryptModeFile processing file $file"
-    _basefile="$(dirname "$file")/$(basename "$file" .gee)"    # make sure, we have the correspondig gee file
-    _geefile="$(dirname "$file")/$(basename "$file" .gee).gee" # make sure, we have the correspondig gee file
+    local -r _basefile="$(dirname "$file")/$(basename "$file" .gee)"    # make sure, we have the correspondig gee file
+    local -r _geefile="$(dirname "$file")/$(basename "$file" .gee).gee" # make sure, we have the correspondig gee file
     if [ -f "$_basefile" ]; then
         debug4 "$_basefile existing"
         [ ! -f "$_geefile" ] && errorExit 100 "required .gee file created by gee add does not exist for $_basefile"
@@ -538,14 +537,14 @@ function encryptModeFile() {
             # shellcheck disable=SC2086
             debug4 Encrypting file $_basefile ' '
             encryptFile "$geePwFile" "$_basefile" "$_geefile" || errorExit 100 "encrypting file $_basefile to $_geefile"
-            git add "$_geefile" || errorExit 101 adding _geefile to index
+            git add "$_geefile" || errorExit 101 "adding _geefile to index"
         else
             # shellcheck disable=SC2086
-            echo $_basefile not newer than $_geefile, no change, continuing
+            echo "$_basefile not newer than $_geefile, no change, continuing"
         fi
     else
         # shellcheck disable=SC2086
-        echo NO $_basefile for $_geefile, continuing
+        echo "NO $_basefile for $_geefile, continuing"
     fi
 }
 
@@ -576,19 +575,18 @@ function encryptMode() {
 #############################################################################################
 
 function listMode() {
-    # created dependency by gee s
-    debug list mode
+    debug "list mode"
     shift
     exitIfNotInGitRepo
     initDefaultVars
     # shellcheck disable=SC2086
-    verbosenl Listing from from git root directory:$gitroot
+    verbosenl "Listing from from git root directory: $gitroot"
     cd "$gitroot" || return
     local found=0
     local file
     find . -type f -name '*.gee' -print | while read -r file; do
         echo -n "$file"
-        local -r _basefile=$(dirname "$file")/$(basename "$file" .gee)
+        local -r _basefile="$(dirname "$file")/$(basename "$file" .gee)"
         [ -f "$_basefile" ] && found=1 && echo -n " ($_basefile existing"
         [ "$_basefile" -nt "$file" ] && echo ', modified)' && continue
         [ "$found" -eq 1 ] && echo -n ')' && found=0
