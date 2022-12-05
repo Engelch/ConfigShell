@@ -180,7 +180,7 @@ function main() {
             warning No OS-specific path file "$PROFILES_CONFIG_DIR/Shell/os.$(uname).sh" found
          fi
          local sshCompletionList=$HOME/.ssh/completion.lst
-         [ -f $sshCompletionList ] && complete -W "$(cat $sshCompletionList)" -- ssh
+         [ -f $sshCompletionList ] && complete -W "$(cat $sshCompletionList)" -- ssh && complete -f -d -W "$(cat $sshCompletionList)" -- rsync
          if [ -z $NO_loadPost ] ; then
             loadSource post
             for file in $HOME/.bashrc.d/*.sh ; do
