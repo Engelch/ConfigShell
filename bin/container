@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
 ########## RELEASE INFORMATION
+# 2.4
+#   - podman is now default if found
 # 2.3
 #   - support for podmand by -2 option
 # 2.2
@@ -17,7 +19,7 @@
 # 1.1.0
 # - introducing new touch variable _detach
 
-VERSION=2.3.0
+VERSION=2.4.0
 
 function err()          { echo $* 1>&2; } # write to stderr
 function err4()          { echo '    '$* 1>&2; } # write to stderr
@@ -37,6 +39,12 @@ function exitIfFilesNotExisting()       { for file in $*; do [ ! -e $file ] && e
 function exitIfDirsNotExisting()        { for dir in $*; do [ ! -d $dir ] && errorExit 252 "$APP:ERROR:directory not found:"$dir; done }
 
 function errorExit()    { EXITCODE=$1 ; shift; error $* ; exit $EXITCODE; }
+
+################################################################################
+
+# Listed in order of ASCENDING preference (podman > docker)
+which docker &>/dev/null && docker=docker
+which podman &>/dev/null && docker=podman
 
 ################################################################################
 
