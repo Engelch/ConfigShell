@@ -42,21 +42,22 @@ function k8Setup() {
       [ "$1" = -n ] && shift && _namespace="-n $1" && shift
       local _pod=$($KUBECTL get po $_namespace | grep -i "$1" | cut -d ' ' -f 1)
       shift
-      $KUBECTL describe $_namespace $_pod $*
+      $KUBECTL describe $_namespace $_pod "$@"
    }
 
    function k8exec() { ## supports -n namespace
       ## k8exec just requires a unique part of the pod-name in the given or the default namespace
       ## options: -n namespace
       ## arguments, optional: command, default: /bin/bash
-      local _namespace=""
-      [ "$1" = -n ] && shift && _namespace="-n $1" && shift
-      local _pod=$($KUBECTL get po $_namespace | grep -i "$1" | cut -d ' ' -f 1)
-      shift
-      cmd=
-      [ "$*" = "" ] && cmd=/bin/bash
-      $KUBECTL exec $_namespace -it $_pod -- $cmd $*
-   }
+
+        local _namespace="";
+        [ "$1" = -n ] && shift && _namespace="-n $1" && shift;
+        local _pod=$($KUBECTL get pod $_namespace -o name | grep -i "$1" | cut -d ' ' -f 1);
+        shift;
+        cmd=;
+        [ "$*" = "" ] && cmd=/bin/bash;
+        $KUBECTL exec $_namespace -it $_pod -- $cmd "$@"
+}
 
    function k8logs() { ## supports -n namespace
       ## k8logs just requires a unique part of the pod-name. -f can be specified.
@@ -75,6 +76,7 @@ function k8Setup() {
       cat  $PROFILES_CONFIG_DIR/Shell/common.k8s.sh | grep -v '#####'  | grep '##' | sed 's/^[[:space:]]*##$//' | sed 's/^[[:space:]]*## /    /' | sed 's/^[[:space:]]*### /    ## /' |  sed 's/^[[:space:]]*#### /    # /'
    }
    alias k8-help=k8help ##
+
    command -v kubectl &>/dev/null && source <(kubectl completion bash) && complete -o default -F __start_kubectl k && complete -o default -F __start_kubectl k8
    return 0
 }
