@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-$(dirname $0)/ci-build.sh $@ && \
+$(dirname $0)/aws-ci-build.sh $@ && \
    echo ================================================ &&\
    echo ================================================ &&\
-   echo ci-build was successful &&\
+   echo aws-ci-build was successful &&\
    echo ================================================ &&\
    echo ================================================ &&\
-   $(dirname $0)/ci-push.sh $@
+   $(dirname $0)/aws-ci-push.sh $@

@@ -34,17 +34,17 @@ DRY_RUN=
 
 # required for tagging, but could also be done in ciPush where it could make sense to support multiple
 # destinations
-. .dockersettings || {
-    1>&2 echo "ERROR: expected file .dockersettings with key-value pairs: REGISTRY=, REGION="
+. .containersettings || {
+    1>&2 echo "ERROR: expected file .containersettings with key-value pairs: REGISTRY=, REGION="
     exit 3
 }
 
 [ -z "${REGISTRY}" ] &&
-    1>&2 echo "ERROR: REGISTRY variable is not set in .dockersettings" &&
+    1>&2 echo "ERROR: REGISTRY variable is not set in .containersettings" &&
     exit 4
 
 [ -z "${REGION}" ] &&
-    1>&2 echo "ERROR: REGION variable is not set in .dockersettings" &&
+    1>&2 echo "ERROR: REGION variable is not set in .containersettings" &&
     exit 5
 
 [ -z "${AWS_PROFILE}" ] &&
