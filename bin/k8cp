@@ -1,0 +1,160 @@
+#!/usr/bin/env bash
+# vim: set expandtab: ts=3: sw=3
+#
+# TITLE: $_app
+#
+# DESCRIPTION: <see usage function below>
+#
+# LICENSE: MIT todo
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy of this
+# software and associated documentation files (the "Software"), to deal in the Software
+# without restriction, including without limitation the rights to use, copy, modify, merge,
+# publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons
+# to whom the Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all copies
+# or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+# INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+# PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+# FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+
+#########################################################################################
+# VARIABLES, CONSTANTS
+
+readonly _app=$(basename $0)
+readonly _appDir=$(dirname $0)
+readonly _absoluteAppDir=$(cd $_appDir; /bin/pwd)
+readonly _appVersion="1.0.0" # use semantic versioning
+export DebugFlag=${DebugFlag:-FALSE}
+
+#########################################################################################
+
+# --- debug: Conditional debugging. All commands begin w/ debug.
+
+function debugSet()             { DebugFlag=TRUE; return 0; }
+function debugUnset()           { DebugFlag=; return 0; }
+function debug()                { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:'$* 1>&2 ; return 0; }
+function debug4()               { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:    ' $* 1>&2 ; return 0; }
+function debug8()               { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:        ' $* 1>&2 ; return 0; }
+function debug12()              { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:            ' $* 1>&2 ; return 0; }
+
+# --- Exits
+
+# function error()        { err 'ERROR:' $*; return 0; } # similar to err but with ERROR prefix and possibility to include
+# Write an error message to stderr. We cannot use err here as the spaces would be removed.
+function error()        { echo 'ERROR:'$* 1>&2;             return 0; }
+function error4()       { echo 'ERROR:    '$* 1>&2;         return 0; }
+function error8()       { echo 'ERROR:        '$* 1>&2;     return 0; }
+function error12()      { echo 'ERROR:            '$* 1>&2; return 0; }
+
+function errorExit()    { EXITCODE=$1 ; shift; error $* ; exit $EXITCODE; }
+function exitIfErr()    { a="$1"; b="$2"; shift; shift; [ "$a" -ne 0 ] && errorExit $b App returned $a $*; }
+
+function err()          { echo $* 1>&2; }                 # just write to stderr
+function err4()         { echo '   ' $* 1>&2; }           # just write to stderr
+function err8()         { echo '       ' $* 1>&2; }       # just write to stderr
+function err12()        { echo '           ' $* 1>&2; }   # just write to stderr
+
+# --- Existance checks
+function exitIfBinariesNotFound()       { for file in $@; do [ $(command -v "$file") ] || errorExit 253 binary not found: $file; done }
+function exitIfPlainFilesNotExisting()  { for file in $*; do [ ! -f $file ] && errorExit 254 'plain file not found:'$file 1>&2; done }
+function exitIfFilesNotExisting()       { for file in $*; do [ ! -e $file ] && errorExit 255 'file not found:'$file 1>&2; done }
+function exitIfDirsNotExisting()        { for dir in $*; do [ ! -d $dir ] && errorExit 252 "$APP:ERROR:directory not found:"$dir; done }
+
+# --- Temporary file/directory  creation
+# -- file creation -- TMP1=$(tempFile); TMP2=$(tempFile) ;;;; trap "rm -f $TMP1 $TMP2" EXIT
+# -- directory creation -- TMPDIR=$(tempDir) ;;;;;  trap "rm -fr $TMPDIR;" EXIT
+#
+function tempFile()                     { mktemp ${TMPDIR:-/tmp/}$_app.XXXXXXXX; }
+function tempDir()                      { mktemp -d "${TMPDIR:-/tmp/}$_app.YYYYYYYYY"; }
+# realpath as shell, argument either supplied as stdin or as $1
+
+# application-specific functions  ===============================================================================
+
+function usage()
+{
+    err DESCRIPTION
+    err
+    err4 k8cp program to copy files to/from a pod
+    err
+    err SYNOPSIS
+    err4 $_app '[-D] [-c <container>] [-n <namespace>] <uniquePodSpec>:file file'
+    err4 $_app '[-D] [-c <container>] [-n <namespace>] file <uniquePodSpec>:file'
+    err4 $_app '-h'
+    err
+    err VERSION
+    err4 $_appVersion
+    err
+    err OPTIONS
+    err4 '-n <namespace>'
+    err4 '-c <container>'
+    err4 '-D      ::= enable debug output'
+    err4 '-h      ::= show usage message and exit with 1'
+    err4 todo .......
+}
+
+# exit codes 1..9
+function parseCLI() {
+    local currentOption
+    while getopts "Dn:hc:" options; do         # Loop: Get the next option;
+        case "${options}" in                    # TIMES=${OPTARG}
+            D)  err Debug enabled ; set -x ; debugSet
+                ;;
+            n)  debug namespace explicitly set
+                _namespace="-n $OPTARG"
+                ;;
+            c)  debug container is $OPTARG
+                _container="-c $OPTARG"
+                ;;
+            h)  usage ; exit 1
+                ;;
+            *)
+                errorExit 2 Wrong argument supplied. Help with $_app -h
+                ;;
+        esac
+    done
+}
+
+function findPod() {
+    if [ "$DebugFlag" = TRUE ] ; then
+        err in debug mode, returning fixed pod name demopod
+        echo demopod
+    else
+        local _pod=$($KUBECTL get pod $_namespace -o name | egrep -E -i "$1" | cut -d ' ' -f 1);
+        [[ $(echo $_pod | wc -l) -ne 1 ]] && errorExit 10 not exactly one pod could be identified
+        echo $_pod | sed -E -e 's,^pod/,,'
+    fi
+    return 0
+}
+
+function main() {
+    exitIfBinariesNotFound pwd basename dirname mktemp $KUBECTL egrep cut wc sed
+    parseCLI $*
+    shift $(($OPTIND - 1))  # not working inside parseCLI
+    myArray=( $* ) # move all arguments into an array
+
+    count=0
+    for ar in ${myArray[*]} ; do # for all arguments supplied
+        debug count is $count
+        if [[ $ar =~ : ]] ; then
+            debug matching on $ar
+            _match=$(echo $ar | sed -E -e 's/:.*//')
+            _rest=$(echo $ar| sed -E -e  's/.*://')
+            myArray[$count]=$(findPod $_match):$_rest
+        else
+            debug working in argument $count, not matching
+        fi
+        (( count += 1 ))
+    done
+    echo kubectl cp  $_container $_namespace ${myArray[*]}
+    kubectl cp  $_container $_namespace ${myArray[*]}
+}
+
+main $*
+
+# EOF
