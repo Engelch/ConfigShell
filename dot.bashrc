@@ -183,8 +183,15 @@ function main() {
          [ -f $sshCompletionList ] && complete -W "$(cat $sshCompletionList)" -- ssh && complete -f -d -W "$(cat $sshCompletionList)" -- rsync
          if [ -z $NO_loadPost ] ; then
             loadSource post
+            for file in $HOME/.bashrc.d/*.rc ; do
+               [ "$file" = "$HOME/.bashrc.d/"'*.rc' ] && continue # in case that no file is found
+               [ -r "$file" ] && debug4 sourcing "$file" && source "$file"
+               [ -r "$file" ] || err could not read "$file"
+            done
             for file in $HOME/.bashrc.d/*.sh ; do
-               [ -r "$file" ] && debug4 source "$file" && source "$file"
+               [ "$file" = "$HOME/.bashrc.d/"'*.sh' ] && continue # in case that no file is found
+               [ -r "$file" ] && debug4 executing "$file" && bash "$file"
+               [ -r "$file" ] || err could not read "$file"
             done
          fi
          ;;
