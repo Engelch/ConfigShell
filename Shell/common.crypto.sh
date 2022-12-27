@@ -1,76 +1,6 @@
 # ---- Crypto -----------------------------------------------------------------------
 
-# These routines delete the original file. By default, they do not overwrite existing files. This can be changed by supplying the argument `-f`.
-
-function sencrypt() {
-   local file
-   local keep=
-   local force=
-   [ $1 = -f ] && force=True && shift
-   [ $1 = -k ] && keep=True && shift
-   [ $1 = -f ] && force=True && shift # all 4 forms (1) -f -k (2) -k -f (3) -kf (4) -fk
-   [ $1 = -kf -o $1 = -fk ] && keep=True && force=True && shift
-   for file in $* ; do
-      [ ! -z $force ] && /bin/rm -f $file.asc 2>/dev/null
-      [ -f $file.asc ] && error target file already exists for $file. && continue
-      gpg -c -o $file.asc $file && [ -z $keep ] && /bin/rm -f $file
-   done
-}
-
-# This version only asks once for the pw for multiple files. This can be risky in multi-user environments as the passphrase is readable in
-# the process table. But, it can help to save a lot of typing :-)
-function sencrypt2() {
-   local file
-   local keep=
-   local force=
-   local pw=
-   local pw2
-   [ $1 = -f ] && force=True && shift
-   [ $1 = -k ] && keep=True && shift
-   [ $1 = -f ] && force=True && shift # all 4 forms (1) -f -k (2) -k -f (3) -kf (4) -fk
-   [ $1 = -kf -o $1 = -fk ] && keep=True && force=True && shift
-   read -esp "Enter passphrase:" pw
-   read -esp "Enter passphrase again:" pw2
-   [ "$pw" != "$pw2" ] && error passwords differ && exit 1
-   for file in $* ; do
-      [ ! -z $force ] && /bin/rm -f $file.asc 2>/dev/null
-      [ -f $file.asc ] && error target file already exists for $file. && continue
-      echo $pw | gpg -c --passphrase-fd 0 --batch --yes -o $file.asc $file && [ -z $keep ] && /bin/rm -f $file
-   done
-}
-
-function sdecrypt() {
-   local file
-   local force=
-   local keep=
-   local target
-   [ $1 = -f ] && force=True && shift
-   [ $1 = -k ] && keep=True && shift
-   [ $1 = -f ] && force=True && shift # all 4 forms (1) -f -k (2) -k -f (3) -kf (4) -fk
-   [ $1 = -kf -o $1 = -fk ] && keep=True && force=True && shift
-   for file in $* ; do
-      target=$(basename $file .asc)
-      [ ! -z $force ] && /bin/rm -f $target 2>/dev/null
-      [ -f $target ] && error target file already exists for $file. && continue
-      debug gpg -d -o $target $file
-      gpg -d -o $target $file && [ -z $keep ] && /bin/rm -f $file
-   done
-}
-
 # ---- SSH  -----------------------------------------------------------------------
-
-# ssf finds a host entry in ssh configuration files in ~/.ssh/config.d/*.config. Earlier versions used ~/.ssh/config.d/* but
-# this makes it complex to disable files and keep them for a while.
-export SSF_SURROUNDING_LINES='--colour -A 3' # variable to be adjusted in .profile.post
-function ssf() { egrep -rv '^[[:space:]]*#' $(find ~/.ssh/ -name Config.d -type d -print  | tr '\n' ' ') | egrep -v ProxyJump | eval egrep -i $SSF_SURROUNDING_LINES --colour=auto "$*" ; }
-
-# show the ssh-fingerprints for the supplied files. ssh-keygen does not support multiple files
-function sshFingerprint() { for file in $* ; do  echo -n $file': ' ; ssh-keygen -lf "$file" ; done ; }
-
-# show the ssh-certificate for the supplied files. ssh-keygen does not support multiple files
-function sshCertificate() { for file in $* ; do ssh-keygen -Lf "$file" ; done ; }
-
-function sshPriv2PubKey() { ssh-keygen -yf $1 ;  } # create public key out of private key
 
 function start_ssh_agent() {
    # start the ssh-agent and store the variable for ssh-add in a file for next shells
@@ -126,10 +56,6 @@ function TRAPEXIT() {
 
 # ---- TLS  -----------------------------------------------------------------------
 
-# ------ Certs
-# create fingerprint of certificate
-function tlsCertFingerprint() {  local output="/dev/null" ; [ "$1" = -v ] &&  output="/dev/stdout" && shift ; local file; for file in $*; do /bin/echo -n "$file:" > $output; openssl x509 -modulus -noout -in "$file" | openssl sha256 | sed 's/.*stdin)= //' ; done;  }
-
 # split -p not existing under Linux .... > switch to simple ruby as existing on most plaforms
 # show certificate (replacing the package version tlsCertView) - removed awk against split
 # function tlsCert() {
@@ -146,107 +72,6 @@ function tlsCertFingerprint() {  local output="/dev/null" ; [ "$1" = -v ] &&  ou
 #    done
 #    setopt -o nomatch;
 # }
-
-function tlsCert() {
-   local a=$(mktemp /tmp/tlsCert.XXXXXXXX)
-   trap "rm -f $a" EXIT
-   cat >> $a <<EOF
-#!/usr/bin/env ruby
-VERSION="v2.1.23"
-args    = ARGV.join(" ")
-count   = -1
-outarr  = Array.new()
-# read lines beginning with BEGIN CERTIFICATE and the following into an outarr
-IO.foreach(args) do | name |
-    if name.include? "----BEGIN CERTIFICATE"
-        count += 1
-    end
-    outarr[count] = outarr[count].to_s + name if count >= 0
-end
-print "Number of certificates (#{VERSION}): ", count+1, "\n"
-print "================================\n"
-(count+1).times do |val|
-    IO.popen("openssl x509 -subject -email -issuer -dates -sha256 -serial -noout -ext 'subjectAltName,authorityKeyIdentifier,subjectKeyIdentifier' 2>/dev/null", "w+") do |proc|
-         proc.write(outarr[val])
-         proc.close_write
-         puts "--------------------------------" if val > 0
-
-         proc.readlines.each { |x|
-            if x.length > 1
-               print (x.to_s.gsub("\n", ""))
-               print ("\n") if not [ "Identifier", "Alternative Name" ].any?{ |s| x.include? s }
-            end
-         }
-    end
-end
-print "================================\n"
-EOF
-   ruby $a $*
-   unset a
-}
-
-function tlsCert2LeafCn() {
-	[ ! -f "$1" ] && error Supplied argument $1 is not a file && return
-	tlsCert $1 | grep 'subject=' | head -n 1 | sed -e 's/^.*CN = //' -e 's/,.*//'
-}
-
-function tlsCert2LeafSubject() {
-	[ ! -f "$1" ] && error Supplied argument $1 is not a file && return
-	tlsCert $1 | grep 'subject=' | head -n 1 | sed -e 's/^.*subject=//'
-}
-
-alias  tlsSrvCrt=tlsServerCert
-alias  tlsSrvCert=tlsServerCert
-function tlsServerCert() {
-   # tlsServerCert expects a hostname as its first argument. The argument can contain http:// or https:// which will
-   # be removed from the call.
-    [ -z $1 ] && 1>&2 echo no argument specified && return 1
-    url=$1
-    # strip potential leading ^http.?://
-    [[ $url =~ ^http.?:// ]] && url=$(echo $url | sed 's,^.*://,,')
-    debug url: $url
-    gnutls-cli --print-cert --no-ca-verification $url  < /dev/null
-}
-
-# ------ Keys
-# show fingerprint of private RSA key
-#function tlsRsaPrvFingerprint() { local output="/dev/null" ; [ "$1" = -v ] &&  output="/dev/stdout" && shift ; local file; for file in $*; do /bin/echo -n "$file:" > $output; openssl rsa -modulus -noout -in "$file" | openssl sha256 | sed 's/.*stdin)= //'; done; }
-function tlsRsaPrvFingerprint() {
-    openssl  rsa  -noout -modulus -text -in $1 | \
-        egrep '(Modulus=|Exponent:)' | \
-        sed -E 's/Exponent: [0-9]+ \(//' | \
-        sed 's/)//' | \
-        sed 's/Modulus=//' | \
-        sed 's/0x//' | \
-        tr  '\n' ',' | \
-        sed -E 's/.$//' | \
-        sed 's/^public//' | \
-        sed 's/,privateExponent://' | \
-        sha256sum | \
-        awk '{ print $1 }'
-}
-
-# show fingerprint of public RSA key
-#function tlsRsaPubFingerprint() { local output="/dev/null" ; [ "$1" = -v ] &&  output="/dev/stdout" && shift ; local file; for file in $*; do /bin/echo -n "$file:" > $output; openssl rsa -modulus -noout -pubin -in "$file" | openssl sha256 | sed 's/.*stdin)= //'; done; }
-function tlsRsaPubFingerprint() {
-       openssl rsa -modulus -text -noout -pubin -in $1  | \
-        egrep '^(Modulus=|Exponent:)' | sed -E 's/Exponent: [0-9]+ \(//' | \
-        sed 's/)//' | sed 's/Modulus=//' | sed 's/0x//' | \
-        tr  '\n' ',' | sed -E 's/.$//' | \
-        sha256sum | \
-        awk '{ print $1 }'
-}
-
-function tlsRsaPrv2PubKey() { openssl rsa -in $1 -pubout; }
-
-# ------ CSR
-function tlsCsr() { local file; for file in $*; do openssl req -in "$file"  -noout -utf8 -text | sed "s,^,$file:," | egrep -v '.*:.*:.*:'; done; }
-function tlsCsrPubKeyFingerprint() {
-   local file
-   for file in $*; do
-      openssl req -in "$file" -noout -pubkey | openssl rsa -modulus -pubin -noout | openssl sha256 | sed 's/.*stdin)= //' | egrep -v '.*:.*:.*:'
-   done
-}
 
 
 ##########################################

@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+#
+# shellcheck disable=SC2155
+# no errors
+#
+# update OS supporting
+# - Darwin alias OSX
+# - Debian/Ubuntu
+# - Fedora
+
+function err()          { echo "$@" 1>&2; return 0; }
+function warning()      { err "WARNING:$*" ; return 0; }
+function errorExit()    { EXITCODE=$1 ; shift; error "$@" ; exit "${EXITCODE}"; }
+
+declare -r version=0.0.1
+_uname=$(uname)
+if [[ ${_uname} == Darwin ]] ; then
+   echo homebrew........................................  1>&2
+   brew update && brew upgrade && brew upgrade --cask --greedy && \
+      brew autoremove && \
+      brew cleanup # casks are also updated to today's brew upgrade && brew cu -ay # cu := cask upgrade
+   echo Google Cloud SDK................................  1>&2
+   if command -v gcloud > /dev/null 2>&1 ;then
+      currentGCPSDK=$(gcloud components list 2>&1 | \
+         grep -E 'Your current Cloud SDK version' | awk '{ print $NF }')
+      availableGCPSDK=$(gcloud components list 2>&1 | \
+         grep -E 'The latest available version' | awk '{ print $NF }')
+      echo Installed version of GCP SDK: "$currentGCPSDK", available version: "$availableGCPSDK"
+      [ ! "$currentGCPSDK" = "$availableGCPSDK" ] && sudo CLOUDSDK_PYTHON=python3.8 gcloud components update
+      [ "$currentGCPSDK" = "$availableGCPSDK" ] && echo No GCP SDK update found.
+   else
+      warning gcloud does not seem to be installed ;
+   fi
+   echo macTeX........................................... 1>&2
+   if command -v tlmgr > /dev/null 2>&1 ; then tlmgr --self --all update
+   else warning mactex does not seem to be installed ;fi
+   touch ~/.pkgU
+elif [[ ${_uname} == Linux ]] ; then
+      found=0
+      [ -e /etc/debian_version ] && found=1 && sudo apt-get update && \
+         sudo DEBIAN_FRONTEND=noninteractive apt-get dist-upgrade && sudo apt-get autoremove
+      command -v dnf &>/dev/null && found=1 && sudo dnf -y upgrade && sudo dnf -y clean packages
+      command -v dnf &>/dev/null || command -v yum &>/dev/null && \
+         found=1 && sudo yum -y update && sudo yum -y clean packages
+      [ $found -eq 0 ] && error pkgU not supported for this OS && return 1
+      touch ~/.pkgU
+else
+   err unsupported OS
+   err This is "$0" version "$version"
+   exit 1
+fi
+
+# EOF

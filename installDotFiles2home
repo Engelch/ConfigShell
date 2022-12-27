@@ -9,7 +9,7 @@
 # - 0.0.1:
 #
 # COPYRIGHT © 2021 Christian Engel (mailto:engel-ch@outlook.com)
-# Skeleton: 
+# Skeleton:
 #   0.1.0 - improved exitIfErr
 # LICENSE: MIT
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this
@@ -45,9 +45,9 @@ function so()
 # always show such a message.  If known terminal, print the message
 # in reverse video mode. This is the other way, not using escape sequences
 {
-   [ "$1" != on -a "$1" != off ] && return 
+   [ "$1" != on -a "$1" != off ] && return
     if [ "$TERM" = xterm -o "$TERM" = vt100 -o "$TERM" = xterm-256color  -o "$TERM" = screen ] ; then
-      [ "$1" = on ] && tput smso 
+      [ "$1" = on ] && tput smso
       [ "$1" = off ] && tput rmso
     fi
 }
@@ -74,7 +74,7 @@ function colBlink()     { printf "\e[5m"; return 0; }
 
 # --- Exits
 
-# function error()        { err 'ERROR:' $*; return 0; } # similar to err but with ERROR prefix and possibility to include 
+# function error()        { err 'ERROR:' $*; return 0; } # similar to err but with ERROR prefix and possibility to include
 # Write an error message to stderr. We cannot use err here as the spaces would be removed.
 function error()        { so on; echo 'ERROR:'$* 1>&2;            so off ; return 0; }
 function error4()       { so on; echo 'ERROR:    '$* 1>&2;        so off ; return 0; }
@@ -110,7 +110,7 @@ function tempDir()                      { mktemp -d "${TMPDIR:-/tmp/}$_app.YYYYY
 function usage()
 {
     err $_app
-    err SYNOPSIS: 
+    err SYNOPSIS:
     err4 $_app '[-d|--debug] [-v|--verbose] [-f|--force] file...'
     err4 $_app '[-h|--help]'
     err DESCRIPTION: TODO
@@ -122,7 +122,7 @@ function parseCLI() {
     # have to call it 2x to get output and exit code. Else 'cmd -x' different to 'cmd -dx'
     getopt -o dvf -l debug,verbose,force -- $* &> /dev/null ; res=$?
     [ $res -ne 0 ] && usage && exit 1
-    local cliLine=$(getopt -o dvf -l debug,verbose,force -- $*) 
+    local cliLine=$(getopt -o dvf -l debug,verbose,force -- $*)
     for option in $cliLine; do
         counter=$(( $counter + 1 ))
         case "$option" in
@@ -150,7 +150,7 @@ function fixGnupg() {
         if [ -d ~/.ssh ] ; then
             if [ -d ~/.ssh/gnupg ] ; then
                 errorExit 20 '~/.gnupg and ~/.ssh/gnupg are both existing directories. Please fix manually.'
-            else 
+            else
                 mv ~/.gnupg ~/.ssh/gnupg
                 ln -fs ~/.ssh/gnupg ~/.gnupg
             fi
@@ -166,16 +166,28 @@ function fixGnupg() {
             mkdir -p ~/.ssh/gnupg ; chmod 700 ~/.ssh
         fi
         ln -fvs ~/.ssh/gnupg ~/.gnupg
-    fi 
+    fi
 }
 
 # function oh-my-zsh() {
 #     if [ ! -d $HOME/.oh-my-zsh ] ; then
 #         echo -n 'Oh my ZSH is not installed. Shall it be installed? [Yynn]'
-#         read a 
-#         [ "$a" = y -o "$a" = Y -o "$a" = "" ] && cd && git clone https://github.com/ohmyzsh/ohmyzsh.git .oh-my-zsh 
+#         read a
+#         [ "$a" = y -o "$a" = Y -o "$a" = "" ] && cd && git clone https://github.com/ohmyzsh/ohmyzsh.git .oh-my-zsh
 #     fi
 # }
+
+function installFish() {
+    declare -r fishCfgDir=~/.config/fish
+    mkdir -p "$fishCfgDir" 2>/dev/null
+    test -d  "$fishCfgDir" || errorExit 10 fish config directory "$fishCfgDir" could not be created
+    test -d $_absoluteAppDir/fish || errorExit 11 fish config directory not found in ConfigShell
+    cd "$fishCfgDir"
+    for file in * ; do
+        test -d "$file" && ! test -h "$file" && ! [[ "$file" =~ .*orig$ ]] && mv -v "$file" "$file.orig"
+    done
+    ln -sfv $_absoluteAppDir/fish/* .
+}
 
 
 function main() {
@@ -185,8 +197,8 @@ function main() {
     cd  # jump to home directory, always install dot-files towards HOME directory
     #oh-my-zsh
     cd
-    # if  $(diff -i $_appDir/dot.zshrc $_appDir/backup.zshrc) ; then 
-    #     echo restoring zshrc 
+    # if  $(diff -i $_appDir/dot.zshrc $_appDir/backup.zshrc) ; then
+    #     echo restoring zshrc
     #     cp -fv $_appDir/backup.zshrc $_appDir/dot.zshrc
     # fi
     for file in $_absoluteAppDir/dot* ; do
@@ -195,7 +207,8 @@ function main() {
         ln -sfv $file $_nameWithoutDot
     done
     fixGnupg
-}    
+    installFish
+}
 
 main $*
 

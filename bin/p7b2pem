@@ -1,4 +1,7 @@
-[ ! -f "$1" ] && echo 1st argument not found as a file > /dev/stderr && exit 1
-outfile=$(basename "$1" .p7b).pem
-[ -f "$outfile" ] && echo output file already existing > /dev/stderr && exit 2
-openssl pkcs7 -inform DER -outform PEM -print_certs -in "$1" -out "$outfile"
+#! /usr/bin/env bash
+
+input="$1"
+[ ! -f "$1" ] && input="-"
+#outfile=$(basename "$1" .p7b).pem
+#[ -f "$outfile" ] && echo output file already existing > /dev/stderr && exit 2
+openssl pkcs7  -print_certs -in "$input"

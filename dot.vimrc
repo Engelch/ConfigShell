@@ -1,5 +1,6 @@
 
 scriptencoding utf-8
+set nofoldenable
 
 " ==========================================================
 filetype plugin indent on
