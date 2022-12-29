@@ -159,18 +159,32 @@ end
 
 function setupPath
     if test (id -u) -eq 0
-        set -U fish_user_paths /sbin:/usr/sbin:/bin:/usr/bin:/usr/local/sbin:/usr/local/bin
+        set fish_user_paths /bin /usr/bin/ /sbin /usr/sbin /usr/local/bin /usr/local/sbin
     else
-        set tmpPath ''
-        for dir in $HOME/go/bin $HOME/Library/Android/sdk/platform-tools /usr/local/share/dotnet /usr/local/go/bin \
+        set fish_user_paths /bin /usr/bin/ /sbin /usr/sbin /usr/local/bin /usr/local/sbin
+        # build up elements to come before default ones
+        for dir in $HOME/bin $HOME/go/bin /opt/ConfigShell/bin $HOME/Library/Android/sdk/platform-tools /usr/local/share/dotnet /usr/local/go/bin \
                 $HOME/.dotnet/tools $HOME/.rvm/bin /usr/local/google-cloud-sdk/ $HOME/google-cloud-sdk/ \
                 $HOME/.pub-cache/bin /opt/flutter/bin $HOME/.linkerd2/bin $HOME/google-cloud-sdk/bin \
                 /usr/local/google-cloud-sdk/bin \
                 /opt/android-studio/bin
-            if test -d "$dir" ; set tmpPath "$dir" "$tmpPath" ; end
+            fish_add_path -p "$dir"
         end
-        set -U fish_user_paths $tmpPath
-        set -e tmpPath
+        # build up OSX elements
+        if test (uname) = Darwin
+            for dir in /opt/homebrew/bin /opt/homebrew/sbin /opt/homebrew/opt/ \
+                    /opt/homebrew/opt/gnu-getopt/bin /usr/local/opt/gnu-getopt/bin \
+                    /usr/local/homebrew/bin /usr/local/homebrew/sbin \
+                    "/opt/homebrew/opt/openssl@1.1/bin" "/usr/local/opt/openssl@1.1/bin" \
+                    /opt/homebrew/opt/curl/bin  /usr/local/opt/curl/bin/ /usr/local/opt/gnu-getopt/bin \
+                    /opt/homebrew/opt/java/bin /usr/local/opt/java/bin /Library/Java/JavaVirtualMachines/current/bin \
+                    /usr/local/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/bin \
+                    "/Applications/Visual Studio Code.app/Contents/Resources/app/bin/" \
+                    "/Applications/Sublime Text.app/Contents/MacOS/" \
+                    /usr/local/texlive/2022/bin/universal-darwin/
+                fish_add_path -p "$dir"
+            end
+        end
     end
 end
 
