@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2155
+
+function err()          { echo "$*" 1>&2; }                 # just write to stderr
+function err4()         { echo '   ' "$*" 1>&2; }           # just write to stderr
+function err8()         { echo '       ' "$*" 1>&2; }       # just write to stderr
+function err12()        { echo '           ' "$*" 1>&2; }   # just write to stderr
+
+# function error()        { err 'ERROR:' $*; return 0; } # similar to err but with ERROR prefix and possibility to include
+# Write an error message to stderr. We cannot use err here as the spaces would be removed.
+function error()        { echo 'ERROR:'"$*" 1>&2;             return 0; }
+function error4()       { echo 'ERROR:    '"$*" 1>&2;         return 0; }
+function error8()       { echo 'ERROR:        '"$*" 1>&2;     return 0; }
+function error12()      { echo 'ERROR:            '"$*" 1>&2; return 0; }
+
+function errorExit()    { EXITCODE="$1" ; shift; error "$*" ; exit "$EXITCODE"; }
+
+## k8exec just requires a unique part of the pod-name in the given or the default namespace
+## options: -n namespace
+## arguments, optional: command, default: /bin/bash
+
+[ -z "$KUBECTL" ] && errorExit 1 KUBECTL is not defined
+
+## k8logs just requires a unique part of the pod-name. -f can be specified.
+## options: -f
+_namespace=""
+follow=
+[ "$1" = -f ] && shift && follow=-f
+[ "$1" = -n ] && shift && _namespace="-n $1" && shift
+[ "$1" = -f ] && shift && follow=-f
+_pod=$($KUBECTL get po "$_namespace" | grep -i "$1" | cut -d ' ' -f 1)
+$KUBECTL logs "$_namespace" "$follow" "$_pod"
+
+# EOF

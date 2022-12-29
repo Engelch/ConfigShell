@@ -1,5 +1,4 @@
-if status is-interactive
-    # Commands to run in interactive sessions can go here
+function setupAliases_Abbreviations
     abbr -a -g l less
     alias j=jobs
     abbr -a -g ln-s 'ln -s'
@@ -60,7 +59,7 @@ if status is-interactive
     abbr -a -g ipi 'curl https://ipinfo.io'
 
     abbr -a -g giaa 'git add -A'
-    abbr -a -g gibr 'git branch -avv'
+    abbr -a -g gibr 'git branch -avv | cat'
     abbr -a -g gidi 'git diff'
     abbr -a -g gidic 'git diff --cached'
     abbr -a -g gife 'git fetch --all -p'
@@ -154,4 +153,63 @@ if status is-interactive
     abbr -a -g k8events "$KUBECTL get events --sort-by=.metadata.creationTimestamp"
     abbr -a -g k8eva    "$KUBECTL get events -A --sort-by=.metadata.creationTimestamp"
     abbr -a -g k8evA    "$KUBECTL get events -A --sort-by=.metadata.creationTimestamp"
+end
+
+function setupPath
+    if test (id -u) -eq 0
+        set -U fish_user_paths /sbin:/usr/sbin:/bin:/usr/bin:/usr/local/sbin:/usr/local/bin
+    else
+        set tmpPath ''
+        for dir in $HOME/go/bin $HOME/Library/Android/sdk/platform-tools /usr/local/share/dotnet /usr/local/go/bin \
+                $HOME/.dotnet/tools $HOME/.rvm/bin /usr/local/google-cloud-sdk/ $HOME/google-cloud-sdk/ \
+                $HOME/.pub-cache/bin /opt/flutter/bin $HOME/.linkerd2/bin $HOME/google-cloud-sdk/bin \
+                /usr/local/google-cloud-sdk/bin \
+                /opt/android-studio/bin
+            if test -d "$dir" ; set tmpPath "$dir" "$tmpPath" ; end
+        end
+        set -U fish_user_paths $tmpPath
+        set -e tmpPath
+    end
+end
+
+function setupExportVars
+    umask 0022
+    set -g -x LESS '-iR'
+    set -g -x RSYNC_FLAGS "-rltDvu --modfiy-window=1" # Windows FS updates file-times only every 2nd second
+    set -g -x RSYNC_SLINK_FLAGS "$RSYNCFLAGS --copy-links"
+    set -g -x VISUAL vim
+    set -g -x EDITOR vim       # bsroot has no notion about VISUAL
+    set -g -x BLOCKSIZE 1K
+end
+
+function err
+    echo $argv 1>&2
+end
+
+function optSourceFile
+    if ! count $argv >/dev/null
+        #err no argument supplied to optSourceFile
+        return
+    end
+    if ! test -f $argv[1]
+        #err supplied argument not a plain file
+        return
+    end
+    if ! test -r $argv[1]
+        #err supplied plain file is not readable
+        return
+    end
+    source $argv[1]
+end
+
+# main code
+if status is-interactive
+    # Commands to run in interactive sessions can go here
+
+    optSourceFile ~/.config/fish/pre.fish
+    setupExportVars
+    setupPath
+    setupAliases_Abbreviations
+    optSourceFile ~/.config/fish/post.fish
+
 end
