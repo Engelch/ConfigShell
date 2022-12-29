@@ -206,7 +206,8 @@ end
 
 function fish_vcs_prompt
     set_color yellow
-    echo ' ('(gitStatus)')' # use or own bash way to show git status
+    set -l out (gitStatus or fish_hg_prompt $argv)
+    echo " ($out)"  # use or own bash way to show git status
     set_color normal
 end
 
