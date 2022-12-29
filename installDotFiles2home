@@ -183,6 +183,9 @@ function installFish() {
     test -d  "$fishCfgDir" || errorExit 10 fish config directory "$fishCfgDir" could not be created
     test -d $_absoluteAppDir/fish || errorExit 11 fish config directory not found in ConfigShell
     cd "$fishCfgDir"
+    for file in * ; do
+        test -d "$file" && ! test -h "$file" && ! [[ "$file" =~ .*orig$ ]] && mv -v "$file" "$file.orig"
+    done
     ln -sfv $_absoluteAppDir/fish/* .
 }
 

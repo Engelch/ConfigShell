@@ -189,16 +189,13 @@ function err
 end
 
 function optSourceFile
-    if ! count $argv >/dev/null
-        #err no argument supplied to optSourceFile
+    if ! count $argv >/dev/null         #err no argument supplied to optSourceFile
         return
     end
-    if ! test -f $argv[1]
-        #err supplied argument not a plain file
+    if ! test -f $argv[1]                #err supplied argument not a plain file
         return
     end
-    if ! test -r $argv[1]
-        #err supplied plain file is not readable
+    if ! test -r $argv[1]               #err supplied plain file is not readable
         return
     end
     source $argv[1]
@@ -207,7 +204,7 @@ end
 function fish_vcs_prompt
     set_color yellow
     set -l out (gitStatus or fish_hg_prompt $argv)
-    echo " ($out)"  # use or own bash way to show git status
+    test -n "$out" && echo " ($out)"  # use or own bash way to show git status
     set_color normal
 end
 
