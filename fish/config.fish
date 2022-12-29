@@ -97,25 +97,61 @@ if status is-interactive
     abbr -a -g tw 'tmux new-window -n'
     alias tn=tw
     abbr -a -g tj 'tmux join-pane -s'
-
     abbr -a -g tmux-prd 'tmux select-pane -P "fg=white,bg=color052"'
     abbr -a -g prd 'tmux select-pane -P "fg=white,bg=color052"'
-
     abbr -a -g tmux-prd2 'tmux select-pane -P "fg=red,bg=color016"'
     abbr -a -g prd2 'tmux select-pane -P "fg=red,bg=color016"'
-
     abbr -a -g tmux-qul 'tmux select-pane -P "fg=black,bg=color179"'
     abbr -a -g qul 'tmux select-pane -P "fg=black,bg=color179"'
-
     abbr -a -g tmux-dvl 'tmux select-pane -P "fg=white,bg=color017"'
     abbr -a -g dvl 'tmux select-pane -P "fg=white,bg=color017"'
-
     abbr -a -g tmux-loc 'tmux select-pane -P "fg=white,bg=color237"'
     abbr -a -g loc 'tmux select-pane -P "fg=white,bg=color237"'
-
     abbr -a -g tmux-whbl 'tmux select-pane -P "fg=white,bg=black"'
     abbr -a -g whbl 'tmux select-pane -P "fg=white,bg=black"'
-
     abbr -a -g tmux-blwh 'tmux select-pane -P "fg=black,bg=white"'
     abbr -a -g blwh 'tmux select-pane -P "fg=black,bg=white"'
+
+    set -g -x KUBECTL kubectl
+    if which docker 2&>/dev/null
+        set -g -x CONTAINER docker
+        #echo set container $CONTAINER
+    end
+    if which podman 2&>/dev/null
+        set -g -x CONTAINER podman
+        #echo set container $CONTAINER
+    end
+
+    abbr -a -g dih      "$CONTAINER image history"
+    abbr -a -g k        $KUBECTL
+    abbr -a -g k8       $KUBECTL
+    abbr -a -g k8s      $KUBECTL
+    abbr -a -g k8af     "$KUBECTL apply -f"
+    abbr -a -g k8df     "$KUBECTL delete -f"
+    abbr -a -g k8c      "$KUBECTL config"
+    abbr -a -g k8cg     "$KUBECTL config get-contexts"
+    abbr -a -g k8cs     "$KUBECTL config set-context"
+    abbr -a -g k8cu     "$KUBECTL config use-context"
+    abbr -a -g k8cv     "$KUBECTL config view"
+    abbr -a -g k8gd     "$KUBECTL get deploy -o wide"
+    abbr -a -g k8gda    "$KUBECTL get deploy -o wide -A"
+    abbr -a -g k8gdA    "$KUBECTL get deploy -o wide -A"
+    abbr -a -g k8gn     "$KUBECTL get nodes -o wide"
+    abbr -a -g k8gp     "$KUBECTL get pods -o wide"
+    abbr -a -g k8gpa    "$KUBECTL get pods -A -o wide"
+    abbr -a -g k8gpA    "$KUBECTL get pods -A -o wide"
+    abbr -a -g k8gs     "$KUBECTL get services -o wide"
+    abbr -a -g k8gsa    "$KUBECTL get services -o wide -A"
+    abbr -a -g k8gsA    "$KUBECTL get services -o wide -A"
+    abbr -a -g k8ns     "$KUBECTL get ns"
+    abbr -a -g k8ga     "$KUBECTL get all"
+    abbr -a -g k8gaa    "$KUBECTL get all -A"
+    abbr -a -g k8gaA    "$KUBECTL get all -A"
+    abbr -a -g k8gaw    "$KUBECTL get all -A -o wide"
+    abbr -a -g k8gaaw   "$KUBECTL get all -A -o wide"
+    abbr -a -g k8gaAw   "$KUBECTL get all -A -o wide"
+    abbr -a -g k8ev     "$KUBECTL get events --sort-by=.metadata.creationTimestamp"
+    abbr -a -g k8events "$KUBECTL get events --sort-by=.metadata.creationTimestamp"
+    abbr -a -g k8eva    "$KUBECTL get events -A --sort-by=.metadata.creationTimestamp"
+    abbr -a -g k8evA    "$KUBECTL get events -A --sort-by=.metadata.creationTimestamp"
 end
