@@ -20,6 +20,7 @@ function setupAliases_Abbreviations
     alias llad "ls  -ladF      $LS_COLOUR"
     # alias ls "ls    -hCF       $LS_COLOUR"
 
+    abbr -a -g cd.. 'cd ..'
     alias ..='cd ..'
     alias .2='cd ../..'
     alias .3='cd ../../..'
@@ -53,8 +54,9 @@ function setupAliases_Abbreviations
     abbr -a -g fin 'find . -name'
     abbr -a -g fini 'find . -iname'
 
-    alias h=history
+    abbr -a -g h "history --show-time"
     abbr -a -g hf 'history | grep -Ei'
+    abbr -a -g hs 'history search --contains' # new command from fish. If it is good, it shall replace/become hf
 
     abbr -a -g ipi 'curl https://ipinfo.io'
 
@@ -200,6 +202,10 @@ function optSourceFile
         return
     end
     source $argv[1]
+end
+
+function fish_vcs_prompt
+    echo ' ('(gitStatus)')' # use or own bash way to show git status
 end
 
 # main code
