@@ -205,7 +205,9 @@ function optSourceFile
 end
 
 function fish_vcs_prompt
+    set_color yellow
     echo ' ('(gitStatus)')' # use or own bash way to show git status
+    set_color normal
 end
 
 # main code
