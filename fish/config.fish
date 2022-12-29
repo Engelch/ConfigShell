@@ -31,8 +31,7 @@ function setupAliases_Abbreviations
     alias brmd='[ -f .DS_Store ] &&  /bin/rm -f .DS_Store ; set -l a $PWD ; cd .. ; rmdir "$a"; set -e a'
     alias mcd=mkcd
     function mkcd
-        mkdir -p $argv[1]
-        cd $argv[1]
+        mkdir -p $argv[1] && cd $argv[1]
     end
     alias po=popd
     alias pu='pushd .'
@@ -57,6 +56,7 @@ function setupAliases_Abbreviations
     abbr -a -g h "history --show-time"
     abbr -a -g hf 'history | grep -Ei'
     abbr -a -g hs 'history search --contains' # new command from fish. If it is good, it shall replace/become hf
+    abbr -a -g proc 'ps -ef | grep -Ei'
 
     abbr -a -g ipi 'curl https://ipinfo.io'
 
@@ -181,7 +181,8 @@ function setupPath
                     /usr/local/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/bin \
                     "/Applications/Visual Studio Code.app/Contents/Resources/app/bin/" \
                     "/Applications/Sublime Text.app/Contents/MacOS/" \
-                    /usr/local/texlive/2022/bin/universal-darwin/
+                    /usr/local/texlive/2022/bin/universal-darwin/ \
+                    ~/.iterm2
                 fish_add_path -p "$dir"
             end
         end
@@ -223,11 +224,56 @@ function git_prompt_status
     end
 end
 
+function fish_cloud_prompt
+    test -n "$AWS_PROFILE" && echo " [AWS:$AWS_PROFILE]"
+end
+
 function fish_vcs_prompt
     set_color yellow
     set -l out (git_prompt_status or fish_hg_prompt $argv)
     test -n "$out" && echo " ($out)"  # use or own bash way to show git status
+    set_color magenta
+    fish_cloud_prompt   # not nice to integrate it here but changes are minimal than changing the complete prompt mechanism
     set_color normal
+end
+
+function setupCompletion
+    if test -r ~/.ssh/completion.lst
+        complete -F -c rsync -a ~/.ssh/completion.lst
+        # complete -F -c scp -a ~/.ssh/completion.lst       # working from scratch. there seems to be more logic behind it
+        complete -x -c ssh -a ~/.ssh/completion.lst
+    end
+end
+
+function err
+    echo $argv 1>&2
+end
+
+function start_ssh_agent
+   # start the ssh-agent and store the variable for ssh-add in a file for next shells
+   set -l ssh_agent_output (ssh-agent)
+   set -e -g SSH_AUTH_SOCK
+   set -x -U SSH_AUTH_SOCK (echo $ssh_agent_output | grep SSH_AUTH_SOCK | sed 's/^.*SSH_AUTH_SOCK=//' | sed 's/;.*//')
+   ssh-add
+end
+
+function setupSsh
+    [ -n "$SSH_AUTH_SOCK" ] && [ -n "$SSH_TTY" ] && return
+
+    ssh-add -l 2>/dev/null 1>&2 ; set -l res $status
+    switch $res
+    case 0      # ssh-agent loaded, keys loaded
+        #echo agent found, keys loaded
+        return
+    case 1      # ssh-agent loaded, but no identities loaded
+        #echo found agent status 1
+        ssh-add
+    case 2      # ssh-agent could not be contacted, starting
+        #echo no agent found
+        start_ssh_agent $ssh_auth_sock_file
+    case '*'
+        err setupSsh unknown answer from ssh-add $status
+    end
 end
 
 # main code
@@ -238,6 +284,7 @@ if status is-interactive
     setupExportVars
     setupPath
     setupAliases_Abbreviations
+    setupCompletion
+    setupSsh
     optSourceFile ~/.config/fish/post.fish
-
 end
