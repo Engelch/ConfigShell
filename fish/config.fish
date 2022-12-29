@@ -60,7 +60,7 @@ if status is-interactive
     abbr -a -g ipi 'curl https://ipinfo.io'
 
     abbr -a -g giaa 'git add -A'
-    abbr -a -g gibr 'git branch -avv'
+    abbr -a -g gibr 'git branch -avv | cat'
     abbr -a -g gidi 'git diff'
     abbr -a -g gidic 'git diff --cached'
     abbr -a -g gife 'git fetch --all -p'
