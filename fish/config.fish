@@ -199,6 +199,11 @@ function setupExportVars
     set -g -x VISUAL vim
     set -g -x EDITOR vim       # bsroot has no notion about VISUAL
     set -g -x BLOCKSIZE 1K
+    set -g -x FISH_RC_VERSION "1.7.1"
+    if test -n "$_current_FISH_RC_VERSION" -a "$FISH_RC_VERSION" != "$_current_FISH_RC_VERSION"
+        echo new FISH_RC_VERSION "$FISH_RC_VERSION"
+    end
+    set -g _current_FISH_RC_VERSION "$FISH_RC_VERSION"
 end
 
 function err
