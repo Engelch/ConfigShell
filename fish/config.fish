@@ -194,12 +194,13 @@ end
 function setupExportVars
     umask 0022
     set -g -x LESS '-iR'
-    set -g -x RSYNC_FLAGS "-rltDvu --modfiy-window=1" # Windows FS updates file-times only every 2nd second
-    set -g -x RSYNC_SLINK_FLAGS "$RSYNCFLAGS --copy-links"
+    set -g -x RSYNC_FLAGS "-rltHpDvu" # Windows FS updates file-times only every 2nd second
+    set -g -x RSYNC_Add_Windows "--modfiy-window=1" # Windows FS updates file-times only every 2nd second
+    set -g -x RSYNC_Add_RemoveSLinks "--copy-links"  # convert links into files
     set -g -x VISUAL vim
     set -g -x EDITOR vim       # bsroot has no notion about VISUAL
     set -g -x BLOCKSIZE 1K
-    set -g -x FISH_RC_VERSION "1.7.1"
+    set -g -x FISH_RC_VERSION "1.7.5"
     if test -n "$_current_FISH_RC_VERSION" -a "$FISH_RC_VERSION" != "$_current_FISH_RC_VERSION"
         echo new FISH_RC_VERSION "$FISH_RC_VERSION"
     end
