@@ -191,22 +191,6 @@ function setupPath
     end
 end
 
-function setupExportVars
-    umask 0022
-    set -g -x LESS '-iR'
-    set -g -x RSYNC_FLAGS "-rltHpDvu" # Windows FS updates file-times only every 2nd second
-    set -g -x RSYNC_Add_Windows "--modfiy-window=1" # Windows FS updates file-times only every 2nd second
-    set -g -x RSYNC_Add_RemoveSLinks "--copy-links"  # convert links into files
-    set -g -x VISUAL vim
-    set -g -x EDITOR vim       # bsroot has no notion about VISUAL
-    set -g -x BLOCKSIZE 1K
-    set -g -x FISH_RC_VERSION "1.7.5"
-    if test -n "$_current_FISH_RC_VERSION" -a "$FISH_RC_VERSION" != "$_current_FISH_RC_VERSION"
-        echo new FISH_RC_VERSION "$FISH_RC_VERSION"
-    end
-    set -g _current_FISH_RC_VERSION "$FISH_RC_VERSION"
-end
-
 function err
     echo $argv 1>&2
 end
@@ -233,7 +217,7 @@ function git_prompt_status
 end
 
 function fish_cloud_prompt
-    test -n "$AWS_PROFILE" && echo " [AWS:$AWS_PROFILE]"
+    test -n "$AWS_PROFILE" && echo " <AWS:$AWS_PROFILE> "
 end
 
 function fish_vcs_prompt
@@ -284,6 +268,22 @@ function setupSsh
     end
 end
 
+function setupExportVars
+    umask 0022
+    set -g -x LESS '-iR'
+    set -g -x RSYNC_FLAGS "-rltHpDvu" # Windows FS updates file-times only every 2nd second
+    set -g -x RSYNC_Add_Windows "--modfiy-window=1" # Windows FS updates file-times only every 2nd second
+    set -g -x RSYNC_Add_RemoveSLinks "--copy-links"  # convert links into files
+    set -g -x VISUAL vim
+    set -g -x EDITOR vim       # bsroot has no notion about VISUAL
+    set -g -x BLOCKSIZE 1K
+    set -g -x FISH_RC_VERSION "1.7.7"
+    if test -n "$_current_FISH_RC_VERSION" -a "$FISH_RC_VERSION" != "$_current_FISH_RC_VERSION"
+        echo new FISH_RC_VERSION "$FISH_RC_VERSION"
+    end
+    set -g _current_FISH_RC_VERSION "$FISH_RC_VERSION"
+end
+
 # main code
 if status is-interactive
     # Commands to run in interactive sessions can go here
@@ -296,3 +296,5 @@ if status is-interactive
     setupSsh
     optSourceFile ~/.config/fish/post.fish
 end
+
+# EOF
