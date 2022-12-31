@@ -59,6 +59,8 @@ function setupAliases_Abbreviations
     abbr -a -g proc 'ps -ef | grep -Ei'
 
     abbr -a -g ipi 'curl https://ipinfo.io'
+    abbr -a -g pkgU pkgUpgrade
+    abbr -a -g rl 'source ~/.config/fish/config.fish'
 
     abbr -a -g giaa 'git add -A'
     abbr -a -g gibr 'git branch -avv | cat'
