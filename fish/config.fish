@@ -75,7 +75,7 @@ function setupAliases_Abbreviations
         git push --all $argv; and git push --tags $argv
     end
     function gipua
-        for remoterepo in (grep '^\[remote' $(git rev-parse --show-toplevel)/.git/config | sed -e 's/.remote \"//' -e s'/..$//')
+        for remoterepo in (grep '^\[remote' (git rev-parse --show-toplevel)/.git/config | sed -e 's/.remote \"//' -e s'/..$//')
             git push --all $remoterepo ; git push --tags $argv
         end
     end
@@ -278,7 +278,7 @@ function setupExportVars
     set -g -x VISUAL vim
     set -g -x EDITOR vim       # bsroot has no notion about VISUAL
     set -g -x BLOCKSIZE 1K
-    set -g -x FISH_RC_VERSION "1.8.0"
+    set -g -x FISH_RC_VERSION "1.8.1"
     if test -n "$_current_FISH_RC_VERSION" -a "$FISH_RC_VERSION" != "$_current_FISH_RC_VERSION"
         echo new FISH_RC_VERSION "$FISH_RC_VERSION"
     end
