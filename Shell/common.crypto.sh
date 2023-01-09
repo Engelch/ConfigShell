@@ -7,9 +7,6 @@
 export SSF_SURROUNDING_LINES='--colour -A 3' # variable to be adjusted in .profile.post
 function ssf() { egrep -rv '^[[:space:]]*#' $(find ~/.ssh/ -name Config.d -type d -print  | tr '\n' ' ') | egrep -v ProxyJump | eval egrep -i $SSF_SURROUNDING_LINES --colour=auto "$*" ; }
 
-# show the ssh-fingerprints for the supplied files. ssh-keygen does not support multiple files
-function sshFingerprint() { for file in $* ; do  echo -n $file': ' ; ssh-keygen -lf "$file" ; done ; }
-
 # show the ssh-certificate for the supplied files. ssh-keygen does not support multiple files
 function sshCertificate() { for file in $* ; do ssh-keygen -Lf "$file" ; done ; }
 
