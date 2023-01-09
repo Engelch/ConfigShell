@@ -7,8 +7,6 @@
 export SSF_SURROUNDING_LINES='--colour -A 3' # variable to be adjusted in .profile.post
 function ssf() { egrep -rv '^[[:space:]]*#' $(find ~/.ssh/ -name Config.d -type d -print  | tr '\n' ' ') | egrep -v ProxyJump | eval egrep -i $SSF_SURROUNDING_LINES --colour=auto "$*" ; }
 
-function sshPriv2PubKey() { ssh-keygen -yf $1 ;  } # create public key out of private key
-
 function start_ssh_agent() {
    # start the ssh-agent and store the variable for ssh-add in a file for next shells
    eval $(ssh-agent)
