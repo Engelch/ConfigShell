@@ -2,11 +2,6 @@
 
 # ---- SSH  -----------------------------------------------------------------------
 
-# ssf finds a host entry in ssh configuration files in ~/.ssh/config.d/*.config. Earlier versions used ~/.ssh/config.d/* but
-# this makes it complex to disable files and keep them for a while.
-export SSF_SURROUNDING_LINES='--colour -A 3' # variable to be adjusted in .profile.post
-function ssf() { egrep -rv '^[[:space:]]*#' $(find ~/.ssh/ -name Config.d -type d -print  | tr '\n' ' ') | egrep -v ProxyJump | eval egrep -i $SSF_SURROUNDING_LINES --colour=auto "$*" ; }
-
 function start_ssh_agent() {
    # start the ssh-agent and store the variable for ssh-add in a file for next shells
    eval $(ssh-agent)
