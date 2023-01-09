@@ -7,9 +7,6 @@
 export SSF_SURROUNDING_LINES='--colour -A 3' # variable to be adjusted in .profile.post
 function ssf() { egrep -rv '^[[:space:]]*#' $(find ~/.ssh/ -name Config.d -type d -print  | tr '\n' ' ') | egrep -v ProxyJump | eval egrep -i $SSF_SURROUNDING_LINES --colour=auto "$*" ; }
 
-# show the ssh-certificate for the supplied files. ssh-keygen does not support multiple files
-function sshCertificate() { for file in $* ; do ssh-keygen -Lf "$file" ; done ; }
-
 function sshPriv2PubKey() { ssh-keygen -yf $1 ;  } # create public key out of private key
 
 function start_ssh_agent() {
