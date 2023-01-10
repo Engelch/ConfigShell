@@ -74,12 +74,16 @@ function tlsCertFingerprint2() {
    declare -l  file
    for file in "$@"; do
       /bin/echo -n "$file:" > $output
-      msg=$(openssl x509 -modulus -noout -in "$file" 2>/dev/null)
+      msg=$(openssl x509 -text -modulus -noout -in "$file" 2>/dev/null)
       if [ "${PIPESTATUS[0]}" != "0" ]; then
       echo ERROR
       exit 1
       else
-         echo "$msg" | openssl sha256 | sed 's/.*stdin)= //'
+         echo "$msg" | grep -E '(^Modulus=|Exponent:)' | \
+            sed -E 's/[[:space:]]*Exponent: [0-9]+ \(//' | \
+            sed 's/)//' | sed 's/Modulus=//' | sed 's/0x//' | \
+            tr  '\n' ',' | sed -E 's/.$//' | \
+            openssl sha256 | sed 's/.*stdin)= //'
       fi
    done
 }
