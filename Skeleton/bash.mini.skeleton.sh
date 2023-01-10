@@ -26,10 +26,14 @@
 #########################################################################################
 # VARIABLES, CONSTANTS
 
-readonly _app=$(basename $0)
-readonly _appDir=$(dirname $0)
-readonly _absoluteAppDir=$(cd $_appDir; /bin/pwd)
-readonly _appVersion="0.0.1" # use semantic versioning
+_app=$(basename "${0}")
+declare -r _app
+_appDir=$(dirname "$0")
+declare -r _appDir
+_absoluteAppDir=$(cd "$_appDir" || exit 99 ; /bin/pwd)
+declare -r _absoluteAppDir
+_appVersion="0.0.1"      # use semantic versioning
+declare -r _appVersion
 export DebugFlag=${DebugFlag:-FALSE}
 
 #########################################################################################
@@ -38,40 +42,40 @@ export DebugFlag=${DebugFlag:-FALSE}
 
 function debugSet()             { DebugFlag=TRUE; return 0; }
 function debugUnset()           { DebugFlag=; return 0; }
-function debugExecIfDebug()     { [ "$DebugFlag" = TRUE ] && $*; return 0; }
-function debug()                { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:'$* 1>&2 ; return 0; }
-function debug4()               { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:    ' $* 1>&2 ; return 0; }
-function debug8()               { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:        ' $* 1>&2 ; return 0; }
-function debug12()              { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:            ' $* 1>&2 ; return 0; }
+function debugExecIfDebug()     { [ "$DebugFlag" = TRUE ] && "$*"; return 0; }
+function debug()                { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:'"$*" 1>&2 ; return 0; }
+function debug4()               { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:    ' "$*" 1>&2 ; return 0; }
+function debug8()               { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:        ' "$*" 1>&2 ; return 0; }
+function debug12()              { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:            ' "$*" 1>&2 ; return 0; }
 
 # --- Exits
 
 # function error()        { err 'ERROR:' $*; return 0; } # similar to err but with ERROR prefix and possibility to include
 # Write an error message to stderr. We cannot use err here as the spaces would be removed.
-function error()        { echo 'ERROR:'$* 1>&2;             return 0; }
-function error4()       { echo 'ERROR:    '$* 1>&2;         return 0; }
-function error8()       { echo 'ERROR:        '$* 1>&2;     return 0; }
-function error12()      { echo 'ERROR:            '$* 1>&2; return 0; }
+function error()        { echo 'ERROR:'"$*" 1>&2;             return 0; }
+function error4()       { echo 'ERROR:    '"$*" 1>&2;         return 0; }
+function error8()       { echo 'ERROR:        '"$*" 1>&2;     return 0; }
+function error12()      { echo 'ERROR:            '"$*" 1>&2; return 0; }
 
-function errorExit()    { EXITCODE=$1 ; shift; error $* ; exit $EXITCODE; }
-function exitIfErr()    { a="$1"; b="$2"; shift; shift; [ "$a" -ne 0 ] && errorExit $b App returned $a $*; }
+function errorExit()    { EXITCODE="$1" ; shift; error "$*" ; exit "$EXITCODE"; }
+function exitIfErr()    { a="$1"; b="$2"; shift; shift; [ "$a" -ne 0 ] && errorExit "$b" App returned "$a" "$*"; }
 
-function err()          { echo $* 1>&2; }                 # just write to stderr
-function err4()         { echo '   ' $* 1>&2; }           # just write to stderr
-function err8()         { echo '       ' $* 1>&2; }       # just write to stderr
-function err12()        { echo '           ' $* 1>&2; }   # just write to stderr
+function err()          { echo "$*" 1>&2; }                 # just write to stderr
+function err4()         { echo '   ' "$*" 1>&2; }           # just write to stderr
+function err8()         { echo '       ' "$*" 1>&2; }       # just write to stderr
+function err12()        { echo '           ' "$*" 1>&2; }   # just write to stderr
 
 # --- Existance checks
-function exitIfBinariesNotFound()       { for file in $@; do [ $(command -v "$file") ] || errorExit 253 binary not found: $file; done }
-function exitIfPlainFilesNotExisting()  { for file in $*; do [ ! -f $file ] && errorExit 254 'plain file not found:'$file 1>&2; done }
-function exitIfFilesNotExisting()       { for file in $*; do [ ! -e $file ] && errorExit 255 'file not found:'$file 1>&2; done }
-function exitIfDirsNotExisting()        { for dir in $*; do [ ! -d $dir ] && errorExit 252 "$APP:ERROR:directory not found:"$dir; done }
+function exitIfBinariesNotFound()       { for file in "$@"; do [ $(command -v "$file") ] || errorExit 253 binary not found: "$file" ; done }
+function exitIfPlainFilesNotExisting()  { for file in "$@"; do [ ! -f "$file" ] && errorExit 254 'plain file not found:'"$file" 1>&2; done }
+function exitIfFilesNotExisting()       { for file in "$@"; do [ ! -e "$file" ] && errorExit 255 'file not found:'"$file" 1>&2; done }
+function exitIfDirsNotExisting()        { for dir in "$@"; do [ ! -d "$dir" ] && errorExit 252 "$APP:ERROR:directory not found:$dir"; done }
 
 # --- Temporary file/directory  creation
 # -- file creation -- TMP1=$(tempFile); TMP2=$(tempFile) ;;;; trap "rm -f $TMP1 $TMP2" EXIT
 # -- directory creation -- TMPDIR=$(tempDir) ;;;;;  trap "rm -fr $TMPDIR;" EXIT
 #
-function tempFile()                     { mktemp ${TMPDIR:-/tmp/}$_app.XXXXXXXX; }
+function tempFile()                     { mktemp "${TMPDIR:-/tmp/}$_app.XXXXXXXX"; }
 function tempDir()                      { mktemp -d "${TMPDIR:-/tmp/}$_app.YYYYYYYYY"; }
 # realpath as shell, argument either supplied as stdin or as $1
 
@@ -81,13 +85,13 @@ function usage()
 {
     err DESCRIPTION
     err
-    err $_app
+    err "$_app"
     err SYNOPSIS
-    err4 $_app '[-D] [-f] [dir...]'
-    err4 $_app '-h'
+    err4 "$_app" '[-D] [-f] [dir...]'
+    err4 "$_app" '-h'
     err
     err VERSION
-    err4 $_appVersion
+    err4 "$_appVersion"
     err
     err OPTIONS
     err4 '-D      ::= enable debug output'
@@ -96,7 +100,6 @@ function usage()
 }
 
 function parseCLI() {
-    local currentOption
     while getopts "Dfh" options; do         # Loop: Get the next option;
         case "${options}" in                    # TIMES=${OPTARG}
             D)  err Debug enabled ; debugSet
@@ -106,7 +109,7 @@ function parseCLI() {
             h)  usage ; exit 1
                 ;;
             *)
-                err Help with $_app -h
+                err Help with "$_app" -h
                 exit 2  # Exit abnormally.
                 ;;
         esac
@@ -115,13 +118,13 @@ function parseCLI() {
 
 function main() {
     exitIfBinariesNotFound pwd basename dirname mktemp
-    parseCLI $*
-    shift $(($OPTIND - 1))  # not working inside parseCLI
-    debug args are $*
-    debug forcedMode is ${forcedMode:-FALSE}
+    parseCLI "$*"
+    shift "$(( OPTIND - 1 ))"  # not working inside parseCLI
+    debug args are "$*"
+    debug forcedMode is "${forcedMode:-FALSE}"
     echo todo '(search and replace all todo accordingly)' here more....................
 }
 
-main $*
+main "$@"
 
 # EOF
