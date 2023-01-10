@@ -74,61 +74,6 @@ function TRAPEXIT() {
 # }
 
 
-
-alias  tlsSrvCrt=tlsServerCert
-alias  tlsSrvCert=tlsServerCert
-function tlsServerCert() {
-   # tlsServerCert expects a hostname as its first argument. The argument can contain http:// or https:// which will
-   # be removed from the call.
-    [ -z $1 ] && 1>&2 echo no argument specified && return 1
-    url=$1
-    # strip potential leading ^http.?://
-    [[ $url =~ ^http.?:// ]] && url=$(echo $url | sed 's,^.*://,,')
-    debug url: $url
-    gnutls-cli --print-cert --no-ca-verification $url  < /dev/null
-}
-
-# ------ Keys
-# show fingerprint of private RSA key
-#function tlsRsaPrvFingerprint() { local output="/dev/null" ; [ "$1" = -v ] &&  output="/dev/stdout" && shift ; local file; for file in $*; do /bin/echo -n "$file:" > $output; openssl rsa -modulus -noout -in "$file" | openssl sha256 | sed 's/.*stdin)= //'; done; }
-function tlsRsaPrvFingerprint() {
-    openssl  rsa  -noout -modulus -text -in $1 | \
-        egrep '(Modulus=|Exponent:)' | \
-        sed -E 's/Exponent: [0-9]+ \(//' | \
-        sed 's/)//' | \
-        sed 's/Modulus=//' | \
-        sed 's/0x//' | \
-        tr  '\n' ',' | \
-        sed -E 's/.$//' | \
-        sed 's/^public//' | \
-        sed 's/,privateExponent://' | \
-        sha256sum | \
-        awk '{ print $1 }'
-}
-
-# show fingerprint of public RSA key
-#function tlsRsaPubFingerprint() { local output="/dev/null" ; [ "$1" = -v ] &&  output="/dev/stdout" && shift ; local file; for file in $*; do /bin/echo -n "$file:" > $output; openssl rsa -modulus -noout -pubin -in "$file" | openssl sha256 | sed 's/.*stdin)= //'; done; }
-function tlsRsaPubFingerprint() {
-       openssl rsa -modulus -text -noout -pubin -in $1  | \
-        egrep '^(Modulus=|Exponent:)' | sed -E 's/Exponent: [0-9]+ \(//' | \
-        sed 's/)//' | sed 's/Modulus=//' | sed 's/0x//' | \
-        tr  '\n' ',' | sed -E 's/.$//' | \
-        sha256sum | \
-        awk '{ print $1 }'
-}
-
-function tlsRsaPrv2PubKey() { openssl rsa -in $1 -pubout; }
-
-# ------ CSR
-function tlsCsr() { local file; for file in $*; do openssl req -in "$file"  -noout -utf8 -text | sed "s,^,$file:," | egrep -v '.*:.*:.*:'; done; }
-function tlsCsrPubKeyFingerprint() {
-   local file
-   for file in $*; do
-      openssl req -in "$file" -noout -pubkey | openssl rsa -modulus -pubin -noout | openssl sha256 | sed 's/.*stdin)= //' | egrep -v '.*:.*:.*:'
-   done
-}
-
-
 ##########################################
 
 function common.crypto.init() {
