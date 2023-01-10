@@ -48,44 +48,68 @@ print "============================================================\n"
 end
 EOF
    ruby "$a" "$@"
-   unset a
 }
 
 function tlsCert2LeafCn2() {
-	[ ! -f "$1" ] && error Supplied argument "$1" is not a file && exit 1
-	tlsCert2 "$1" | grep 'subject=' | head -n 1 | sed -e 's/^.*CN = //' -e 's/,.*//'
+   for file in "$@" ; do
+	   [ ! -f "$file" ] && error Supplied argument "$file" is not a file && exit 1
+	   tlsCert2 "$file" | grep 'subject=' | head -n 1 | sed -e 's/^.*CN = //' -e 's/,.*//'
+   done
 }
 
 function tlsCert2LeafSubject2() {
-	[ ! -f "$1" ] && error Supplied argument "$1" is not a file && return
-	tlsCert2 "$1" | grep 'subject=' | head -n 1 | sed -e 's/^.*subject=//'
+   for file in "$@" ; do
+	   [ ! -f "$file" ] && error Supplied argument "$file" is not a file && return
+	   tlsCert2 "$file" | grep 'subject=' | head -n 1 | sed -e 's/^.*subject=//'
+   done
 }
 
 function tlsCert2LeafIssuer2() {
-	[ ! -f "$1" ] && error Supplied argument "$1" is not a file && return
-	tlsCert2 "$1" | grep 'issuer=' | head -n 1 | sed -e 's/^.*issuer=//'
+   for file in "$@" ; do
+      [ ! -f "$file" ] && error Supplied argument "$file" is not a file && return
+      tlsCert2 "$file" | grep 'issuer=' | head -n 1 | sed -e 's/^.*issuer=//'
+   done
 }
 
-function tlsCertFingerprint2() {
+# output fingerprint for a cert
+function tlsCertFingerprint3() {
+   input="$1"
+   [ -z "$input" ] && input='-'
+   msg=$(openssl x509 -text -modulus -noout -in "$input" 2>/dev/null)
+   if [ "${PIPESTATUS[0]}" != "0" ]; then
+   echo ERROR
+   exit 1
+   else
+      echo "$msg" | grep -E '(^Modulus=|Exponent:)' | \
+         sed -E 's/[[:space:]]*Exponent: [0-9]+ \(//' | \
+         sed 's/)//' | sed 's/Modulus=//' | sed 's/0x//' | \
+         tr  '\n' ',' | sed -E 's/.$//' | \
+         openssl sha256 | sed 's/.*stdin)= //'
+   fi
+}
+
+function fingerprint2() {
    declare -l output="/dev/null"
 
    [ "$1" = -v ] &&  output="/dev/stdout" && shift
 
    declare -l  file
-   for file in "$@"; do
-      /bin/echo -n "$file:" > $output
-      msg=$(openssl x509 -text -modulus -noout -in "$file" 2>/dev/null)
-      if [ "${PIPESTATUS[0]}" != "0" ]; then
-      echo ERROR
-      exit 1
-      else
-         echo "$msg" | grep -E '(^Modulus=|Exponent:)' | \
-            sed -E 's/[[:space:]]*Exponent: [0-9]+ \(//' | \
-            sed 's/)//' | sed 's/Modulus=//' | sed 's/0x//' | \
-            tr  '\n' ',' | sed -E 's/.$//' | \
-            openssl sha256 | sed 's/.*stdin)= //'
-      fi
-   done
+   if [ $# -eq 0 ] ; then
+      tlsCertFingerprint3
+   else
+      for file in "$@"; do
+         /bin/echo -n "$file:" > $output
+         unset found
+         [[ "$file" =~ .*\.crt$  ]] && found=TRUE && tlsCertFingerprint3 "$file"
+         [[ "$file" =~ .*\.pem$  ]] && found=TRUE && tlsCertFingerprint3 "$file"
+         [[ "$file" =~ .*\.pub$  ]] && found=TRUE && rsaPubFingerprint "$file"
+         [[ "$file" =~ .*\.prv$  ]] && found=TRUE && rsaPrvFingerprint "$file"
+         [[ "$file" =~ .*\.key$  ]] && found=TRUE && rsaPrvFingerprint "$file"
+         [[ "$file" =~ .*\.csr$  ]] && found=TRUE && tlsCsr -f "$file"
+         [[ "$file" =~ .*\.p7b$  ]] && found=TRUE && p7b2pem "$file" | tlsCertFingerprint3
+         [ -z "$found" ] && err ERROR file "$file" not supported && exit 20
+      done
+   fi
 }
 
 tlsCheckCertExpiry2() {
@@ -158,17 +182,18 @@ function usage() {
    err Show certificate information. The default it to output the complete chain if existing.
    err
    err "$(basename "$0")" '-h'
-   err "$(basename "$0")" '-v'
-   err "$(basename "$0")" '<<file>>'
-   err "$(basename "$0")" '[-D] -c <<file>>'
-   err "$(basename "$0")" '[-D] -s <<file>>'
-   err "$(basename "$0")" '[-D] -i <<file>>'
-   err "$(basename "$0")" '[-D] -f <<file>>...'
-   err "$(basename "$0")" '[-D] -e <<expirationInDays>> <<file>>'
-   err "$(basename "$0")" '[-D] -r <<[https://]remoteServer>>'
+   err "$(basename "$0")" '-V'
+   err "$(basename "$0")" '[<<file>>]'
+   err "$(basename "$0")" '[-D] -c [<<file>>]'
+   err "$(basename "$0")" '[-D] -s [<<file>>]'
+   err "$(basename "$0")" '[-D] -i [<<file>>]'
+   err "$(basename "$0")" '[-D] -f [<<file>>...]'
+   err "$(basename "$0")" '[-D] -x [<<file>>...]'
+   err "$(basename "$0")" '[-D] -e <<expirationInDays>> [<<file>>]'
+   err "$(basename "$0")" '[-D] -r [<<[https://]remoteServer>>]'
    err
    err '-h ::= help'
-   err '-v ::= show version'
+   err '-V ::= show version'
    err '-D ::= enable debug'
    err '-c ::= just show leaf CN field'
    err '-i ::= just show issuer of leaf certificate'
@@ -184,35 +209,84 @@ function usage() {
    err '           101 specified file is not a plain file'
 }
 
+# fixArg provides handling for receiving input from stdin aka as pipe-mode. If no argument is specified, pipe-mode is assumed.
+# fixArg will copy stdin into a temporary file and offer the filename back to to caller
+# fixArg exits with 99 in case of pipe-mode. As this function is run in a sub-shell, the removal of the temporary file must be
+# done from the parent process. Otherwise the file is deleted when finishing the client process with fixArg and the parent
+# could not access the file anymore.
+function fixArg() {
+   if [ -n "$1" ] ; then
+      echo "$@"
+   else
+      local b=$(mktemp /tmp/tlsCert.XXXXXXXX)
+      cat > "$b"
+      echo "$b"
+      exit 99
+   fi
+}
+
 function main() {
    exitIfBinariesNotFound ruby
-   # for file in "$@" ; do
+   unset VERBOSE
    if [ "$1" = -h ] ; then
       usage
       exit 10
-   elif [ "$1" = -v ] ; then
-      echo 1.1.0
+   elif [ "$1" = -V ] ; then
+      echo 1.3.0
       exit 11
    elif [ "$1" = -D ] ; then
       debugSet
       shift
    elif [ "$1" = -c ] ; then
-      tlsCert2LeafCn2 "$2"
+      shift
+      arg=$(fixArg "$@")
+      [ $? -eq 99 ] && trap "/bin/rm -f ${arg}" EXIT
+      tlsCert2LeafCn2 $arg
    elif [ "$1" = -s ] ; then
-      tlsCert2LeafSubject2 "$2"
+      shift
+      arg=$(fixArg "$@")
+      [ $? -eq 99 ] && trap "/bin/rm -f ${arg}" EXIT
+      tlsCert2LeafSubject2 $arg
    elif [ "$1" = -i ] ; then
-      tlsCert2LeafIssuer2 "$2"
+      shift
+      arg=$(fixArg "$@")
+      [ $? -eq 99 ] && trap "/bin/rm -f ${arg}" EXIT
+      tlsCert2LeafIssuer2 "$arg"
    elif [ "$1" = -f ] ; then
       shift
-      tlsCertFingerprint2 "$@"
+      fingerprint2 "$@"
+   elif [ "$1" = -x ] ; then
+      shift
+      arg=$(fixArg "$@")
+      [ $? -eq 99 ] && trap "/bin/rm -f ${arg}" EXIT
+      for file in $arg ; do
+         tlsCert "$file" | grep -E 'notBefore=|notAfter='
+      done
    elif [ "$1" = -e ] ; then
       shift
-      tlsCheckCertExpiry2 $@
+      expiry="$1"
+      shift
+      arg=$(fixArg "$@")
+      # echo expiry $expiry arg $arg
+      [ $? -eq 99 ] && trap "/bin/rm -f ${arg}" EXIT
+      tlsCheckCertExpiry2 "$expiry" $arg
    elif [ "$1" = -r ] ; then
       exitIfBinariesNotFound gnutls-cli
-      tlsServerCert2 $2
+      shift
+      arg=$(fixArg "$@")
+      res=$?
+      if [ $res -eq 99 ] ; then
+         trap "/bin/rm -f ${arg}" EXIT
+         for host in $(grep -v '^$' "$arg") ; do
+            tlsServerCert2 "$host"
+         done
+      else
+         tlsServerCert2 $arg
+      fi
    else
-      tlsCert2 "$1"
+      arg=$(fixArg "$@")
+      [ $? -eq 99 ] && trap "/bin/rm -f ${arg}" EXIT
+      tlsCert2 $arg
    fi
    # done
 }
