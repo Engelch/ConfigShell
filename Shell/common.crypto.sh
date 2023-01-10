@@ -56,10 +56,6 @@ function TRAPEXIT() {
 
 # ---- TLS  -----------------------------------------------------------------------
 
-# ------ Certs
-# create fingerprint of certificate
-function tlsCertFingerprint() {  local output="/dev/null" ; [ "$1" = -v ] &&  output="/dev/stdout" && shift ; local file; for file in $*; do /bin/echo -n "$file:" > $output; openssl x509 -modulus -noout -in "$file" | openssl sha256 | sed 's/.*stdin)= //' ; done;  }
-
 # split -p not existing under Linux .... > switch to simple ruby as existing on most plaforms
 # show certificate (replacing the package version tlsCertView) - removed awk against split
 # function tlsCert() {
@@ -77,53 +73,7 @@ function tlsCertFingerprint() {  local output="/dev/null" ; [ "$1" = -v ] &&  ou
 #    setopt -o nomatch;
 # }
 
-function tlsCert() {
-   local a=$(mktemp /tmp/tlsCert.XXXXXXXX)
-   trap "rm -f $a" EXIT
-   cat >> $a <<EOF
-#!/usr/bin/env ruby
-VERSION="v2.1.23"
-args    = ARGV.join(" ")
-count   = -1
-outarr  = Array.new()
-# read lines beginning with BEGIN CERTIFICATE and the following into an outarr
-IO.foreach(args) do | name |
-    if name.include? "----BEGIN CERTIFICATE"
-        count += 1
-    end
-    outarr[count] = outarr[count].to_s + name if count >= 0
-end
-print "Number of certificates (#{VERSION}): ", count+1, "\n"
-print "================================\n"
-(count+1).times do |val|
-    IO.popen("openssl x509 -subject -email -issuer -dates -sha256 -serial -noout -ext 'subjectAltName,authorityKeyIdentifier,subjectKeyIdentifier' 2>/dev/null", "w+") do |proc|
-         proc.write(outarr[val])
-         proc.close_write
-         puts "--------------------------------" if val > 0
 
-         proc.readlines.each { |x|
-            if x.length > 1
-               print (x.to_s.gsub("\n", ""))
-               print ("\n") if not [ "Identifier", "Alternative Name" ].any?{ |s| x.include? s }
-            end
-         }
-    end
-end
-print "================================\n"
-EOF
-   ruby $a $*
-   unset a
-}
-
-function tlsCert2LeafCn() {
-	[ ! -f "$1" ] && error Supplied argument $1 is not a file && return
-	tlsCert $1 | grep 'subject=' | head -n 1 | sed -e 's/^.*CN = //' -e 's/,.*//'
-}
-
-function tlsCert2LeafSubject() {
-	[ ! -f "$1" ] && error Supplied argument $1 is not a file && return
-	tlsCert $1 | grep 'subject=' | head -n 1 | sed -e 's/^.*subject=//'
-}
 
 alias  tlsSrvCrt=tlsServerCert
 alias  tlsSrvCert=tlsServerCert
