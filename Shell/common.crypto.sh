@@ -74,16 +74,6 @@ function TRAPEXIT() {
 # }
 
 
-# ------ CSR
-function tlsCsr() { local file; for file in $*; do openssl req -in "$file"  -noout -utf8 -text | sed "s,^,$file:," | egrep -v '.*:.*:.*:'; done; }
-function tlsCsrPubKeyFingerprint() {
-   local file
-   for file in $*; do
-      openssl req -in "$file" -noout -pubkey | openssl rsa -modulus -pubin -noout | openssl sha256 | sed 's/.*stdin)= //' | egrep -v '.*:.*:.*:'
-   done
-}
-
-
 ##########################################
 
 function common.crypto.init() {

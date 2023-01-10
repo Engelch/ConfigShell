@@ -29,10 +29,15 @@ elif [ "$1" = -v ] ; then
    VERBOSE=TRUE
    shift
 fi
-for file in "$@" ; do
-   [ ! -f "$file" ] && err ERROR "$file" is not a regualar file && exit 10
-   [ -n "$VERBOSE" ] && echo -n "$file:"
-   rsaPubFingerprint2 "$file"
-done
+# echo num args $#
+if [ $# -eq 0 ] ; then     # read from stdin
+   rsaPubFingerprint2 -
+else
+   for file in "$@" ; do
+      [ ! -f "$file" ] && err ERROR "$file" is not a regualar file && exit 10
+      [ -n "$VERBOSE" ] && echo -n "$file:"
+      rsaPubFingerprint2 "$file"
+   done
+fi
 
 # EOF
