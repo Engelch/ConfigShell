@@ -164,6 +164,7 @@ function usage() {
    err "$(basename "$0")" '[-D] -s <<file>>'
    err "$(basename "$0")" '[-D] -i <<file>>'
    err "$(basename "$0")" '[-D] -f <<file>>...'
+   err "$(basename "$0")" '[-D] -x <<file>>...'
    err "$(basename "$0")" '[-D] -e <<expirationInDays>> <<file>>'
    err "$(basename "$0")" '[-D] -r <<[https://]remoteServer>>'
    err
@@ -191,7 +192,7 @@ function main() {
       usage
       exit 10
    elif [ "$1" = -v ] ; then
-      echo 1.1.0
+      echo 1.2.0
       exit 11
    elif [ "$1" = -D ] ; then
       debugSet
@@ -205,6 +206,11 @@ function main() {
    elif [ "$1" = -f ] ; then
       shift
       tlsCertFingerprint2 "$@"
+   elif [ "$1" = -x ] ; then
+      shift
+      for file in "$@" ; do
+         tlsCert "$file" | grep -E 'notBefore=|notAfter='
+      done
    elif [ "$1" = -e ] ; then
       shift
       tlsCheckCertExpiry2 $@
