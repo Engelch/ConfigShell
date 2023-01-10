@@ -74,20 +74,6 @@ function TRAPEXIT() {
 # }
 
 
-
-alias  tlsSrvCrt=tlsServerCert
-alias  tlsSrvCert=tlsServerCert
-function tlsServerCert() {
-   # tlsServerCert expects a hostname as its first argument. The argument can contain http:// or https:// which will
-   # be removed from the call.
-    [ -z $1 ] && 1>&2 echo no argument specified && return 1
-    url=$1
-    # strip potential leading ^http.?://
-    [[ $url =~ ^http.?:// ]] && url=$(echo $url | sed 's,^.*://,,')
-    debug url: $url
-    gnutls-cli --print-cert --no-ca-verification $url  < /dev/null
-}
-
 # ------ Keys
 # show fingerprint of private RSA key
 #function tlsRsaPrvFingerprint() { local output="/dev/null" ; [ "$1" = -v ] &&  output="/dev/stdout" && shift ; local file; for file in $*; do /bin/echo -n "$file:" > $output; openssl rsa -modulus -noout -in "$file" | openssl sha256 | sed 's/.*stdin)= //'; done; }

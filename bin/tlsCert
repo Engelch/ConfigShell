@@ -137,6 +137,17 @@ tlsCheckCertExpiry2() {
     fi
 }
 
+function tlsServerCert2() {
+   # tlsServerCert expects a hostname as its first argument. The argument can contain http:// or https:// which will
+   # be removed from the call.
+    [ -z $1 ] && 1>&2 echo no argument specified && return 1
+    url=$1
+    # strip potential leading ^http.?://
+    [[ $url =~ ^http.?:// ]] && url=$(echo $url | sed 's,^.*://,,')
+    debug url: $url
+    gnutls-cli --print-cert --no-ca-verification $url  < /dev/null
+}
+
 function err() { 1>&2 echo "$@"; }
 
 function usage() {
@@ -150,6 +161,7 @@ function usage() {
    err "$(basename "$0")" '[-D] -i <<file>>'
    err "$(basename "$0")" '[-D] -f <<file>>...'
    err "$(basename "$0")" '[-D] -e <<expirationInDays>> <<file>>'
+   err "$(basename "$0")" '[-D] -r <<[https://]remoteServer>>'
    err
    err '-h ::= help'
    err '-v ::= show version'
@@ -175,7 +187,7 @@ function main() {
       usage
       exit 10
    elif [ "$1" = -v ] ; then
-      echo 1.0.0
+      echo 1.1.0
       exit 11
    elif [ "$1" = -D ] ; then
       debugSet
@@ -192,6 +204,9 @@ function main() {
    elif [ "$1" = -e ] ; then
       shift
       tlsCheckCertExpiry2 $@
+   elif [ "$1" = -r ] ; then
+      exitIfBinariesNotFound gnutls-cli
+      tlsServerCert2 $2
    else
       tlsCert2 "$1"
    fi
