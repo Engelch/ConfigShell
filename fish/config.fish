@@ -61,6 +61,7 @@ function setupAliases_Abbreviations
     abbr -a -g ipi 'curl https://ipinfo.io'
     abbr -a -g pkgU pkgUpgrade
     abbr -a -g rl 'source ~/.config/fish/config.fish'
+    abbr -a -g ssf ssh-grep
 
     abbr -a -g giaa 'git add -A'
     abbr -a -g gibr 'git branch -avv | cat'
@@ -94,7 +95,6 @@ function setupAliases_Abbreviations
         end
     end
 
-    alias ssh-grep=ssf
 
     abbr -a -g tm 'tmux new -s'
     abbr -a -g tw 'tmux new-window -n'
@@ -278,7 +278,7 @@ function setupExportVars
     set -g -x VISUAL vim
     set -g -x EDITOR vim       # bsroot has no notion about VISUAL
     set -g -x BLOCKSIZE 1K
-    set -g -x FISH_RC_VERSION "1.8.1"
+    set -g -x FISH_RC_VERSION "1.8.2"
     if test -n "$_current_FISH_RC_VERSION" -a "$FISH_RC_VERSION" != "$_current_FISH_RC_VERSION"
         echo new FISH_RC_VERSION "$FISH_RC_VERSION"
     end
