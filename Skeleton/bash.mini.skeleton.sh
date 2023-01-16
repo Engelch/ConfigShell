@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # vim: set expandtab: ts=3: sw=3
+# shellcheck disable=SC2155
 #
 # TITLE: $_app
 #
@@ -83,15 +84,18 @@ function tempDir()                      { mktemp -d "${TMPDIR:-/tmp/}$_app.YYYYY
 
 function usage()
 {
-    err DESCRIPTION
+    err NAME
+    err4 "$_app"
     err
-    err "$_app"
     err SYNOPSIS
     err4 "$_app" '[-D] [-f] [dir...]'
     err4 "$_app" '-h'
     err
     err VERSION
     err4 "$_appVersion"
+    err
+    err DESCRIPTION
+    err4 ...
     err
     err OPTIONS
     err4 '-D      ::= enable debug output'
@@ -118,7 +122,7 @@ function parseCLI() {
 
 function main() {
     exitIfBinariesNotFound pwd basename dirname mktemp
-    parseCLI "$*"
+    parseCLI "$@"
     shift "$(( OPTIND - 1 ))"  # not working inside parseCLI
     debug args are "$*"
     debug forcedMode is "${forcedMode:-FALSE}"
