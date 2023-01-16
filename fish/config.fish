@@ -1,7 +1,9 @@
 function setupAliases_Abbreviations
+    set -g -x GREP_OPTIONS "--color=always"
     abbr -a -g l less
     alias j=jobs
     abbr -a -g ln-s 'ln -s'
+    alias a=alias
     alias cp='cp -i'
     alias rm='rm -i'
     alias mv='mv -i'
@@ -54,7 +56,7 @@ function setupAliases_Abbreviations
     abbr -a -g fini 'find . -iname'
 
     abbr -a -g h "history --show-time"
-    abbr -a -g hf 'history | grep -Ei'
+    abbr -a -g hf 'history | grep -Ei | less'
     abbr -a -g hs 'history search --contains' # new command from fish. If it is good, it shall replace/become hf
     abbr -a -g proc 'ps -ef | grep -Ei'
 
@@ -278,7 +280,7 @@ function setupExportVars
     set -g -x VISUAL vim
     set -g -x EDITOR vim       # bsroot has no notion about VISUAL
     set -g -x BLOCKSIZE 1K
-    set -g -x FISH_RC_VERSION "1.8.2"
+    set -g -x FISH_RC_VERSION "1.8.4"
     if test -n "$_current_FISH_RC_VERSION" -a "$FISH_RC_VERSION" != "$_current_FISH_RC_VERSION"
         echo new FISH_RC_VERSION "$FISH_RC_VERSION"
     end
