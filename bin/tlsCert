@@ -198,7 +198,7 @@ function usage() {
    err '-c ::= just show leaf CN field'
    err '-i ::= just show issuer of leaf certificate'
    err '-s ::= just show leaf subject field'
-   err '-f ::= show the fingerprint for certificates'
+   err '-f ::= show the fingerprint for certificates, private, and public keys, and CSRs'
    err '-e ::= show if the certificate expired in the specified amount of days'
    err '       Exit codes'
    err '             0 certificate not expiring in the next specified days'
@@ -286,7 +286,11 @@ function main() {
    else
       arg=$(fixArg "$@")
       [ $? -eq 99 ] && trap "/bin/rm -f ${arg}" EXIT
-      tlsCert2 $arg
+      for file in "$arg" ; do
+         mainFound=
+         [[ "$file" =~ .*\.csr$  ]] && mainFound=TRUE && tlsCsr "$file"
+         [[ -z "$mainFound" ]] && tlsCert2 $arg
+      done
    fi
    # done
 }
