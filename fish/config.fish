@@ -56,7 +56,7 @@ function setupAliases_Abbreviations
     abbr -a -g fini 'find . -iname'
 
     abbr -a -g h "history --show-time"
-    abbr -a -g hf 'history | grep -Ei | less'
+    abbr -a -g hf 'history | grep -Ei '
     abbr -a -g hs 'history search --contains' # new command from fish. If it is good, it shall replace/become hf
     abbr -a -g proc 'ps -ef | grep -Ei'
 
@@ -280,7 +280,7 @@ function setupExportVars
     set -g -x VISUAL vim
     set -g -x EDITOR vim       # bsroot has no notion about VISUAL
     set -g -x BLOCKSIZE 1K
-    set -g -x FISH_RC_VERSION "1.9.0"
+    set -g -x FISH_RC_VERSION "1.9.1"
     if test -n "$_current_FISH_RC_VERSION" -a "$FISH_RC_VERSION" != "$_current_FISH_RC_VERSION"
         echo new FISH_RC_VERSION "$FISH_RC_VERSION"
     end
@@ -298,7 +298,7 @@ end
 if status is-interactive
     # Commands to run in interactive sessions can go here
 
-    optSourceFile ~/.config/fish/pre.fish 
+    optSourceFile ~/.config/fish/pre.fish
     for file in $HOME/.config/fish/conf.d/*.fish
         optSourceFile $file
     end
