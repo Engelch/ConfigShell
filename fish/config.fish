@@ -280,18 +280,31 @@ function setupExportVars
     set -g -x VISUAL vim
     set -g -x EDITOR vim       # bsroot has no notion about VISUAL
     set -g -x BLOCKSIZE 1K
-    set -g -x FISH_RC_VERSION "1.8.4"
+    set -g -x FISH_RC_VERSION "1.9.0"
     if test -n "$_current_FISH_RC_VERSION" -a "$FISH_RC_VERSION" != "$_current_FISH_RC_VERSION"
         echo new FISH_RC_VERSION "$FISH_RC_VERSION"
     end
     set -g _current_FISH_RC_VERSION "$FISH_RC_VERSION"
 end
 
+function execIfExisting
+    for file in $argv
+        test -f $file && bash $file
+    end
+end
+
+
 # main code
 if status is-interactive
     # Commands to run in interactive sessions can go here
 
-    optSourceFile ~/.config/fish/pre.fish
+    optSourceFile ~/.config/fish/pre.fish 
+    for file in $HOME/.config/fish/conf.d/*.fish
+        optSourceFile $file
+    end
+    for file in $HOME/.config/fish/conf.d/*.sh
+        bash $file
+    end
     setupExportVars
     setupPath
     setupAliases_Abbreviations
