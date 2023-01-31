@@ -13,6 +13,8 @@ function setupAliases_Abbreviations
         end
     end
     abbr -a -g rm~ 'find . -name \*~ -print -exec /bin/rm -v {} \; ; find . -name \*.bak -print -exec /bin/rm -v {} \;'
+    # rmbak for virtual environments w/out working ~ key
+    abbr -a -g rmbak 'find . -name \*~ -print -exec /bin/rm -v {} \; ; find . -name \*.bak -print -exec /bin/rm -v {} \;'
     abbr -a -g  wh which
 
     alias la "ls -aCF $LS_COLOUR"
@@ -20,7 +22,6 @@ function setupAliases_Abbreviations
     alias lla "ls   -laF       $LS_COLOUR"
     alias lld "ls   -ldF       $LS_COLOUR"
     alias llad "ls  -ladF      $LS_COLOUR"
-    # alias ls "ls    -hCF       $LS_COLOUR"
 
     abbr -a -g cd.. 'cd ..'
     alias ..='cd ..'
@@ -39,6 +40,7 @@ function setupAliases_Abbreviations
     alias pu='pushd .'
 
     abbr -a -g cm cmake
+    abbr -a -g gm gmake
     abbr -a -g m make
 
     alias disp0='export DISPLAY=:0'
@@ -280,7 +282,7 @@ function setupExportVars
     set -g -x VISUAL vim
     set -g -x EDITOR vim       # bsroot has no notion about VISUAL
     set -g -x BLOCKSIZE 1K
-    set -g -x FISH_RC_VERSION "1.9.1"
+    set -g -x FISH_RC_VERSION "1.9.2"
     if test -n "$_current_FISH_RC_VERSION" -a "$FISH_RC_VERSION" != "$_current_FISH_RC_VERSION"
         echo new FISH_RC_VERSION "$FISH_RC_VERSION"
     end
