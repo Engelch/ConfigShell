@@ -282,7 +282,7 @@ function main() {
         openssl req \
             -key "$arg" -subj "$subject" \
             -new -x509 -days "${days:-365}" -sha256 -extensions v3_ca \
-            -out "$(basename $arg .key).pem"
+            -out "$(basename $arg .key).crt"
     done
 }
 
