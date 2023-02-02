@@ -17,8 +17,8 @@ function tlsCsr2() {
 function csrShowFingerprint() {
    local file
    for file in "$*"; do
-      [ -n "$VERBOSE" ] && echo -n "$file":
-      openssl req -in "$file" -noout -pubkey | rsaPubFingerprint
+      # [ -n "$VERBOSE" ] && echo -n "$file":
+      openssl req -in "$file" -noout -pubkey | tls-rsa-pub-fingerprint.sh
    done
 }
 
@@ -58,12 +58,13 @@ function main() {
    shift $(($OPTIND - 1))  # not working inside parseCLI
    if [ -n "$FINGERPRINT" ] ; then
       for file in "$@" ; do
-         csrShowFingerprint "$file"
+
+         [ -n "$VERBOSE" ] && csrShowFingerprint "$file" | sed "s/$/ $file/"
+         [ -z "$VERBOSE" ] && csrShowFingerprint "$file"
       done
    else
       for file in "$@" ; do
          [ ! -f "$file" ] && err ERROR "$file" is not a regualar file && exit 10
-         [ -n "$VERBOSE" ] && echo  "$file: ============================================================"
          tlsCsr2 "$file"
       done
    fi

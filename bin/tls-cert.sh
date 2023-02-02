@@ -80,11 +80,10 @@ function tlsCertFingerprint3() {
    echo ERROR
    exit 1
    else
-      echo "$msg" | grep -E '(^Modulus=|Exponent:)' | \
-         sed -E 's/[[:space:]]*Exponent: [0-9]+ \(//' | \
+      echo "$msg" | grep -E --color=never '(^Modulus=|Exponent:)' | \
+         sed -E 's/^.*Exponent:.*\(//' | \
          sed 's/)//' | sed 's/Modulus=//' | sed 's/0x//' | \
-         tr  '\n' ',' | sed -E 's/.$//' | \
-         openssl sha256 | sed 's/.*stdin)= //'
+         tr  '\n' ',' | sed -E 's/.$//' | openssl sha256 | sed 's/.*stdin)= //' | sed "s/$/ $input/"
    fi
 }
 
@@ -102,11 +101,11 @@ function fingerprint2() {
          unset found
          [[ "$file" =~ .*\.crt$  ]] && found=TRUE && tlsCertFingerprint3 "$file"
          [[ "$file" =~ .*\.pem$  ]] && found=TRUE && tlsCertFingerprint3 "$file"
-         [[ "$file" =~ .*\.pub$  ]] && found=TRUE && rsaPubFingerprint "$file"
-         [[ "$file" =~ .*\.prv$  ]] && found=TRUE && rsaPrvFingerprint "$file"
-         [[ "$file" =~ .*\.key$  ]] && found=TRUE && rsaPrvFingerprint "$file"
-         [[ "$file" =~ .*\.csr$  ]] && found=TRUE && tlsCsr -f "$file"
-         [[ "$file" =~ .*\.p7b$  ]] && found=TRUE && p7b2pem "$file" | tlsCertFingerprint3
+         [[ "$file" =~ .*\.pub$  ]] && found=TRUE && tls-rsa-pub-fingerprint.sh -v "$file"
+         [[ "$file" =~ .*\.prv$  ]] && found=TRUE && tls-rsa-prv-fingerprint.sh -v "$file"
+         [[ "$file" =~ .*\.key$  ]] && found=TRUE && tls-rsa-prv-fingerprint.sh -v "$file"
+         [[ "$file" =~ .*\.csr$  ]] && found=TRUE && tlsCsr -v -f "$file"
+         [[ "$file" =~ .*\.p7b$  ]] && found=TRUE && tls-p7b-to-pem.sh "$file" | tlsCertFingerprint3
          [ -z "$found" ] && err ERROR file "$file" not supported && exit 20
       done
    fi

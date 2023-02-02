@@ -3,17 +3,15 @@
 
 function prvFingerprint() {
    openssl  rsa  -noout -modulus -text -in "$1" | \
-        egrep '(Modulus=|Exponent:)' | \
-        sed -E 's/Exponent: [0-9]+ \(//' | \
+        grep -E --colour=never '(Modulus=|publicExponent:)' | \
+        sed -E 's/^.*Exponent: [0-9]+ \(//' | \
         sed 's/)//' | \
         sed 's/Modulus=//' | \
         sed 's/0x//' | \
         tr  '\n' ',' | \
         sed -E 's/.$//' | \
         sed 's/^public//' | \
-        sed 's/,privateExponent://' | \
-        sha256sum | \
-        awk '{ print $1 }'
+        sed 's/publicExponent:/Exponent:/' | sha256sum | awk '{ print $1 }'
 }
 
 
@@ -37,8 +35,9 @@ elif [ "$1" = -v ] ; then       # show filenames
 fi
 for file in "$@" ; do
    [ ! -f "$file" ] && err ERROR "$file" is not a regualar file && exit 10
-   [ -n "$VERBOSE" ] && echo -n "$file:"
-   prvFingerprint "$file"
+   [ -n "$VERBOSE" ] && prvFingerprint "$file" | sed "s/$/ $file/"
+   [ -z "$VERBOSE" ] && prvFingerprint "$file"
+
 done
 
 # EOF
