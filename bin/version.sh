@@ -90,6 +90,10 @@ function main() {
       _file=$(echo $_versionFilePattern | awk '{ print $1 }')
       _pattern=$(echo $_versionFilePattern | awk '{ print $2 }')
       START="egrep -i $_pattern $_file /dev/null | grep -v '^$' | egrep -v '^[[:space:]]*#'"
+   elif [ -f "./version.txt" ] ; then
+        [ "$_showFileName" = TRUE ] && grep -HEv '^$' ./version.txt
+        [ "$_showFileName" != TRUE ] && grep -Ev '^$' ./version.txt
+        return
    else
       # find file(s) with app.?version information included. It should result in exactly one file.
       # should only return one line or less => -quit option
