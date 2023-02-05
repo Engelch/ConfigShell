@@ -73,7 +73,7 @@ function setupAliases_Abbreviations
     abbr -a -g gidic 'git diff --cached'
     abbr -a -g gife 'git fetch --all -p'
     abbr -a -g gilo 'git log --branches --remotes --tags --graph --oneline --decorate'
-    abbr -a -g gist "git status -u --show-stash"
+    abbr -a -g gist "git status -u --show-stash --ignore-submodules"
     abbr -a -g gipl 'git pull --all; git fetch --tags'
     abbr -a -g girm "git status | sed '1,/not staged/d' | grep deleted | awk '{print \$2}' | xargs git rm"
     function gipu
