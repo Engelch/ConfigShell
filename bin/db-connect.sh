@@ -51,17 +51,18 @@ function usage()
     err4 A script to call DBMS as a user. The database-details are read from a
     err4 database configuration file
     err4
-    err4 1. usecase_DB_TYPE =  '<<mysql|mariadb or psql>>'
-    err4 2. usecase_HOSTNAME=  'IP-address or FDQN'
+    err4 1. usecase_DB_TYPE=   '<<mysql|mariadb or psql>>'
+    err4 2. usecase_HOST=      'IP-address or FDQN'
     err4 3. usecase_PORT=      'port#, can be omitted for default port number'
     err4 4. usecase_USER=      'required: DB-user'
     err4 5. usecase_PW=        'required: DB-pw'
     err4 6. usecase_DB=        'required: DB to connect to in DBMS'
     err
     err OPTIONS
-    err4 '-D      ::= enable debug output'
-    err4 '-h      ::= show usage message and exit with exit code 1'
-    err4 todo .......
+    err4 '-D                    ::= enable debug output'
+    err4 '-h                    ::= show usage message and exit with exit code 1'
+    err4 '-f <<cfgFile>>        ::= load the configuration froma cfg file'
+    err4 todo -f not yet implemented
 }
 
 # todo -f
@@ -82,79 +83,7 @@ function parseCLI() {
     done
 }
 
-# SCRIPT Implementation
-
-function old() {
-    # check for hidden cfg file
-    for inputfile in .psql.source.sh _psql.source.sh ; do
-        if [ -f "$inputfile" ] ; then
-            debug sourcing $inputfile
-            source "$inputfile"
-        fi
-    done
-
-    # determine the user from the called scripts. All others are supposed to be
-    # s-links to psql-connect-admin.sh such as psql-connect-user.sh
-    declare -r _user=$(basename "$0" | sed -E -e 's/^psql-connect-//' -e 's/\.sh$//' | tr '[:lower:]' '[:upper:]')
-    debug User is "$_user"
-
-    # we expect to have only one target DBMS, if not set, it is localhost
-    if [ -z "$POSTGRESQL_HOSTNAME" ] ; then
-    POSTGRESQL_HOSTNAME=localhost
-    tlsString='?sslmode=disable'
-    debug Seting hostname to localhost and no tls
-    else
-        debug POSTGRESQL_HOSTNAME set from outside to "$POSTGRESQL_HOSTNAME"
-    fi
-
-    # if port is not set, default to 5432
-    if [ -z "$POSTGRESQL_PORT" ] ; then
-    POSTGRESQL_PORT=5432
-    debug Setting port to default 5432
-    else
-        debug POSTGRESQL_PORT set from outside to "$POSTGRESQL_PORT"
-    fi
-
-    psqluser=POSTGRESQL_${_user}_USER
-    # if the admin user is not set, default to postgres
-    if [ -z "${!psqluser}" ] ; then
-        eval "${psqluser}"=postgres
-        debug Setting "${psqluser}" to postgres
-    else
-        debug "$psqluser" set from outside to "${!psqluser}"
-    fi
-
-    psqlpw=POSTGRESQL_${_user}_PW
-    # if the pw is not set, ask for it
-    if [ -z "${!psqlpw}" ] ; then
-        read -esrp "Postgres ${_user} pw \(not echoed\):" pw
-        eval "${psqlpw}"="$pw"
-        unset pw
-        debug "$psqlpw" set to to "${!psqlpw}"
-    else
-        debug "$psqlpw" set from outside to "${!psqlpw}"
-    fi
-
-    psqldb=POSTGRESQL_${_user}_DB
-    if [ -z "${!psqldb}" ] ; then
-        eval "${psqldb}"=postgres
-        debug echo Setting default DB to postgres
-    else
-        debug "$psqldb" set from outside to "${!psqldb}"
-    fi
-
-    # allow commands added to it
-    if [ "$*" != '' ] ; then
-        cmds="echo \"$*\" |"
-        debug Commands found on the command line':' "$cmds"
-    else
-        cmds=""
-        debug No commands found on command line
-    fi
-
-    debug postgresql://"${!psqluser}":"${!psqlpw}"@"$POSTGRESQL_HOSTNAME":"$POSTGRESQL_PORT"/"${!psqldb}""$tlsString"
-    eval "$cmds" psql postgresql://"${!psqluser}":"${!psqlpw}"@"$POSTGRESQL_HOSTNAME":"$POSTGRESQL_PORT"/"${!psqldb}""$tlsString"
-}
+##################### SCRIPT Implementation
 
 # determineUseCase checks the $0 filename to determine the use-case
 # EXIT: 10
@@ -270,11 +199,22 @@ function checkEnoughSettings() {
 
 # evalCredentialsFile <<usecase>>
 # todo check for specified config file
+# EXIT 20
+#   21
 function evalCredentialsFile() {
-    credentials=
-    [ -f db-connect.pw ] && credentials=TRUE && debug ./db-connect.pw found && checkEnoughSettings "$1" ./db-connect.pw && return
-    [ -f ../db-connect.pw ] && credentials=TRUE && debug ../db-connect.pw found && checkEnoughSettings "$1" ../db-connect.pw && return
-    [ -z "$credentials" ] && errorExit 20 No credentials file found
+    if [ -f db-connect.pw ] ; then
+        debug db-connect.pw found
+        checkEnoughSettings "$1" db-connect.pw
+    elif [ -f db-connect.pws ] ; then
+        debug db-connect.pws found
+        if [ ! -L db-connect.pws ] ; then
+            errorExit 21 db-connect.pws is supposed to be an s-link, but it is not.
+        fi
+        checkEnoughSettings "$1" db-connect.pws
+        return
+    else
+        errorExit 20 No credentials file found
+    fi
 }
 
 # callDB calls the actual DB
@@ -298,7 +238,7 @@ function main() {
     declare -r App=$(basename "${0}")
     #declare -r AppDir=$(dirname "$0")
     # declare -r _AbsoluteAppDir=$(cd "$_appDir" || exit 99 ; /bin/pwd)
-    declare -r AppVersion="1.0.0"      # use semantic versioning
+    declare -r AppVersion="1.1.0"      # use semantic versioning
     dry=
     parseCLI "$@"
     shift "$(( OPTIND - 1 ))"  # not working inside parseCLI
