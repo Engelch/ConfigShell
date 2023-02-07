@@ -38,7 +38,7 @@
 
 readonly _app=$(basename $0)
 readonly _appDir=$(dirname $(readlink -f $0))
-readonly _appVersion="2.2.0" # use semantic versioning
+readonly _appVersion="2.3.0" # use semantic versioning
 export DebugFlag=${DebugFlag:-FALSE}
 
 #########################################################################################
@@ -238,7 +238,7 @@ function createPreCommit() {
     # single-quotes around ENDINIT prevents evaluation of vars inside here document
     cat  >| .git/hooks/pre-commit <<'ENDINIT'
 #!/usr/bin/env bash
-
+# version 2.3.0
 # --- debug: Conditional debugging. All commands begin w/ debug.
 
 function debugSet()             { DebugFlag=TRUE; return 0; }
@@ -253,6 +253,11 @@ function main() {
     initDefaultVars
     cd "$gitroot"
     debug pre-commit starting from $(pwd)
+    for file in $(find . -name '*.pws' -print) ; do
+        if ! [ -L "$file" ] ; then
+            echo 1>&2 File "$file" is not a symbolic link; exit 2
+        fi
+    done
     for file in $(find . -name '*.gee' -type f -print) ; do
         debug working on $file
         _noGeeFile=$(basename $file .gee)
