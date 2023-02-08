@@ -1,0 +1,93 @@
+\documentclass[a4paper]{article}
+\usepackage{url}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage[
+backend=biber,
+style=alphabetic,
+]{biblatex}
+\usepackage[]{csquotes}
+\usepackage[]{ukdate}
+
+\addbibresource{latexSkeleton.bib}
+\setlength\parindent{0pt}
+\addtolength{\parskip}{5pt}
+
+\begin{document}
+\title{title}
+\author{CIAS}
+\maketitle
+
+\tableofcontents
+
+\begin{itemize}
+    \item Author: Fantomas
+    \item Version[/last update] of this document:  0.0.0 / 2023-01
+    \item Created: 2023-01
+    \item Version of described solution:
+\end{itemize}
+
+\section{About}
+
+
+
+\texttt{pandoc}~\cite{pandoc_homepage} is to be installed on your development machines using the related \texttt{ansible}~\cite{ansible_homepage} *playbooks*.
+
+\medskip
+
+\noindent
+The above text was created using
+\begin{verbatim}
+    \texttt{pandoc}~\cite{pandoc_homepage} is to be installed on
+    your development machines using the related
+    \texttt{ansible}~\cite{ansible_homepage} *playbooks*.
+\end{verbatim}
+
+\noindent
+Please look at the example to learn more about \LaTeX{} commands. Here, some fancy math:
+
+This is a simple math expression with numbering
+
+\begin{equation}
+    \sqrt{x^2+1}    \label{eq0}
+\end{equation}
+
+separated from text. We can refer to it using the label \texttt{eq0} which we defined using the \verb?\label{eq0}? statement (this is equation~\ref{eq0} and the page~\pageref{eq0}).
+The same kind of labeling can be used for sections, subsection,..., tables, images.
+
+
+\section{License}
+....
+\appendix
+
+\section{Special Characters}
+
+äöüß can be typed as \verb?äöüß?.
+
+\section{Creation of PDF documentation}
+
+The documentation can be created in a few steps:
+
+\fbox{%
+\begin{minipage}{0.92 \textwidth}
+    \begin{enumerate}
+        \item latex latexSkeleton
+        \item biber latexSkeleton
+        \item xelatex latexSeketon
+        \item xelatex latexSeketon
+    \end{enumerate}
+\end{minipage}
+}
+
+The first \texttt{latex} call tries to create a dvi file and additionally creates a \texttt{.aux} file which is used by biber to
+extract the required citations from the \texttt{latexSkeleton.bib} file.
+
+The \texttt{biber} command reads the \texttt{.aux} file and creates a \texttt{.bbl file} with the extracted bibliographic references.
+
+The last steps compile the \LaTeX{} document again. As we are interested in PDF output and want to have support for UTF-8 character encoding we used \texttt{xelatex} here.
+Alternatively, we could have used the \texttt{latex} command --- until no comments tell us to rerun it again --- and then we would have used \texttt{dvipdf} to convert the dvi
+into a PDF file.
+
+\appendix
+\printbibliography
+\end{document}
