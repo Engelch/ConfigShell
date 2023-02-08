@@ -63,7 +63,8 @@ function setupAliases_Abbreviations
     abbr -a -g proc 'ps -ef | grep -Ei'
 
     abbr -a -g ipi 'curl https://ipinfo.io'
-    abbr -a -g pkgU pkgUpgrade
+    abbr -a -g pkgU pkgUpgrade          # pkgU was old name for pkgUpgrade
+    abbr -a -g osUpgrade pkgUpgrade     # create intuitive names for pkgUpgrade
     abbr -a -g rl 'source ~/.config/fish/config.fish'
     abbr -a -g ssf ssh-grep
 
