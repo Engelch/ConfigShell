@@ -12,7 +12,7 @@ function err()          { echo "$@" 1>&2; return 0; }
 function warning()      { err "WARNING:$*" ; return 0; }
 function errorExit()    { EXITCODE=$1 ; shift; error "$@" ; exit "${EXITCODE}"; }
 
-declare -r version=0.1.0
+declare -r version=0.2.0
 _uname=$(uname)
 if [[ ${_uname} == Darwin ]] ; then
    echo homebrew........................................  1>&2
@@ -34,7 +34,7 @@ if [[ ${_uname} == Darwin ]] ; then
    echo macTeX........................................... 1>&2
    if command -v tlmgr > /dev/null 2>&1 ; then tlmgr --self --all update
    else warning mactex does not seem to be installed ;fi
-   touch ~/.pkgU
+   touch ~/.pkgUpgrade
 elif [[ ${_uname} == Linux ]] ; then
       found=0
       [ -e /etc/debian_version ] && found=1 && sudo apt-get update && \
