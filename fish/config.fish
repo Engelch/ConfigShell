@@ -1,5 +1,5 @@
 function setupAliases_Abbreviations
-    set -g -x GREP_OPTIONS "--color=always"
+    set -g -x GREP_OPTIONS "--color=auto"
     abbr -a -g l less
     alias j=jobs
     abbr -a -g ln-s 'ln -s'
@@ -58,8 +58,12 @@ function setupAliases_Abbreviations
     abbr -a -g fini 'find . -iname'
 
     abbr -a -g h "history --show-time"
-    abbr -a -g hf 'history | grep -Ei '
-    abbr -a -g hs 'history search --contains' # new command from fish. If it is good, it shall replace/become hf
+
+    abbr --erase hf # delete the old hf #abbr -a -g hf 'history | grep -Ei '
+    function hf
+        history | grep -Ei $argv[1] | sort -r
+    end
+    abbr -a -g hs 'history search --reverse --contains' # new command from fish. If it is good, it shall replace/become hf
     abbr -a -g proc 'ps -ef | grep -Ei'
 
     abbr -a -g ipi 'curl https://ipinfo.io'
@@ -162,6 +166,18 @@ function setupAliases_Abbreviations
     abbr -a -g k8events "$KUBECTL get events --sort-by=.metadata.creationTimestamp"
     abbr -a -g k8eva    "$KUBECTL get events -A --sort-by=.metadata.creationTimestamp"
     abbr -a -g k8evA    "$KUBECTL get events -A --sort-by=.metadata.creationTimestamp"
+
+    # golang-specific commands
+    abbr  -a -g gode goexec-debug
+    abbr  -a -g gore goexec-release
+    abbr  -a -g godue goexec-upx
+
+    # bumpversion commands
+    # increase and show the new version number
+    abbr  -a -g bpa 'bumppatch ; version.sh'
+    abbr  -a -g bmi 'bumpminor ; version.sh'
+    abbr  -a -g bma 'bumpmajor ; version.sh'
+
 end
 
 function setupPath
@@ -283,7 +299,7 @@ function setupExportVars
     set -g -x VISUAL vim
     set -g -x EDITOR vim       # bsroot has no notion about VISUAL
     set -g -x BLOCKSIZE 1K
-    set -g -x FISH_RC_VERSION "1.9.3"
+    set -g -x FISH_RC_VERSION "1.11.1"
     if test -n "$_current_FISH_RC_VERSION" -a "$FISH_RC_VERSION" != "$_current_FISH_RC_VERSION"
         echo new FISH_RC_VERSION "$FISH_RC_VERSION"
     end

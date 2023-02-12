@@ -139,7 +139,7 @@ function setContainerName() {
 
 function buildTags() {
   version=$(version.sh)
-  [ -a "$version" ] && errorExit 20 could not determine the version of the image to be built
+  [ -z "$version" ] && errorExit 20 could not determine the version of the image to be built
   debug version tag is "$version"
   date=$(date -u +%y%m%d_%H%M%S)
   debug date tag is "$date"
@@ -149,7 +149,7 @@ function main() {
     declare -r App=$(basename "${0}")
     # declare -r AppDir=$(dirname "$0")
     # declare -r AbsoluteAppDir=$(cd "$_appDir" || exit 99 ; /bin/pwd)
-    declare -r AppVersion="0.9.0"      # use semantic versioning
+    declare -r AppVersion="0.9.1"      # use semantic versioning
     parseCLI "$@"
     shift "$(( OPTIND - 1 ))"  # not working inside parseCLI
     debug args are "$*"

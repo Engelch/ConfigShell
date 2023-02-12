@@ -47,22 +47,28 @@ function usage()
     err SYNOPSIS
     err4 $_app '[-D] [-v]'
     err4 $_app '-h'
+    err4 $_app '-V'
     err
     err VERSION
     err4 $_appVersion
     err
     err OPTIONS
     err4 '-D      ::= enable debug output'
-    err4 '-v      ::= show the version number and the line with file-name, where it is originating from'
-    err4 todo .......
+    err4 '-v      ::= show the file-name and the version number'
+    err4 '-V      ::= show the version# of script'
 }
 
-
+# EXIT 1 usage
+# EXIT 2 unknown option
+# EXIT 3 show version number of script
 function parseCLI() {
     local currentOption
-    while getopts "hDv" options; do         # Loop: Get the next option;
+    while getopts "hDvV" options; do         # Loop: Get the next option;
         case "${options}" in                    # TIMES=${OPTARG}
             D)  err Debug enabled ; debugSet
+                ;;
+            V) echo $_version
+                exit 3
                 ;;
             v)  declare -g _showFileName=TRUE
                debug _showFileName mode selected
@@ -89,7 +95,7 @@ function main() {
       [ $(echo $_versionFilePattern | wc -w ) -ne 2 ] && 1>&2 echo 'Versionpattern file should be of the format <filename> <pattern for selecting the line in the file>'
       _file=$(echo $_versionFilePattern | awk '{ print $1 }')
       _pattern=$(echo $_versionFilePattern | awk '{ print $2 }')
-      START="egrep -i $_pattern $_file /dev/null | grep -v '^$' | egrep -v '^[[:space:]]*#'"
+      START="egrep -i --colour=never $_pattern $_file /dev/null | grep -v '^$' | egrep -v '^[[:space:]]*#'"
    elif [ -f "./version.txt" ] ; then
         [ "$_showFileName" = TRUE ] && grep -HEv '^$' ./version.txt
         [ "$_showFileName" != TRUE ] && grep -Ev '^$' ./version.txt
@@ -97,10 +103,10 @@ function main() {
    else
       # find file(s) with app.?version information included. It should result in exactly one file.
       # should only return one line or less => -quit option
-      files=$(find . -name \*.go -exec egrep -il 'app.version[[:space:]]*=' {}  \;  -quit)
+      files=$(find . -name \*.go -exec egrep -il 'app.?version[[:space:]]*=' {}  \;  -quit)
       debug files:$files
       [ -z "$files" ] && 1>&2 echo Could not determine version file. Variable files returned $files. && exit 1
-      START="egrep -iH 'app.?version[[:space:]]*=' $files | egrep '[0-9]+\.[0-9]+\.[0-9]+' | tail -n1"
+      START="egrep -iH --colour=never 'app.?version[[:space:]]*=' $files | egrep --colour=never '[0-9]+\.[0-9]+\.[0-9]+' | tail -n1"
    fi
 
    if [ "$_showFileName" = TRUE ] ; then

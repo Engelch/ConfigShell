@@ -51,6 +51,8 @@ function tempDir()                      { mktemp -d "${TMPDIR:-/tmp/}$_app.YYYYY
 
 set -e      # exit if error
 
+! [ -f go.mod ] && echo 1>&2 "go.mod not found. Wrong directory?" && exit 1
+
 _os=$(uname | tr "A-Z" "a-z")
 _arch=$(uname -m | tr "A-Z" "a-z")
 [ "$_arch" = x86_64 ] && _arch=amd64
