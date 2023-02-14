@@ -132,8 +132,12 @@ function setDefaultArchitecture() {
 }
 
 function setContainerName() {
-  containerName=$(basename $PWD)
-  [ "$containerName" = src ] && containerName=$(dirname $PWD | xargs basename)
+  if [ $(/bin/ls | grep -c '^_name_.*' ) -eq 1 ] ; then
+    containerName=$(/bin/ls | grep '^_name_.*' | sed 's/.*_name_//')
+  else
+    containerName=$(basename $PWD)
+    [ "$containerName" = src ] && containerName=$(dirname $PWD | xargs basename)
+  fi
   debug container name is $containerName
 }
 
