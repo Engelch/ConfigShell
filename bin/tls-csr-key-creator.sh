@@ -116,7 +116,7 @@ function usage()
     err4 '-k      ::= key creation only, no CSR'
     err4 '-l      ::= list supported ECC ciphers'
     err4 '-g      ::= generate key pair mode. By default, it is expected to exist'
-    err4 '-o val  ::= set O field in CSR, default: Schindler Digital'
+    err4 '-o val  ::= set O field in CSR, default: ""'
     err4 '-u val  ::= set OU field in CSR'
     err4 '-s val  ::= set C field in CSR, default: CH'
     err4 '-x val  ::= create SAN field, like: -x "certificatePolicies = 1.2.3.4"'

@@ -111,7 +111,7 @@ function usage()
     err4 '-e ciph ::= specify ECC key generation and the cipher to be used. It implies -g'
     err4 '-l      ::= list supported ECC ciphers'
     err4 '-g      ::= generate key pair mode. By default, it is expected to exist'
-    err4 '-o val  ::= set O field in CSR, default: Schindler Digital'
+    err4 '-o val  ::= set O field in CSR, default: empty'
     err4 '-u val  ::= set OU field in CSR'
     err4 '-s val  ::= set C field in CSR, default: CH'
     err4 '-y days ::= days until expiry of cert'
