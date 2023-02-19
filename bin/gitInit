@@ -28,7 +28,7 @@ fi
 
 _gitMailAddr=$(git config --global user.email)
 /bin/echo Current git email name: $_gitMailAddr
-/bin/echo -n  'ENTER to keep current email address or:'; read _tmp 
+/bin/echo -n  'ENTER to keep current email address or:'; read _tmp
 [ ! -z $_tmp ] && _gitMailAddr=$_tmp
 [ -z $_debug ] && git config --global user.email "$_gitMailAddr"
 [ ! -z $_debug ] && /bin/echo WOULD: git config --global user.email "$_gitMailAddr"
@@ -44,6 +44,9 @@ _gitMailAddr=$(git config --global user.email)
 
 git config --global init.defaultBranch master
 
+git config --global diff.ignoreSubmodules all
+
+
 # preference of vi before emacs and nano
 for _editor in vi vim emacs uemacs nano ; do
     if $(command -v $_editor >/dev/null 2>&1) ; then
@@ -54,16 +57,16 @@ for _editor in vi vim emacs uemacs nano ; do
     fi
 done
 
-# set credential helpers for WSL, Linux, Darwin 
+# set credential helpers for WSL, Linux, Darwin
 case $(uname) in
 Linux)
     [[ $(uname -r ) =~ Microsoft ]] && [ -z $_debug ] && git config --global credential.helper manager    # WSL support
     [[ $(uname -r ) =~ Microsoft ]] && [ ! -z $_debug ] && /bin/echo WOULD: git config --global credential.helper manager    # WSL support
-    
+
     [[ ! $(uname -r ) =~ Microsoft ]] && [ -z $_debug ] && git config --global credential.helper store    # classical Linux
     [[ ! $(uname -r ) =~ Microsoft ]] && [ ! -z $_debug ] && /bin/echo WOULD:git config --global credential.helper store    # classical Linux
     ;;
-Darwin) 
+Darwin)
     [ -z $_debug ] && git config --global credential.helper osxkeychain
     [ ! -z $_debug ] && /bin/echo WOULD: git config --global credential.helper osxkeychain
     ;;
