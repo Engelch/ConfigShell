@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+find $HOME/* /opt/ConfigShell/ -name .git -execdir bash -c 'echo -en "\033[1;31m"repo: "\033[1;34m"; echo "`git rev-parse --show-toplevel`"; git status -s ' \;
+
