@@ -230,26 +230,26 @@ function optSourceFile
     source $argv[1]
 end
 
-function git_prompt_status
-    if [ (git rev-parse --is-inside-work-tree 2>&1 | grep fatal | wc -l) -eq 0  ]
-        set -l _gitBranch (git status -s -b | head -1 | sed 's/^##.//')
-        set -l _gitStatus (git status -s -b | tail -n +2 | sed 's/^\(..\).*/\1/' | sort | uniq | tr "\n" " " | sed -e 's/ //g' -e 's/??/?/' -e 's/^[ ]*//')
-        echo $_gitStatus $_gitBranch
-    end
-end
+# function git_prompt_status
+#     if [ (git rev-parse --is-inside-work-tree 2>&1 | grep fatal | wc -l) -eq 0  ]
+#         set -l _gitBranch (git status -s -b | head -1 | sed 's/^##.//')
+#         set -l _gitStatus (git status -s -b | tail -n +2 | sed 's/^\(..\).*/\1/' | sort | uniq | tr "\n" " " | sed -e 's/ //g' -e 's/??/?/' -e 's/^[ ]*//')
+#         echo $_gitStatus $_gitBranch
+#     end
+# end
 
-function fish_cloud_prompt
-    test -n "$AWS_PROFILE" && echo " <AWS:$AWS_PROFILE> "
-end
-
-function fish_vcs_prompt
-    set_color yellow
-    set -l out (git_prompt_status or fish_hg_prompt $argv)
-    test -n "$out" && echo " ($out)"  # use or own bash way to show git status
-    set_color magenta
-    fish_cloud_prompt   # not nice to integrate it here but changes are minimal than changing the complete prompt mechanism
-    set_color normal
-end
+# function fish_cloud_prompt
+#     test -n "$AWS_PROFILE" && echo " <AWS:$AWS_PROFILE> "
+# end
+#
+# function fish_vcs_prompt
+#     set_color yellow
+#     set -l out (git_prompt_status or fish_hg_prompt $argv)
+#     test -n "$out" && echo " ($out)"  # use or own bash way to show git status
+#     set_color magenta
+#     fish_cloud_prompt   # not nice to integrate it here but changes are minimal than changing the complete prompt mechanism
+#     set_color normal
+# end
 
 function setupCompletion
     if test -r ~/.ssh/completion.lst
@@ -317,10 +317,10 @@ end
 if status is-interactive
     # Commands to run in interactive sessions can go here
 
-    optSourceFile ~/.config/fish/pre.fish
-    for file in $HOME/.config/fish/conf.d/*.fish
-        optSourceFile $file
-    end
+    #optSourceFile ~/.config/fish/pre.fish
+    #for file in $HOME/.config/fish/conf.d/*.fish
+    #    optSourceFile $file
+    #end
     for file in $HOME/.config/fish/conf.d/*.sh
         bash $file
     end
