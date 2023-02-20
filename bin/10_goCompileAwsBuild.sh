@@ -33,33 +33,33 @@ which podman &>/dev/null &&
 echo Container command set to "$EXEC"
 
 ####################################################################################
-########### check if AWS_PROFILE is set
+########### check if AWS_PROFILE is set, the Containerfile is supposed to use an image from AWS
 ####################################################################################
 
-# [ -z "${AWS_PROFILE}" ] &&
-#     1>&2 echo "ERROR: AWS_PROFILE environment variable is required, in order to login to the docker registry" &&
-#     exit 6
+[ -z "${AWS_PROFILE}" ] &&
+    1>&2 echo "ERROR: AWS_PROFILE environment variable is required, in order to login to the docker registry" &&
+    exit 6
 
-# echo AWS_PROFILE set to "$AWS_PROFILE"
+echo AWS_PROFILE set to "$AWS_PROFILE"
 
-# REGION=
-# REGISTRY=
-# ! [ -f aws.cfg ] &&
-#    1>&2 echo "ERROR: AWS Configuration aws.cfg not found" &&
-#    exit 7
+REGION=
+REGISTRY=
+! [ -f aws.cfg ] &&
+   1>&2 echo "ERROR: AWS Configuration aws.cfg not found" &&
+   exit 7
 
-# source aws.cfg
+source aws.cfg
 
-# [ -z "$REGION" ] &&
-#    1>&2 echo "AWS Region not set" &&
-#    exit 8
-# [ -z "$REGISTRY" ] &&
-#    1>&2 echo "AWS Registry not set" &&
-#    exit 9
+[ -z "$REGION" ] &&
+   1>&2 echo "AWS Region not set" &&
+   exit 8
+[ -z "$REGISTRY" ] &&
+   1>&2 echo "AWS Registry not set" &&
+   exit 9
 
-# echo "Login to AWS..."
-# # login to AWS
-# aws ecr get-login-password --region "${REGION}" | "$EXEC" login --username AWS --password-stdin "$REGISTRY"
+echo "Login to AWS..."
+# login to AWS
+aws ecr get-login-password --region "${REGION}" | "$EXEC" login --username AWS --password-stdin "$REGISTRY"
 
 
 #########################
