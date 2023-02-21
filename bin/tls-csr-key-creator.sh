@@ -3,6 +3,10 @@
 # shellcheck disable=SC2155
 #
 # RELEASE NOTES / CHANGELOG
+# 2.1.0:
+# - -V  version
+# - no CSR is no subject field is set
+# -     -k option now obsolete but kept for compatibility
 # 2.0.0:
 # - ECC support
 # - Allow creation of key-material only
@@ -16,7 +20,7 @@
 readonly _app=$(basename "$0")
 readonly _appDir=$(dirname "$0")
 readonly _absoluteAppDir=$(cd "$_appDir" || errorExit 1 cannot determine absolute path of app_dir; /bin/pwd)
-readonly _appVersion="2.0.0" # use semantic versioning
+readonly _appVersion="2.1.0" # use semantic versioning
 export DebugFlag=${DebugFlag:-FALSE}
 
 # dry run mode, either supposed to be empty or to be echo
@@ -122,12 +126,15 @@ function usage()
     err4 '-x val  ::= create SAN field, like: -x "certificatePolicies = 1.2.3.4"'
     err
     err4 '-D      ::= enable debug output'
+    err4 '-V      ::= show version'
     err4 '-n      ::= dry-run mode'
     err4 '-h      ::= show usage message and exit with exit code 1'
 }
 
+# EXIT 1    usage
+# EXIT 2    version
 function parseCLI() {
-    while getopts "2Dc:d:e:ghi:klno:s:u:x:" options; do         # Loop: Get the next option;
+    while getopts "2DVc:d:e:ghi:klno:s:u:x:" options; do         # Loop: Get the next option;
         case "${options}" in                    # TIMES=${OPTARG}
             2)  debug RSA key material 2048bit
                 KEY_CREATION=TRUE
@@ -135,6 +142,9 @@ function parseCLI() {
                 ;;
             D)  err Debug enabled
                 debugSet
+                ;;
+            V)  echo $_appVersion
+                exit 2
                 ;;
             c)  CN=$OPTARG
                 debug setting CN to "$CN"
@@ -292,6 +302,7 @@ function main() {
         fi
         [[ "$KEY_CREATION_ONLY" == 'TRUE' ]] && debug only key-creating, skipping CSR creation && continue
         keysAlreadyExisting "$arg" || errorExit 11 key-material not found for "$arg"
+        [ -z "$subject" ] && err Subject fields empty, not creating a CSR. && exit 0
         createCsr "$arg" "$subject" "$SAN" "$EXT"
     done
 }
