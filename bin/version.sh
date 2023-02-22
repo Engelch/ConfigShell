@@ -35,7 +35,7 @@ readonly _app=$(basename $0)
 readonly _appDir=$(dirname $0)
 readonly _absoluteAppDir=$(cd $_appDir; /bin/pwd)
 
-declare -r _version="2.0.0"
+declare -r _version="2.1.0"
 
 ##########################
 
@@ -103,7 +103,7 @@ function main() {
    else
       # find file(s) with app.?version information included. It should result in exactly one file.
       # should only return one line or less => -quit option
-      files=$(find . -name \*.go -exec egrep -il 'app.?version[[:space:]]*=' {}  \;  -quit)
+      files=$(find . -name \*.go -maxdepth 1 -exec egrep -il 'app.?version[[:space:]]*=' {}  \;  -quit)
       debug files:$files
       [ -z "$files" ] && 1>&2 echo Could not determine version file. Variable files returned $files. && exit 1
       START="egrep -iH --colour=never 'app.?version[[:space:]]*=' $files | egrep --colour=never '[0-9]+\.[0-9]+\.[0-9]+' | tail -n1"
