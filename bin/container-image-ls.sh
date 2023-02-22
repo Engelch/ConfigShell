@@ -39,6 +39,6 @@ function setDockerCmd() {
 
 exitIfBinariesNotFound jq paste
 setDockerCmd
-$dockerCmd image ls -n -q | paste -s -d ' ' - | xargs $dockerCmd inspect | \
-  jq '.[]|{ Names: .NamesHistory,Architecture: .Architecture, Id: .Id, Created: .Created, Cmd: .Config.Cmd[] }'
+$dockerCmd image ls -n -q "$@" | paste -s -d ' ' - | xargs $dockerCmd inspect | \
+  jq '.[]|{ Names: .NamesHistory,Architecture: .Architecture, Id: .Id, Created: .Created, Cmd: .Config.Cmd }'
 
