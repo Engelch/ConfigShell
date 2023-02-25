@@ -78,7 +78,7 @@ function setupAliases_Abbreviations
     abbr -a -g gidic 'git diff --cached'
     abbr -a -g gife 'git fetch --all -p'
     abbr -a -g gilo 'git log --branches --remotes --tags --graph --oneline --decorate'
-    abbr -a -g gist "git status -u --show-stash --ignore-submodules"
+    abbr -a -g gist "git status -u --show-stash " # --ignore-submodules"
     abbr -a -g gipl 'git pull --all; git fetch --tags'
     abbr -a -g girm "git status | sed '1,/not staged/d' | grep deleted | awk '{print \$2}' | xargs git rm"
     function gipu
@@ -299,7 +299,7 @@ function setupExportVars
     set -g -x VISUAL vim
     set -g -x EDITOR vim       # bsroot has no notion about VISUAL
     set -g -x BLOCKSIZE 1K
-    set -g -x FISH_RC_VERSION "1.12.0"
+    set -g -x FISH_RC_VERSION "1.12.1"
     if test -n "$_current_FISH_RC_VERSION" -a "$FISH_RC_VERSION" != "$_current_FISH_RC_VERSION"
         echo new FISH_RC_VERSION "$FISH_RC_VERSION"
     end
