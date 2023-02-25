@@ -67,7 +67,7 @@ function err8()         { echo '       ' "$*" 1>&2; }       # just write to stde
 function err12()        { echo '           ' "$*" 1>&2; }   # just write to stderr
 
 # --- Existance checks
-function exitIfBinariesNotFound()       { for file in "$@"; do [ $(command -v "$file") ] || errorExit 253 binary not found: "$file" ; done }
+function exitIfBinariesNotFound()       { for file in "$@"; do command -v "$file" || errorExit 253 binary not found: "$file" ; done }
 function exitIfPlainFilesNotExisting()  { for file in "$@"; do [ ! -f "$file" ] && errorExit 254 'plain file not found:'"$file" 1>&2; done }
 function exitIfFilesNotExisting()       { for file in "$@"; do [ ! -e "$file" ] && errorExit 255 'file not found:'"$file" 1>&2; done }
 function exitIfDirsNotExisting()        { for dir in "$@"; do [ ! -d "$dir" ] && errorExit 252 "$APP:ERROR:directory not found:$dir"; done }
