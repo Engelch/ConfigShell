@@ -1,4 +1,24 @@
 #!/usr/bin/env bash
 
-find $HOME/* /opt/ConfigShell/ -name .git -execdir bash -c 'echo -en "\033[1;31m"repo: "\033[1;34m"; echo "`git rev-parse --show-toplevel`"; git status -s ' \;
+function usage() {
+    cat << HERE
+git-status-all [ dir ]
+git-status-all -V
+git-status-all (-h | --help)
 
+Without a directory, the commands start at your home-directory and at /opt/ConfigShell to
+check the status of your git repositories. With arguments, the commands starts at the specified
+directories and recursively checks for git repositories and output their status.
+
+-V ::= output the version and exit 1
+-h ::= output help and exit 2
+HERE
+}
+
+[ "$1" = "-V" ] && echo "1.1.0" && exit 1
+
+[ "$1" = "-h" -o "$1" = "--help" ] && usage && exit 2
+
+
+[ -n "$1" ] && find $* -name .git -execdir bash -c 'echo -en "\033[1;31m"repo: "\033[1;34m"; echo "`git rev-parse --show-toplevel`"; git status -s ' \;
+[ -z "$1" ] && find $HOME/* /opt/ConfigShell/ -name .git -execdir bash -c 'echo -en "\033[1;31m"repo: "\033[1;34m"; echo "`git rev-parse --show-toplevel`"; git status -s ' \;
