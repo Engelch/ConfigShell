@@ -126,8 +126,8 @@ function setDefaultArchitecture() {
   arch=$(uname -m)
   [[ "$args" =~ arm ]] && return
   [[ "$args" =~ x86 ]] && arch=amd64
-  debug arch is $arch
-  [ -z "$target_architecture" ] && target_architecture="--arch=$arch"
+  [ -z "$target_architecture" ] && debug target architecture detected by OS && target_architecture="--arch=$arch"
+  [ -n "$target_architecture" ] && debug "target architecture explicitly set"
   debug target_architecture is $target_architecture
 }
 
@@ -153,10 +153,10 @@ function main() {
     declare -r App=$(basename "${0}")
     # declare -r AppDir=$(dirname "$0")
     # declare -r AbsoluteAppDir=$(cd "$_appDir" || exit 99 ; /bin/pwd)
-    declare -r AppVersion="0.9.1"      # use semantic versioning
+    declare -r AppVersion="0.9.2"      # use semantic versioning
     parseCLI "$@"
     shift "$(( OPTIND - 1 ))"  # not working inside parseCLI
-    debug args are "$*"
+    # debug args are "$*"
     setDefaultArchitecture    # must be run before parseCLI
     setDockerCmd
     setContainerFile

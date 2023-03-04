@@ -18,66 +18,120 @@
 #   container-image-build.sh
 #   podman [] docker
 #
+#
+
+declare -r app_version="0.1.1"
+
+function error()        { echo 'ERROR:'"$*" 1>&2;             return 0; }
+function error4()       { echo 'ERROR:    '"$*" 1>&2;         return 0; }
+function error8()       { echo 'ERROR:        '"$*" 1>&2;     return 0; }
+function error12()      { echo 'ERROR:            '"$*" 1>&2; return 0; }
+
+function errorExit()    { EXITCODE="$1" ; shift; error "$*" ; exit "$EXITCODE"; }
 
 ####################################################################################
 ########### set the container command
 ####################################################################################
 
-EXEC=
-# Listed in order of ASCENDING preference (podman > docker)
-which docker &>/dev/null &&
-    EXEC=docker
-which podman &>/dev/null &&
-    EXEC=podman
+function setContainerCmd() {
+    # Listed in order of ASCENDING preference (podman > docker)
+    which docker &>/dev/null && containerCmd=docker
+    which podman &>/dev/null && containerCmd=podman
+    echo Container command is "$containerCmd"
+}
 
-echo Container command set to "$EXEC"
+function setContainerFile() {
+    for file in Containerfile Dockerfile ; do
+        [ -f "$file" ] && echo "Containerfile is $file" && containerFile="$file"
+        break
+    done
+    [ -z "$containerFile" ] && errorExit 10 Could not find a Containerfile
+}
 
-####################################################################################
-########### check if AWS_PROFILE is set
-####################################################################################
+function setContainerName() {
+    if [ $(/bin/ls | grep -c '^_name_.*' ) -eq 1 ] ; then
+        containerName=$(/bin/ls | grep '^_name_.*' | sed 's/.*_name_//')
+    else
+        containerName=$(basename $PWD)
+        [ "$containerName" = src ] && containerName=$(dirname $PWD | xargs basename)
+    fi
+    echo "containerName is $containerName"
+}
 
-# [ -z "${AWS_PROFILE}" ] &&
-#     1>&2 echo "ERROR: AWS_PROFILE environment variable is required, in order to login to the docker registry" &&
-#     exit 6
+function login2aws() {
 
-# echo AWS_PROFILE set to "$AWS_PROFILE"
+    ####################################################################################
+    ########### check if AWS_PROFILE is set
+    ####################################################################################
 
-# REGION=
-# REGISTRY=
-# ! [ -f aws.cfg ] &&
-#    1>&2 echo "ERROR: AWS Configuration aws.cfg not found" &&
-#    exit 7
+    [ -z "${AWS_PROFILE}" ] && \
+        errorExit 6 "AWS_PROFILE environment variable is required, in order to login to the docker registry"
 
-# source aws.cfg
+    echo AWS_PROFILE set to "$AWS_PROFILE"
 
-# [ -z "$REGION" ] &&
-#    1>&2 echo "AWS Region not set" &&
-#    exit 8
-# [ -z "$REGISTRY" ] &&
-#    1>&2 echo "AWS Registry not set" &&
-#    exit 9
+    REGION=
+    REGISTRY=
+    ! [ -f aws.cfg ] && errorExit 7 "AWS Configuration aws.cfg not found"
+    source aws.cfg
 
-# echo "Login to AWS..."
-# # login to AWS
-# aws ecr get-login-password --region "${REGION}" | "$EXEC" login --username AWS --password-stdin "$REGISTRY"
+    [ -z "$REGION" ] && errorExit 8 "AWS Region not set"
+    [ -z "$REGISTRY" ] && errorExit 9  "AWS Registry not set"
 
+    echo "Login to AWS..."
+    # login to AWS
+    echo "aws ecr get-login-password --region ${REGION} | $containerCmd login --username AWS --password-stdin $REGISTRY"
+    aws ecr get-login-password --region "${REGION}" | "$containerCmd" login --username AWS --password-stdin "$REGISTRY"
+}
+
+function loginAwsIfInContainerfile() {
+    if [ $(grep -vE '^#' $containerFile | grep -Fc "amazonaws.com") -gt 0 ] ; then
+        echo AWS elements found in containerfile
+        login2aws
+    else
+        echo No AWS elements found
+    fi
+}
+
+# Containerfile does not work well with packages referenced by s-links. Own, local packages
+# are referenced using ./packages/<<pkg>>.  <<pkg>> might/should often be an s-link to
+# a more global pkg for this project. This script copies the packages into the directory
+# build_packages
+function createBuildPackages() {
+    [ -d ./ContainerBuild ] && echo deleting old ContainerBuild && /bin/rm -fr ./ContainerBuild # delete dir if existing
+    mkdir -p ./ContainerBuild/src ./ContainerBuild/packages # fresh dir
+
+    [ $(grep -Fc ./packages go.mod) -lt 1 ] && return # not copying
+    for pkg in $(grep -F ./packages go.mod | awk '{ print $NF }') ; do
+        rsync -av "$pkg" ./ContainerBuild/packages
+    done
+    rsync -av *.go go.mod go.sum ./ContainerBuild/src
+}
 
 #########################
 
-rsync -av ../go.sum ../go.mod ../main.go .
-[ ! -d ./packages/ ] && echo 1>&2 ./packages not existing && exit 1
-[ -d ../../packages ] && rsync -av ../../packages/ ./packages/
+# rsync -av ../go.sum ../go.mod ../*.go .
+# [ ! -d ./packages/ ] && echo 1>&2 ./packages not existing && exit 1
+# [ -d ../../packages ] && rsync -av ../../packages/ ./packages/
 
-if [ $(/bin/ls | grep -c '^_name_.*' ) -eq 1 ] ; then
-    containerName=$(/bin/ls | grep '^_name_.*' | sed 's/.*_name_//')
-else
-    containerName=$(basename $PWD)
-    [ "$containerName" = src ] && containerName=$(dirname $PWD | xargs basename)
-fi
+function main() {
+    declare -g noStop
+    declare -g containerCmd
+    declare -g containerFile
+    declare -g containerName
+    [ "$1" = '-V' ] && err $app_version && exit 1
+    [ "$1" = '-f' ] && NO_STOP="TRUE"
 
+    setContainerCmd
+    setContainerFile
+    setContainerName
+    loginAwsIfInContainerfile
+    createBuildPackages
+    echo container-image-build.sh -D $* -t amd64 "$containerName":$(version.sh)
 
-echo container-image-build.sh -D $* -t amd64 "$containerName":$(version.sh)
-echo press ENTER to execute
-read
-container-image-build.sh -D $* -t amd64 "$containerName":$(version.sh)
+    [ -z "$NO_STOP" ] && echo press ENTER to execute && read
+    container-image-build.sh -D $* -t amd64 "$containerName":$(version.sh)
+}
 
+main "$@"
+
+# EOF
