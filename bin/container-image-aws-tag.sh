@@ -5,25 +5,9 @@
 # shellcheck disable=SC1091
 
 # Releases
-# 1.0.0
-# - shellcheck disablement added
-# - old 10_ scripts included to one version
-# - shellcheck executed
 #
 # About
-# container-build.sh is a front-end for container-image-build.sh
-# 1. it determines the command to use for container-related commands
-# 2. it determines the name of the container-file
-# 3. it determines the name of the image to be created
-# 4. it checks if the container-file contains hints for AWS and in such a case performs login to AWS
-# 5. it checks if the container-file contains hints for go compilation and in such a case prepares
-#    the go files for container-staged compilation
-# 6. it determines the version to be created.
-# 7. it calls cotnainer-image-build to build the container image for the given architecture and version and date
-#
-# Requirements:
-#   container-image-build.sh
-#   podman [] docker#
+# container-image-aws-tag.sh - tag an image for AWS ECR
 #
 
 declare -r _appVersion="1.0.0"
@@ -73,17 +57,6 @@ function setContainerCmd() {
     debug Container command is "$containerCmd"
 }
 
-# setContainerFile determines the Containerfile or Dockerfile to be used.
-# An error is created if none of them could be found.
-# EXIT 11
-function setContainerFile() {
-    for file in Containerfile Dockerfile ; do
-        [ -f "$file" ] && debug "Containerfile is $file" && containerFile="$file"
-        break
-    done
-    [ -z "$containerFile" ] && errorExit 11 Could not find a Containerfile
-}
-
 # setContainerName determines the name of the container image to be created.
 # An error is created if none of them could be found.
 # EXIT 12
@@ -108,53 +81,19 @@ function login2aws() {
     [ -z "${AWS_PROFILE}" ] && errorExit 6 "AWS_PROFILE environment variable is required, in order to login to the docker registry"
     debug AWS_PROFILE set to "$AWS_PROFILE"
 
-    _region=
-    _registry=
+    # vars expected in aws.cfg
+    #REGION=
+    REGISTRY=
     ! [ -f aws.cfg ] && errorExit 7 "AWS Configuration aws.cfg not found"
     source "aws.cfg"
 
-    [ -z "$_region" ] && errorExit 8 "AWS Region not set"
-    [ -z "$_registry" ] && errorExit 9  "AWS Registry not set"
+    [ -z "$REGION" ] && errorExit 8 "AWS Region not set"
+    [ -z "$REGISTRY" ] && errorExit 9  "AWS Registry not set"
 
     debug "Login to AWS..."
     # login to AWS
-    debug "aws ecr get-login-password --region ${_region} | $containerCmd login --username AWS --password-stdin $_registry"
-    $DRY aws ecr get-login-password --region "${_region}" | "$containerCmd" login --username AWS --password-stdin "$_registry"
-}
-
-# loginAwsIfInContainerfile checks if amazonaws.com is found in the container-file.
-# If so, it tries to log in into AWS.
-function loginAwsIfInContainerfile() {
-    [ -n "$awsSupport" ] && debug flag aws support set && login2aws && return
-    if [ "$(grep -vE '^#' $containerFile | grep -Fc 'amazonaws.com')" -gt 0 ] ; then
-        debug AWS elements found in containerfile
-        login2aws
-    else
-        debug No AWS elements found, not logging in
-    fi
-}
-
-# Containerfile does not work well with packages referenced by s-links. Own, local packages
-# are referenced using ./packages/<<pkg>>.  <<pkg>> might/should often be an s-link to
-# a more global pkg for this project. This script copies the packages into the directory
-# ContainerBuild
-function createBuildPackages() {
-    [ -d ./ContainerBuild ] && debug deleting old ContainerBuild && $DRY /bin/rm -fr ./ContainerBuild # delete dir if existing
-    $DRY mkdir -p ./ContainerBuild/src ./ContainerBuild/packages # fresh dir
-
-    [ "$(grep -Fc ./packages go.mod)" -lt 1 ] && return # not copying
-    grep -F ./packages go.mod | awk '{ print $NF }' | while IFS= read -r pkg ; do
-        [ "$DebugFlag" = "TRUE" ] && $DRY rsync -av "$pkg" ./ContainerBuild/packages
-        [ "$DebugFlag" != "TRUE" ] && $DRY rsync -a "$pkg" ./ContainerBuild/packages
-    done
-    [ "$DebugFlag" = "TRUE" ] && $DRY rsync -av ./*.go go.mod go.sum ./ContainerBuild/src
-    [ "$DebugFlag" != "TRUE" ] && $DRY rsync -a ./*.go go.mod go.sum ./ContainerBuild/src
-}
-
-# optionallyCreateGoSetup checks if to create ContainerBuild directory for go compilation
-function optionallyCreateGoSetup() {
-    [ -n "$goCompilation" ] && createBuildPackages && return
-    [ "$(grep -vE '^#' $containerFile | grep -Fc '.go')" -gt 0 ] && $DRY createBuildPackages
+    debug "aws ecr get-login-password --region ${REGION} | $containerCmd login --username AWS --password-stdin $REGISTRY"
+    $DRY aws ecr get-login-password --region "${REGION}" | "$containerCmd" login --username AWS --password-stdin "$REGISTRY"
 }
 
 #########################
@@ -163,19 +102,14 @@ function optionallyCreateGoSetup() {
 function usage() {
     1>&2 cat << HERE
 USAGE
-    container-build.sh [ -D ] [ -a ] [ -g ] [ -t targetPlatform ] [ -n ]
-    container-build.sh -h
-    container-build.sh -V
+    container-image-aws-tag.sh [-D] [-n] [<<image:version>>]
+    container-image-aws-tag.sh -h
+    container-image-aws-tag.sh -V
 OPTIONS
     -D :: enable debug
     -V :: show version and exit 2
     -h :: show usage/help and exit 1
-    -a :: explicit AWS login based on AWS_PROFILE and/or aws.cfg,
-          normally checked by container-file
-    -g :: explicitly say, compile for go,
-          normally checked by container-file
     -n :: dry-run
-    -t :: set the target environment, default amd64
 HERE
 }
 
@@ -183,12 +117,7 @@ HERE
 # EXIT 2    version
 # EXIT 3    unknown option
 function parseCLI() {
-    declare -r defaultTargetEnv="-t amd64"
-    declare -g extTargetEnv=
-    declare -g awsSupport=
-    declare -g goCompilation=
-    declare -g DRY=
-    while getopts "DVaghnt:" options; do         # Loop: Get the next option;
+    while getopts "DVhn" options; do         # Loop: Get the next option;
         case "${options}" in                    # TIMES=${OPTARG}
             D)  err Debug enabled
                 debugSet
@@ -196,47 +125,41 @@ function parseCLI() {
             V)  err $_appVersion
                 exit 3
                 ;;
-            a)  awsSupport="TRUE"
-                debug AWS support activated
-                ;;
-            g)  goCompilation="TRUE"
-                ;;
             h)  usage
                 exit 1
                 ;;
             n)  DRY="echo"
                 err DRY run enabled...
                 ;;
-            t)  extTargetEnv="$extTargetEnv -t $OPTARG"
-                debug setting target env to "$OPTARG"
-                ;;
             *)  err Help with "$app" -h
                 exit 2  # Exit abnormally.
                 ;;
         esac
     done
-    [ -z "$extTargetEnv" ] && extTargetEnv="$defaultTargetEnv"
 }
 
 function main() {
     exitIfBinariesNotFound pwd basename dirname version.sh container-image-build.sh
+    declare -g DRY=
+    declare -g REGISTRY=
     declare -g app="$(basename $0)"
     declare -g containerCmd=
-    declare -g containerFile=
     declare -g containerName=
 
     parseCLI "$@"
     shift $(( OPTIND - 1 ))  # not working inside parseCLI
-
     setContainerCmd
-    setContainerFile
-    setContainerName
-    loginAwsIfInContainerfile
-    optionallyCreateGoSetup
-    debug Would execute: container-image-build.sh -D $@ $extTargetEnv "$containerName":"$(version.sh)"
-
+    if [ -z "$1" ] ; then
+        setContainerName
+        containerName="$containerName:$(version.sh)"
+    else
+        containerName="$1"
+    fi
+    login2aws
+    debug "target to be pushed is $target"
+    debug "would execute: $containerCmd tag $containerName $REGISTRY/$containerName"
     [ "$DebugFlag" = TRUE ] && echo press ENTER to execute && read -r
-    $DRY container-image-build.sh -D $@ $extTargetEnv "$containerName":"$(version.sh)"
+    $DRY $containerCmd tag "$containerName" "$REGISTRY/$containerName"
 }
 
 main "$@"
