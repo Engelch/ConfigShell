@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+ls -CF1 "$@" | grep '/$' | paste  -s -
