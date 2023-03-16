@@ -117,6 +117,7 @@ function setupPath() {
     fi
     # add directories if existing for all platforms
     for _POTENTIAL_DIR in \
+        $HOME/.local/share/JetBrains/Toolbox/scripts/ \
         $HOME/go/bin $HOME/Library/Android/sdk/platform-tools /usr/local/share/dotnet /usr/local/go/bin \
         $HOME/.dotnet/tools $HOME/.rvm/bin /usr/local/google-cloud-sdk/ $HOME/google-cloud-sdk/ \
         $HOME/.pub-cache/bin /opt/flutter/bin $HOME/.linkerd2/bin $HOME/google-cloud-sdk/bin \
