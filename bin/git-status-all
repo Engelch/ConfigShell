@@ -21,7 +21,10 @@ function checkGitDir() {
     git remote update &>/dev/null
     git status -s -u --ignore-submodules --show-stash
 }
-export -f checkGitDir
+
+export -f checkGitDir       # export function to sub-processes
+# alternative, POSIX compliant
+# find . | while read file; do dosomething "$file"; done
 
 [ "$1" = "-V" ] && echo "1.1.0" && exit 1
 
