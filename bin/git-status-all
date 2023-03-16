@@ -15,10 +15,18 @@ directories and recursively checks for git repositories and output their status.
 HERE
 }
 
+function checkGitDir() {
+    echo -en "\033[1;31m"repo: "\033[1;34m";
+    echo "`git rev-parse --show-toplevel`"
+    git remote update &>/dev/null
+    git status -s -u --ignore-submodules --show-stash
+}
+export -f checkGitDir
+
 [ "$1" = "-V" ] && echo "1.1.0" && exit 1
 
 [ "$1" = "-h" -o "$1" = "--help" ] && usage && exit 2
 
 
-[ -n "$1" ] && find $* -name .git -execdir bash -c 'echo -en "\033[1;31m"repo: "\033[1;34m"; echo "`git rev-parse --show-toplevel`"; git status -s ' \;
-[ -z "$1" ] && find $HOME/* /opt/ConfigShell/ -name .git -execdir bash -c 'echo -en "\033[1;31m"repo: "\033[1;34m"; echo "`git rev-parse --show-toplevel`"; git status -s ' \;
+[ -n "$1" ] && find $* -name .git -execdir bash -c 'checkGitDir' \;
+[ -z "$1" ] && find $HOME/* /opt/ConfigShell/ -name .git -execdir bash -c 'checkGitDir' \;
