@@ -1,0 +1,8 @@
+[Desktop Entry]
+Encoding=UTF-8
+Type=Application
+Terminal=false
+Exec=/opt/GoLand/bin/goland.sh
+Name=GoLand
+Icon=/opt/GoLand/bin/goland.png
+
