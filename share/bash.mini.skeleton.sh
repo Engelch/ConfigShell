@@ -27,16 +27,6 @@
 #########################################################################################
 # VARIABLES, CONSTANTS
 
-_app=$(basename "${0}")
-declare -r _app
-_appDir=$(dirname "$0")
-declare -r _appDir
-_absoluteAppDir=$(cd "$_appDir" || exit 99 ; /bin/pwd)
-declare -r _absoluteAppDir
-_appVersion="0.0.1"      # use semantic versioning
-declare -r _appVersion
-export DebugFlag=${DebugFlag:-FALSE}
-
 #########################################################################################
 
 # --- debug: Conditional debugging. All commands begin w/ debug.
@@ -67,7 +57,7 @@ function err8()         { echo '       ' "$*" 1>&2; }       # just write to stde
 function err12()        { echo '           ' "$*" 1>&2; }   # just write to stderr
 
 # --- Existance checks
-function exitIfBinariesNotFound()       { for file in "$@"; do command -v "$file" || errorExit 253 binary not found: "$file" ; done }
+function exitIfBinariesNotFound()       { for file in "$@"; do command -v "$file" &>/dev/null || errorExit 253 binary not found: "$file" ; done }
 function exitIfPlainFilesNotExisting()  { for file in "$@"; do [ ! -f "$file" ] && errorExit 254 'plain file not found:'"$file" 1>&2; done }
 function exitIfFilesNotExisting()       { for file in "$@"; do [ ! -e "$file" ] && errorExit 255 'file not found:'"$file" 1>&2; done }
 function exitIfDirsNotExisting()        { for dir in "$@"; do [ ! -d "$dir" ] && errorExit 252 "$APP:ERROR:directory not found:$dir"; done }
@@ -84,31 +74,26 @@ function tempDir()                      { mktemp -d "${TMPDIR:-/tmp/}$_app.YYYYY
 
 function usage()
 {
-    err NAME
-    err4 "$_app"
-    err
-    err SYNOPSIS
-    err4 "$_app" '[-D] [-f] [dir...]'
-    err4 "$_app" '-h'
-    err
-    err VERSION
-    err4 "$_appVersion"
-    err
-    err DESCRIPTION
-    err4 ...
-    err
-    err OPTIONS
-    err4 '-D      ::= enable debug output'
-    err4 '-h      ::= show usage message and exit with exit code 1'
-    err4 todo .......
+    cat <<HERE
+NAME
+    $_app
+SYNOPSIS
+    $_app [-D] [dir...]
+    $_app -h
+VERSION
+    $_appVersion
+DESCRIPTION
+ ...
+OPTIONS
+ -D      ::= enable debug output
+ -h      ::= show usage message and exit with exit code 1
+HERE
 }
 
 function parseCLI() {
-    while getopts "Dfh" options; do         # Loop: Get the next option;
+    while getopts "Dh" options; do         # Loop: Get the next option;
         case "${options}" in                    # TIMES=${OPTARG}
             D)  err Debug enabled ; debugSet
-                ;;
-            f)  debug forcedMode; forcedMode=TRUE
                 ;;
             h)  usage ; exit 1
                 ;;
@@ -121,11 +106,19 @@ function parseCLI() {
 }
 
 function main() {
+    # Variables
+    declare -r _app=$(basename "${0}")
+    declare -r _appDir=$(dirname "$0")
+    declare -r _absoluteAppDir=$(cd "$_appDir" || exit 99 ; /bin/pwd)
+    declare -r _appVersion="0.0.1"      # use semantic versioning
+    export DebugFlag=${DebugFlag:-FALSE}
+    # Requirements
     exitIfBinariesNotFound pwd basename dirname mktemp
+
     parseCLI "$@"
     shift "$(( OPTIND - 1 ))"  # not working inside parseCLI
+
     debug args are "$*"
-    debug forcedMode is "${forcedMode:-FALSE}"
     echo todo '(search and replace all todo accordingly)' here more....................
 }
 
