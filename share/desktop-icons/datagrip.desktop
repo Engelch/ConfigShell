@@ -1,8 +1,0 @@
-[Desktop Entry]
-Encoding=UTF-8
-Type=Application
-Terminal=false
-Exec=/opt/DataGrip/bin/datagrip.sh
-Name=DataGrip
-Icon=/opt/DataGrip/bin/datagrip.png
-
