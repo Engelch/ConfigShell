@@ -12,7 +12,7 @@ function err()          { echo "$@" 1>&2; return 0; }
 function warning()      { err "WARNING:$*" ; return 0; }
 function errorExit()    { EXITCODE=$1 ; shift; error "$@" ; exit "${EXITCODE}"; }
 
-declare -r version=0.2.0
+declare -r version=0.3.0
 _uname=$(uname)
 if [[ ${_uname} == Darwin ]] ; then
    echo homebrew........................................  1>&2
@@ -44,7 +44,9 @@ elif [[ ${_uname} == Linux ]] ; then
          found=1 && sudo yum -y update && sudo yum -y clean packages
       [ $found -eq 0 ] && error pkgU not supported for this OS && return 1
       touch ~/.pkgU
-      [ -f /run/reboot-required ] && echo "reboot is REQUIRED!"
+      [ -f /run/reboot-required ] && echo "reboot is REQUIRED!" && exit 0
+      echo NO reboot required.
+      exit 0
 else
    err unsupported OS
    err This is "$0" version "$version"
