@@ -1,0 +1,8 @@
+[Desktop Entry]
+Encoding=UTF-8
+Type=Application
+Terminal=false
+Exec=/opt/1Password/1password
+Name=1Password
+Icon=/opt/ConfigShell/share/desktop-icons/1pw.png
+
