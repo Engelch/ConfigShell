@@ -82,31 +82,41 @@ function searchExpr() {
 function usage()
 {
     cat <<HERE
-NAME
+NAME, DESCRIPTION
     $_app searches with the pattern in the EIS2 database for shorter lookup.
 
     If the found file ends in .md, it is formatted using pandoc. Files ending
     in .txt will be shown in plain form using the pager defined by \$PAGER.
 
-SYNOPSIS
-    $_app [-D] <<pattern>>
-    $_app -h
 VERSION
     $_appVersion
-DESCRIPTION
- ...
+
+SYNOPSIS
+    $_app [-D] <<pattern>>
+    $_app -h | -l
+
 OPTIONS
  -D      ::= enable debug output
  -h      ::= show usage message and exit with exit code 1
+ -l      ::= list all existing entries
 HERE
 }
 
+function listMode() {
+    cd "$configDir"
+    ls *.{txt,md}
+}
+
 function parseCLI() {
-    while getopts "Dh" options; do         # Loop: Get the next option;
+    while getopts "Dhl" options; do         # Loop: Get the next option;
         case "${options}" in                    # TIMES=${OPTARG}
             D)  err Debug enabled ; debugSet
                 ;;
             h)  usage ; exit 1
+                ;;
+            l)  debug List mode selected
+                listMode
+                exit 0
                 ;;
             *)
                 err Help with "$_app" -h
@@ -121,7 +131,7 @@ function main() {
     declare -r _app=$(basename "${0}")
     declare -r _appDir=$(dirname "$0")
     declare -r _absoluteAppDir=$(cd "$_appDir" || exit 99 ; /bin/pwd)
-    declare -r _appVersion="0.0.1"      # use semantic versioning
+    declare -r _appVersion="0.1.0"      # use semantic versioning
     export DebugFlag=${DebugFlag:-FALSE}
 
     declare configDir="/opt/ConfigShell/share/eis2"   # todo (1) make it changable, (2) allow for multiple directories

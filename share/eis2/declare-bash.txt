@@ -1,0 +1,9 @@
+declare - bash define variable type
+
+-r      readonly
+-a      array
+-i      integer
+-u      uppercase var
+-g      global variable (in shell functions, otherwise local)
+
+-p      show values and types for all variables

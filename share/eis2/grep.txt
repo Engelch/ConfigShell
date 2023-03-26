@@ -1,0 +1,19 @@
+grep - search for pattern(s) in files
+
+-v          invert match
+-r, -R      recursively
+-c          show only count of matches
+-E          do egrep
+-F          do fgrep
+-w          expect pattern to have word boundaries around them
+-i          ignore case
+-l          show only names of files which are matching
+-L          show only names of files whare are NOT matching
+-n          show line number for file matches
+
+-h          never show filename with a match
+-H          always show filename, same as adding /dev/null to file args
+-A n        show n lines after match
+-B n        show n lines before match
+
+-z          end matches with NUL, instead of \n

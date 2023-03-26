@@ -1,0 +1,12 @@
+read (bash)
+
+read <<variable>>
+
+-e          use readline command line editing
+-p prompt   show prompt
+-i init     set inital value of variable to init
+-r          recommended, do not allow backslashes
+-s          do not echo (for passwords)
+-t uint     timeout after uint seconds
+
+-a arr      read the input words into the array arr, starting at index 0

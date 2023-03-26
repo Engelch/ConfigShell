@@ -1,0 +1,7 @@
+NAME
+     lam – laminate files
+
+DESCRIPTION
+    Every 2 lines of a file may be joined on one line with
+
+        lam - - < file

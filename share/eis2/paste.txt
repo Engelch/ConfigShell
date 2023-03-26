@@ -1,0 +1,15 @@
+paste file ... - merge lines into one
+
+- is stdin
+
+-s              concatenate all lines, newlines are replaces with \t, unless specified otherwise by -d
+-d <<list>>>
+
+
+List the files in the current directory in three columns:
+
+           ls | paste - - -
+
+Create a colon-separated list of directories named bin, suitable for use in the PATH environment variable:
+
+           find / -name bin -type d | paste -s -d : -
