@@ -86,7 +86,7 @@ function usage()
     err4 "$app"
     err
     err SYNOPSIS
-    err4 "$app" '[-D] [pattern...]'
+    err4 "$app" '[-D] [-r] [pattern...]'
     err4 "$app" '-h'
     err
     err VERSION
@@ -98,15 +98,18 @@ function usage()
     err OPTIONS
     err4 '-D      ::= enable debug output'
     err4 '-h      ::= show usage message and exit with exit code 1'
+    err4 '-r      ::= raw patterns, do not convert them to absolute filenames from git root onl'
 }
 
 # EXIT 1    usage
 function parseCLI() {
-    while getopts "Dh" options; do         # Loop: Get the next option;
+    while getopts "Dhr" options; do         # Loop: Get the next option;
         case "${options}" in                    # TIMES=${OPTARG}
             D)  err Debug enabled ; debugSet
                 ;;
             h)  usage ; exit 1
+                ;;
+            r) rawFilename=TRUE
                 ;;
             *)
                 err Help with "$app" -h
@@ -122,7 +125,7 @@ function main() {
     declare -g -r app=$(basename "$0")
     declare -g -r appDir=$(dirname "$0")
     declare -g -r absoluteAppDir=$(cd "$appDir" || exit 99 ; /bin/pwd)
-    declare -g -r appVersion="0.0.1"      # use semantic versioning
+    declare -g -r appVersion="0.1.0"      # use semantic versioning
     declare -g    DebugFlag="${DebugFlag:-FALSE}"
 
     parseCLI "$@"
@@ -139,7 +142,20 @@ function main() {
     debug "Gitroot is $Gitroot"
 
     for pattern in $@ ; do
-        echo "$pattern" >> "$Gitroot/.gitignore"
+        if [ ! "$rawFilename" == TRUE ] ; then
+            if [ -d "$pattern" ] ; then
+                dir="$pattern"
+                file=""
+            else
+                dir="$(dirname $pattern)"
+                file="$(basename $pattern)"
+            fi
+            absoluteDir=$(cd "$dir" || exit 98 ; /bin/pwd)
+            dirFromGitRoot=$(echo "$absoluteDir" | sed -e "s,^$Gitroot,,")
+            debug normalised dir is "$dirFromGitRoot/$file"
+        fi
+        debug adding "$dirFromGitRoot/$file" to "$Gitroot/.gitignore"
+        echo "$dirFromGitRoot/$file" >> "$Gitroot/.gitignore"
     done
 }
 
