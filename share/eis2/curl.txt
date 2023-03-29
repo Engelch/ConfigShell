@@ -19,4 +19,9 @@
 --cert <<filepath MTLS cert>>
 --key  <<filepath MTLS key>>
 
+--dns-servers   DNS server addrs to use: 1.1.1.1;2.2.2.2
+--dns-interface  Interface to use for DNS requests
+--dns-ipv4-addr  IPv4 address to use for DNS requests, dot notation
+--dns-ipv6-addr  IPv6 address to use for DNS requests, dot notation
+
 --version
