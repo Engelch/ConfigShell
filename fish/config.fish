@@ -191,7 +191,8 @@ function setupPath
                 $HOME/.dotnet/tools $HOME/.rvm/bin /usr/local/google-cloud-sdk/ $HOME/google-cloud-sdk/ \
                 $HOME/.pub-cache/bin /opt/flutter/bin $HOME/.linkerd2/bin $HOME/google-cloud-sdk/bin \
                 /usr/local/google-cloud-sdk/bin \
-                /opt/android-studio/bin /opt/1Password/ /opt/Xmind/
+                /opt/android-studio/bin /opt/1Password/ /opt/Xmind/ \
+                /opt/ConfigShell/Config$(uname)/bin_$(uname)-$(uname -m)
             fish_add_path -p "$dir"
         end
         # build up OSX elements
@@ -300,7 +301,7 @@ function setupExportVars
     set -g -x VISUAL vim
     set -g -x EDITOR vim       # bsroot has no notion about VISUAL
     set -g -x BLOCKSIZE 1K
-    set -g -x FISH_RC_VERSION "1.15.0"
+    set -g -x FISH_RC_VERSION "1.16.0"
     if test -n "$_current_FISH_RC_VERSION" -a "$FISH_RC_VERSION" != "$_current_FISH_RC_VERSION"
         echo new FISH_RC_VERSION "$FISH_RC_VERSION"
     end
