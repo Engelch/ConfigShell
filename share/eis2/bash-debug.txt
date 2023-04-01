@@ -1,0 +1,2 @@
+${BASH_SOURCE[0]}    file being sourced
+debug8 "${BASH_SOURCE[0]}::${FUNCNAME[0]}"      # output sourced file and current function name
