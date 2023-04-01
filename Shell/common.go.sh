@@ -28,10 +28,6 @@ function setupGo() {
     alias gore='execHelp release $*'
     alias goue='execHelp upx $*'
 
-    # increase and show the new version number
-    alias bpa='bumppatch ; version.sh'
-    alias bmi='bumpminor ; version.sh'
-    alias bma='bumpmajor ; version.sh'
 }
 
 function increaseVersionNumberIfRequiredAndCompile() {

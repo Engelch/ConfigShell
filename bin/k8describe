@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+function k8describe() { ## supports -n namespace
+      ## k8describe just requires a unique part of the pod-name.
+      local _namespace=""
+      [ "$1" = '-n' -o "$1" = '--namespace' ] && shift && _namespace="-n $1" && shift
+      local _pod=$($KUBECTL get po $_namespace | grep -i "$1" | cut -d ' ' -f 1)
+      shift
+      $KUBECTL describe $_namespace $_pod "$@"
+}
+
+k8describe $* 

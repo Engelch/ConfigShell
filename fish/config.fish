@@ -93,49 +93,14 @@ function setupAliases_Abbreviations
         #echo set container $CONTAINER
     end
 
-    abbr -a -g dih      "$CONTAINER image history"
     abbr -a -g k        $KUBECTL
     abbr -a -g k8       $KUBECTL
     abbr -a -g k8s      $KUBECTL
-    abbr -a -g k8af     "$KUBECTL apply -f"
-    abbr -a -g k8df     "$KUBECTL delete -f"
-    abbr -a -g k8c      "$KUBECTL config"
-    abbr -a -g k8cg     "$KUBECTL config get-contexts"
-    abbr -a -g k8cs     "$KUBECTL config set-context"
-    abbr -a -g k8cu     "$KUBECTL config use-context"
-    abbr -a -g k8cv     "$KUBECTL config view"
-    abbr -a -g k8gd     "$KUBECTL get deploy -o wide"
-    abbr -a -g k8gda    "$KUBECTL get deploy -o wide -A"
-    abbr -a -g k8gdA    "$KUBECTL get deploy -o wide -A"
-    abbr -a -g k8gn     "$KUBECTL get nodes -o wide"
-    abbr -a -g k8gp     "$KUBECTL get pods -o wide"
-    abbr -a -g k8gpa    "$KUBECTL get pods -A -o wide"
-    abbr -a -g k8gpA    "$KUBECTL get pods -A -o wide"
-    abbr -a -g k8gs     "$KUBECTL get services -o wide"
-    abbr -a -g k8gsa    "$KUBECTL get services -o wide -A"
-    abbr -a -g k8gsA    "$KUBECTL get services -o wide -A"
-    abbr -a -g k8ns     "$KUBECTL get ns"
-    abbr -a -g k8ga     "$KUBECTL get all"
-    abbr -a -g k8gaa    "$KUBECTL get all -A"
-    abbr -a -g k8gaA    "$KUBECTL get all -A"
-    abbr -a -g k8gaw    "$KUBECTL get all -A -o wide"
-    abbr -a -g k8gaaw   "$KUBECTL get all -A -o wide"
-    abbr -a -g k8gaAw   "$KUBECTL get all -A -o wide"
-    abbr -a -g k8ev     "$KUBECTL get events --sort-by=.metadata.creationTimestamp"
-    abbr -a -g k8events "$KUBECTL get events --sort-by=.metadata.creationTimestamp"
-    abbr -a -g k8eva    "$KUBECTL get events -A --sort-by=.metadata.creationTimestamp"
-    abbr -a -g k8evA    "$KUBECTL get events -A --sort-by=.metadata.creationTimestamp"
 
     # golang-specific commands
     abbr  -a -g gode goexec-debug
     abbr  -a -g gore goexec-release
     abbr  -a -g godue goexec-upx
-
-    # bumpversion commands
-    # increase and show the new version number
-    abbr  -a -g bpa 'bumppatch ; version.sh'
-    abbr  -a -g bmi 'bumpminor ; version.sh'
-    abbr  -a -g bma 'bumpmajor ; version.sh'
 
 end
 
@@ -260,7 +225,7 @@ function setupExportVars
     set -g -x VISUAL vim
     set -g -x EDITOR vim       # bsroot has no notion about VISUAL
     set -g -x BLOCKSIZE 1K
-    set -g -x FISH_RC_VERSION "1.18.0"
+    set -g -x FISH_RC_VERSION "1.19.0"
     if test -n "$_current_FISH_RC_VERSION" -a "$FISH_RC_VERSION" != "$_current_FISH_RC_VERSION"
         echo new FISH_RC_VERSION "$FISH_RC_VERSION"
     end

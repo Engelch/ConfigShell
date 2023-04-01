@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+[ -z "$KUBECTL"] && 1>&2 echo "KUBECTL environment variable is not set, exiting" && exit 1
+
+"$KUBECTL" get nodes -o wide $*
+
+

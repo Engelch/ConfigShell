@@ -22,7 +22,7 @@ function errorExit()    { EXITCODE="$1" ; shift; error "$*" ; exit "$EXITCODE"; 
 [ -z "$KUBECTL" ] && errorExit 1 KUBECTL is not defined
 
 _namespace=""
-[ "$1" = -n ] && shift && _namespace="-n $1" && shift;
+[ "$1" = '-n' -o "$1" = '--namespace' ] && shift && _namespace="-n $1" && shift;
 
 _pod=$($KUBECTL get pod "$_namespace" -o name | grep -i "$1" | cut -d ' ' -f 1);
 shift;

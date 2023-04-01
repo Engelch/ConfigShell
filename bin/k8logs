@@ -26,7 +26,7 @@ function errorExit()    { EXITCODE="$1" ; shift; error "$*" ; exit "$EXITCODE"; 
 _namespace=""
 follow=
 [ "$1" = -f ] && shift && follow=-f
-[ "$1" = -n ] && shift && _namespace="-n $1" && shift
+[ "$1" = '-n' -o "$1" = '--namespace' ] && shift && _namespace="-n $1" && shift
 [ "$1" = -f ] && shift && follow=-f
 _pod=$($KUBECTL get po "$_namespace" | grep -i "$1" | cut -d ' ' -f 1)
 $KUBECTL logs "$_namespace" "$follow" "$_pod"
