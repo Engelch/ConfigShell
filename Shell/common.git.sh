@@ -9,39 +9,21 @@ function gitContents() {
     fi
 }
 
-# git-specific aliases and functions
-function setupGit() {
-   alias giaa='git add -A' ##
-   alias gidi='git diff'               ## show delta working-tree vs index
-   alias gidic='git diff --cached'     ## show delta index vs last commit
-   alias gibr='git branch -avv' ##
-   alias gilo='git log --branches --remotes --tags --graph --oneline --decorate' ##
-   alias gist='git status' ##
-   alias gipl='git pull --all; git fetch --tags' ##
-   alias girm="git status | sed '1,/not staged/d' | grep deleted | awk '{print \$2}' | xargs git rm" ##
-   alias git-untracked="git ls-files --others --exclude-standard" ## show untracked files without the ones mentioned by .gitignore
-   function gipu() { git push --all $*; git push --tags $* ; } ##
-   # improved git commit
-   function gicm() { if [ $# -ne 0 ] ; then git commit -m "$*" ; else git commit ; fi ; } ##
-   function gicma() { if [ $# -ne 0 ] ; then git commit -a -m "$*" ; else git commit -a ; fi ; } ##
-   function gipua() { for remoterepo in $(grep '^\[remote' $(git rev-parse --show-toplevel)/.git/config | sed -e 's/.remote \"//' -e s'/..$//') ; do git push --all $remoterepo ; git push --tags $* ; done ; } ##
-}
-
 # help to show all git helpers
-function gihelp() {
-    cat  $PROFILES_CONFIG_DIR/Shell/common.git.sh \
-    | grep -v '#####' \
-    | grep '##' \
-    | sed 's/^[[:space:]]*##$//' \
-    | sed 's/^[[:space:]]*## /    /' \
-    | sed 's/^[[:space:]]*### /    ## /' \
-    | sed 's/^[[:space:]]*#### /    # /' \
-    | grep -v _gitBranch= \
-    | sed -E 's/^[[:space:]]*//' \
-    | egrep -Ev '^\|'
-}
+# function gihelp() {
+#     cat  $PROFILES_CONFIG_DIR/Shell/common.git.sh \
+#     | grep -v '#####' \
+#     | grep '##' \
+#     | sed 's/^[[:space:]]*##$//' \
+#     | sed 's/^[[:space:]]*## /    /' \
+#     | sed 's/^[[:space:]]*### /    ## /' \
+#     | sed 's/^[[:space:]]*#### /    # /' \
+#     | grep -v _gitBranch= \
+#     | sed -E 's/^[[:space:]]*//' \
+#     | egrep -Ev '^\|'
+# }
 
-alias git-help=gihelp ##
+# alias git-help=gihelp ##
 
 function lower() {
     echo $* | tr "[:upper:]" "[:lower:]"
@@ -55,7 +37,7 @@ function common.git.init() {
     debug4 common.git.init %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     [ ! -z $NO_gitCommon ] && debug exiting common.git.sh && return
     debug8 setting up git...
-    setupGit
+    # setupGit
     if [[ "$SHELL" =~ bash && $(lower $NO_gitCompletion) != true ]] ; then
         debug8 loading bash git completion
         [ ! -r "$PROFILES_CONFIG_DIR/git-completion.bash" ] && 1>&2 echo ERROR: Cannot find completion file && return 1

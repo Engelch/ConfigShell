@@ -64,39 +64,6 @@ function setupAliases_Abbreviations
     abbr -a -g rl 'source ~/.config/fish/config.fish'
     abbr -a -g ssf ssh-grep
 
-    abbr -a -g giaa 'git add -A'
-    abbr -a -g gibr 'git branch -avv | cat'
-    abbr -a -g gidi 'git diff'
-    abbr -a -g gidic 'git diff --cached'
-    abbr -a -g gife 'git fetch --all -p'
-    abbr -a -g gilo 'git log --branches --remotes --tags --graph --oneline --decorate'
-    abbr -a -g gist "git status -u --show-stash " # --ignore-submodules"
-    abbr -a -g gipl 'git pull --all; git fetch --tags'
-    abbr -a -g girm "git status | sed '1,/not staged/d' | grep deleted | awk '{print \$2}' | xargs git rm"
-    function gipu
-        git push --all $argv; and git push --tags $argv
-    end
-    function gipua
-        for remoterepo in (grep '^\[remote' (git rev-parse --show-toplevel)/.git/config | sed -e 's/.remote \"//' -e s'/..$//')
-            git push --all $remoterepo ; git push --tags $argv
-        end
-    end
-    function gicm
-        if count $argv
-            git commit -m "$argv"
-        else
-            git commit
-        end
-    end
-    function gicma
-        if count $argv
-            git commit -a -m "$argv"
-        else
-            git commit -a
-        end
-    end
-
-
     abbr -a -g tm 'tmux new -s'
     abbr -a -g tw 'tmux new-window -n'
     alias tn=tw
@@ -293,7 +260,7 @@ function setupExportVars
     set -g -x VISUAL vim
     set -g -x EDITOR vim       # bsroot has no notion about VISUAL
     set -g -x BLOCKSIZE 1K
-    set -g -x FISH_RC_VERSION "1.17.1"
+    set -g -x FISH_RC_VERSION "1.18.0"
     if test -n "$_current_FISH_RC_VERSION" -a "$FISH_RC_VERSION" != "$_current_FISH_RC_VERSION"
         echo new FISH_RC_VERSION "$FISH_RC_VERSION"
     end
