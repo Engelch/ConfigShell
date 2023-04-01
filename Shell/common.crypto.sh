@@ -12,14 +12,17 @@ function start_ssh_agent() {
 
 function sshagent_init {
    #  ssh agent sockets can be attached to a ssh daemon process or an ssh-agent process.
-   debug8 common.crypto.sh sshagent_init
-
+   debug8 "${BASH_SOURCE[0]}::${FUNCNAME[0]}"
    [ -n "${SSH_AUTH_SOCK}" ] && [ -n "${SSH_TTY}" ] && return
 
    local -r ssh_auth_sock_file=$HOME/.ssh_auth_sock
+   debug12 ssh_auth_sock_file set to "$ssh_auth_sock_file"
    if [ -r $ssh_auth_sock_file ] ; then
-      source $ssh_auth_sock_file # SSH_AUTH_SOCK to be read by this file
-      export SSH_AUTH_SOCK
+      # 230401 file contained also escape sequences
+      # source $ssh_auth_sock_file # SSH_AUTH_SOCK to be read by this file
+      export SSH_AUTH_SOCK=$(grep = "$ssh_auth_sock_file" | sed -e 's/^.*=//')
+      debug12 Variable from $ssh_auth_sock_file is set to $SSH_AUTH_SOCK
+      debug12 checking loaded keys
       ssh-add -l 2>/dev/null 1>&2 ; res=$?
       case $res in
       0) # ssh-agent loaded, keys loaded
@@ -44,8 +47,8 @@ function sshagent_init {
 }
 
 function sshSetup() {
-   debug8 zcommonsh.crypto.sh sshSetup
-    [ ! -x "$(which ssh-add)" ] && 1>&2 echo "ssh-add is not available; agent testing aborted" && return 1
+   debug8 "${BASH_SOURCE[0]}::${FUNCNAME[0]}"
+   [ ! -x "$(which ssh-add)" ] && 1>&2 echo "ssh-add is not available; agent testing aborted" && return 1
    sshagent_init
 }
 

@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+find . -name \*~    -print -exec /bin/rm {} \; 
+find . -name \*.bak -print -exec /bin/rm {} \;

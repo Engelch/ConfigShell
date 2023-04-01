@@ -7,14 +7,6 @@ function setupAliases_Abbreviations
     alias cp='cp -i'
     alias rm='rm -i'
     alias mv='mv -i'
-    function rmtex
-        for file in  -f *.log *.aux *.dvi *.loc *.toc *~
-            rm -fv $file
-        end
-    end
-    abbr -a -g rm~ 'find . -name \*~ -print -exec /bin/rm -v {} \; ; find . -name \*.bak -print -exec /bin/rm -v {} \;'
-    # rmbak for virtual environments w/out working ~ key
-    abbr -a -g rmbak 'find . -name \*~ -print -exec /bin/rm -v {} \; ; find . -name \*.bak -print -exec /bin/rm -v {} \;'
     abbr -a -g  wh which
 
     alias la "ls -aCF $LS_COLOUR"
@@ -301,7 +293,7 @@ function setupExportVars
     set -g -x VISUAL vim
     set -g -x EDITOR vim       # bsroot has no notion about VISUAL
     set -g -x BLOCKSIZE 1K
-    set -g -x FISH_RC_VERSION "1.16.0"
+    set -g -x FISH_RC_VERSION "1.17.0"
     if test -n "$_current_FISH_RC_VERSION" -a "$FISH_RC_VERSION" != "$_current_FISH_RC_VERSION"
         echo new FISH_RC_VERSION "$FISH_RC_VERSION"
     end
@@ -340,6 +332,7 @@ if status is-interactive
     setupAliases_Abbreviations
     setupCompletion
     setupSsh
+
     optSourceFile ~/.config/fish/post.fish
 end
 
