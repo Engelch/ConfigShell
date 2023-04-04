@@ -512,7 +512,7 @@ function decryptMode() {
     else _force=; fi
     local file
     if [ -z "$*" ]; then # all gee file mode
-        find "$gitroot" -name \*.gee -type f -print | while read -r file; do
+        find "$gitroot" -name '*.gee' -type f -print | while read -r file; do
             decryptModeFile "$file"
         done
     else
