@@ -173,7 +173,7 @@ function err12() { echo '           ' $* 1>&2; } # just write to stderr
 
 # --- Existence checks
 # shellcheck disable=SC2086
-function exitIfBinariesNotFound() { for file in "$@"; do command -v "$file" || errorExit 253 "binary not found: $file"; done; }
+function exitIfBinariesNotFound() { for file in "$@"; do command -v "$file" &>/dev/null || errorExit 253 "binary not found: $file"; done; }
 # shellcheck disable=SC2086
 function exitIfPlainFilesNotExisting() { for file in "$@"; do [ ! -f $file ] && errorExit 254 "plain file not found: $file" 1>&2; done; }
 # shellcheck disable=SC2086
@@ -586,7 +586,7 @@ function listMode() {
     local file
     find . -type f -name '*.gee' -print | while read -r file; do
         echo -n "$file"
-        local -r _basefile="$(dirname "$file")/$(basename "$file" .gee)"
+        local _basefile="$(dirname "$file")/$(basename "$file" .gee)"
         [ -f "$_basefile" ] && found=1 && echo -n " ($_basefile existing"
         [ "$_basefile" -nt "$file" ] && echo ', modified)' && continue
         [ "$found" -eq 1 ] && echo -n ')' && found=0
