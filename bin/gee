@@ -36,8 +36,9 @@
 
 # readonly skeleton_version=0.4.1 # variable normally not required
 
-readonly _app=$(basename $0)
-readonly _appDir=$(dirname $(readlink -f $0))
+# shellcheck disable=SC2155
+readonly _app=$(basename "${0}")
+readonly _appDir=$(dirname "$(readlink -f "${0}")")
 readonly _appVersion="2.3.0" # use semantic versioning
 export DebugFlag=${DebugFlag:-FALSE}
 
@@ -45,76 +46,160 @@ export DebugFlag=${DebugFlag:-FALSE}
 # SKELETON FUNCTIONS, considered R/O, v0.4.1 excerpt
 
 # so helps to write a message in reverse mode
-function so()
-# always show such a message.  If known terminal, print the message
-# in reverse video mode. This is the other way, not using escape sequences
-{
-   [ "$1" != on -a "$1" != off ] && return
-    if [ "$TERM" = xterm -o "$TERM" = vt100 -o "$TERM" = xterm-256color  -o "$TERM" = screen ] ; then
-      [ "$1" = on ] && tput smso
-      [ "$1" = off ] && tput rmso
+function so() { # always show such a message.  If known terminal, print the message
+    # in reverse video mode. This is the other way, not using escape sequences
+    [ "$1" != on ] && [ "$1" != off ] && return
+    if [ "$TERM" = xterm ] || [ "$TERM" = vt100 ] || [ "$TERM" = xterm-256color ] || [ "$TERM" = screen ]; then
+        [ "$1" = on ] && tput smso
+        [ "$1" = off ] && tput rmso
     fi
 }
 
 # --- debug: Conditional debugging. All commands begin w/ debug.
 
-function debugSet()             { DebugFlag=TRUE; return 0; }
-function debugUnset()           { DebugFlag=; return 0; }
-function debugExecIfDebug()     { [ "$DebugFlag" = TRUE ] && $*; return 0; }
-function debug()                { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:'$* 1>&2 ; return 0; }
-function debug4()               { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:    ' $* 1>&2 ; return 0; }
-function debug8()               { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:        ' $* 1>&2 ; return 0; }
-function debug12()              { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:            ' $* 1>&2 ; return 0; }
+function debugSet() {
+    DebugFlag=TRUE
+    return 0
+}
+function debugUnset() {
+    DebugFlag=
+    return 0
+}
+function debugExecIfDebug() {
+    [ "$DebugFlag" = TRUE ] && "$@"
+    return 0
+}
+function debug() {
+    # shellcheck disable=SC2048,SC2086
+    [ "$DebugFlag" = TRUE ] && echo 'DEBUG:'$* 1>&2
+    return 0
+}
+function debug4() {
+    # shellcheck disable=SC2048,SC2086
+    [ "$DebugFlag" = TRUE ] && echo 'DEBUG:    ' $* 1>&2
+    return 0
+}
+function debug8() {
+    # shellcheck disable=SC2048,SC2086
+    [ "$DebugFlag" = TRUE ] && echo 'DEBUG:        ' $* 1>&2
+    return 0
+}
+function debug12() {
+    # shellcheck disable=SC2048,SC2086
+    [ "$DebugFlag" = TRUE ] && echo 'DEBUG:            ' $* 1>&2
+    return 0
+}
 
-function verbose()              { [ "$VerboseFlag" = TRUE ] && echo -n $* ; return 0; }
-function verbosenl()            { [ "$VerboseFlag" = TRUE ] && echo $* ; return 0; }
-function verboseSet()           { VerboseFlag=TRUE; return 0; }
+function verbose() {
+    # shellcheck disable=SC2048,SC2086
+    [ "$VerboseFlag" = TRUE ] && echo -n $*
+    return 0
+}
+function verbosenl() {
+    # shellcheck disable=SC2048,SC2086
+    [ "$VerboseFlag" = TRUE ] && echo $*
+    return 0
+}
+function verboseSet() {
+    VerboseFlag=TRUE
+    return 0
+}
 
 # --- Exits
 
 # function error()        { err 'ERROR:' $*; return 0; } # similar to err but with ERROR prefix and possibility to include
 # Write an error message to stderr. We cannot use err here as the spaces would be removed.
-function error()        { so on; echo 'ERROR:'$* 1>&2;            so off ; return 0; }
-function error4()       { so on; echo 'ERROR:    '$* 1>&2;        so off ; return 0; }
-function error8()       { so on; echo 'ERROR:        '$* 1>&2;    so off ; return 0; }
-function error12()      { so on; echo 'ERROR:            '$* 1>&2;so off ; return 0; }
+function error() {
+    so on
+    # shellcheck disable=SC2048,SC2086
+    echo 'ERROR:'$* 1>&2
+    so off
+    return 0
+}
+function error4() {
+    so on
+    # shellcheck disable=SC2048,SC2086
+    echo 'ERROR:    '$* 1>&2
+    so off
+    return 0
+}
+function error8() {
+    so on
+    # shellcheck disable=SC2048,SC2086
+    echo 'ERROR:        '$* 1>&2
+    so off
+    return 0
+}
+function error12() {
+    so on
+    # shellcheck disable=SC2048,SC2086
+    echo 'ERROR:            '$* 1>&2
+    so off
+    return 0
+}
 
-function warning()      { so on; echo 'WARNING:'$* 1>&2;          so off; return 0; }
+function warning() {
+    so on
+    # shellcheck disable=SC2048,SC2086
+    echo 'WARNING:'$* 1>&2
+    so off
+    return 0
+}
 
+function errorExit() {
+    EXITCODE=$1
+    shift
+    # shellcheck disable=SC2048,SC2086
+    error $*
+    # shellcheck disable=SC2086
+    exit $EXITCODE
+}
+function exitIfErr() {
+    a="$1"
+    b="$2"
+    shift
+    shift
+    [ "$a" -ne 0 ] && errorExit "$b" "App returned $b $*"
+}
 
-function errorExit()    { EXITCODE=$1 ; shift; error $* ; exit $EXITCODE; }
-function exitIfErr()    { a="$1"; b="$2"; shift; shift; [ "$a" -ne 0 ] && errorExit $b App returned $b $*; }
-
-function err()          { echo $* 1>&2; }                 # just write to stderr
-function err4()         { echo '   ' $* 1>&2; }           # just write to stderr
-function err8()         { echo '       ' $* 1>&2; }       # just write to stderr
-function err12()        { echo '           ' $* 1>&2; }   # just write to stderr
+# shellcheck disable=SC2048,SC2086
+function err() { echo $* 1>&2; } # just write to stderr
+# shellcheck disable=SC2048,SC2086
+function err4() { echo '   ' $* 1>&2; } # just write to stderr
+# shellcheck disable=SC2048,SC2086
+function err8() { echo '       ' $* 1>&2; } # just write to stderr
+# shellcheck disable=SC2048,SC2086
+function err12() { echo '           ' $* 1>&2; } # just write to stderr
 
 # --- Existence checks
-function exitIfBinariesNotFound()       { for file in $@; do [ $(command -v "$file") ] || errorExit 253 binary not found: $file; done }
-function exitIfPlainFilesNotExisting()  { for file in $*; do [ ! -f $file ] && errorExit 254 'plain file not found:'$file 1>&2; done }
-function exitIfFilesNotExisting()       { for file in $*; do [ ! -e $file ] && errorExit 255 'file not found:'$file 1>&2; done }
-function exitIfDirsNotExisting()        { for dir in $*; do [ ! -d $dir ] && errorExit 252 "$APP:ERROR:directory not found:"$dir; done }
+# shellcheck disable=SC2086
+function exitIfBinariesNotFound() { for file in "$@"; do command -v "$file" &>/dev/null || errorExit 253 "binary not found: $file"; done; }
+# shellcheck disable=SC2086
+function exitIfPlainFilesNotExisting() { for file in "$@"; do [ ! -f $file ] && errorExit 254 "plain file not found: $file" 1>&2; done; }
+# shellcheck disable=SC2086
+function exitIfFilesNotExisting() { for file in "$@"; do [ ! -e $file ] && errorExit 255 "file not found: $file" 1>&2; done; }
+# shellcheck disable=SC2086
+function exitIfDirsNotExisting() { for dir in "$@"; do [ ! -d $dir ] && errorExit 252 "$APP:ERROR:directory not found: $dir"; done; }
 
 # --- Temporary file/directory  creation
 # -- file creation -- TMP1=$(tempFile); TMP2=$(tempFile) ;;;; trap "/bin/rm -f $TMP1 $TMP2 &>/dev/null" EXIT
 # -- directory creation -- TMPDIR=$(tempDir) ;;;;;  trap "rm -fr $TMPDIR;" EXIT
 #
-function tempFile()                     { mktemp ${TMPDIR:-/tmp/}$_app.XXXXXXXX; }
-function tempDir()                      { mktemp -d "${TMPDIR:-/tmp/}$_app.YYYYYYYYY"; }
+function tempFile() { mktemp "${TMPDIR:-/tmp/}$_app.XXXXXXXX"; }
+function tempDir() { mktemp -d "${TMPDIR:-/tmp/}$_app.YYYYYYYYY"; }
 # realpath as shell, argument either supplied as stdin or as $1
 
 # application-specific functions  ===============================================================================
 
-function usage()
-{
+# shellcheck disable=all
+function usage() {
     err DESCRIPTION
     err4 $_app allows for the encryption of files in a git repository. It solves some problems with
     err4 git crypt, git secret, and git secrets.
     err
     err SYNOPSIS
     err4 $_app '[-D] gee init'
-    err8 Put git repository under git gee => install a prehook
+    err8 Put git repository under git gee = a prehook >install
     err8 and specify the password file for en- and decryption.
     err8 The password file must follow the convention:
     err12 If the git-root directory is /a/b/, then
@@ -154,7 +239,7 @@ function usage()
     err
     err4 git commit '[ -n ]' ...
     err8 - gee checks for all .gee files if the ignored file without the suffix is younger than the .gee file
-    err12   if existing. If so, it blocks the commit.
+    err12 if existing. If so, it blocks the commit.
     err8 -n prevents the checks and commits anyway.
     err
     err4 GLOBAL OPTIONS
@@ -163,30 +248,31 @@ function usage()
     err8 '-h      ::= show usage message and exit with exit code 1'
 }
 
-function git-root-relative-path () {
+function git-root-relative-path() {
     initDefaultVars
-    local absfile
-    [ -z "$1" ] && errorExit 90 missing argument to git-root-relative-path
-    _absfile=$(readlink -f "$1")
-    echo $_absfile | sed s,$gitroot/,,
+    local _absfile
+    [ -z "$1" ] && errorExit 90 "missing argument to git-root-relative-path"
+    local -r _absfile=$(readlink -f "$1")
+    # shellcheck disable=SC2001
+    echo "$_absfile" | sed "s,$gitroot/,,"
 }
 
 function exitIfNotInGitRepo() {
-    git rev-parse --show-toplevel &>/dev/null || errorExit 11 Not in a git repository
+    git rev-parse --show-toplevel &>/dev/null || errorExit 11 "Not in a git repository"
 }
 
 function mtime() {
     ## mtime, return modification time of a file in epoch, UTC
-    [ -z "$1" ] && errorExit 80 mtime, no argument specified
-    [ ! -e $1 ] && errorExit 81 mtime, argument not a file
-    date -u -r "$1" +%s    # OK for OSX, Linux
+    [ -z "$1" ] && errorExit 80 "mtime, no argument specified"
+    [ ! -e "$1" ] && errorExit 81 "mtime, argument not a file"
+    date -u -r "$1" +%s # OK for OSX, Linux
 }
 
 function mtimeSet() {
     ## mtimeSet, set the modification time of a file in epoch, UTC
-    [ -z "$1" ] && errorExit 85 mtimeSet, no argument specified
-    _time=$1
-    [ ! -e "$2" ] && errorExit 86 mtimeSet, argument not a file
+    [ -z "$1" ] && errorExit 85 "mtimeSet, no argument specified"
+    local -r _time=$1
+    [ ! -e "$2" ] && errorExit 86 "mtimeSet, argument not a file"
 
 }
 
@@ -194,76 +280,83 @@ function mtimeSet() {
 #############################################################################################
 
 function parseCLI() {
-    while getopts "Dhv" options; do         # Loop: Get the next option;
-        case "${options}" in                    # TIMES=${OPTARG}
-            D)  err Debug enabled ; debugSet
-                ;;
-            h)  usage ; exit 1
-                ;;
-            v)  verboseSet
-                ;;
-            *)  err Help with $_app -h
-                exit 2  # Exit abnormally.
-                ;;
+    while getopts "Dhv" options; do # Loop: Get the next option;
+        case "${options}" in        # TIMES=${OPTARG}
+        D)
+            err "Debug enabled"
+            debugSet
+            ;;
+        h)
+            usage
+            exit 1
+            ;;
+        v)
+            verboseSet
+            ;;
+        *)
+            # shellcheck disable=SC2086
+            err "Help with $_app -h"
+            exit 2 # Exit abnormally.
+            ;;
         esac
     done
 }
 
 function checkPreCommitHookExisting() {
-    readonly _hook=$gitroot/.git/hooks/pre-commit
-    [ -e "$_hook" -a ! -f "$_hook" ] && error Other object type with name $_hook && return 1
-    [ ! -f "$_hook" ] && error Hook $_hook not found. && return 2
-    [ ! -r "$_hook" ] && error Hook $_hook not readable. && return 3
+    local -r _hook="$gitroot/.git/hooks/pre-commit"
+    [ -e "$_hook" ] && [ ! -f "$_hook" ] && error "Other object type with name $_hook" && return 1
+    [ ! -f "$_hook" ] && error "Hook $_hook not found." && return 2
+    [ ! -r "$_hook" ] && error "Hook $_hook not readable." && return 3
     return 0
 }
 
 function exitIfNotInGitGeeRepo() {
-    debug exitIfNotInGitGeeRepo, checking for existence of $gitroot/.git/gee
-    [ ! -f $gitroot/.git/gee ] && errorExit 12 Not a git gee repository
+    debug "exitIfNotInGitGeeRepo, checking for existence of $gitroot/.git/gee"
+    [ ! -f "$gitroot/.git/gee" ] && errorExit 12 "Not a git gee repository"
 }
 
 function initDefaultVars() {
-    if [ -z "$geeInitDefaultVars" ] ; then
+    if [ -z "$geeInitDefaultVars" ]; then
         declare -gr gitroot="$(git rev-parse --show-toplevel)"
         declare -gr gitignore="$gitroot/.gitignore"
-        declare -gr geePwFile=$(dirname $gitroot)/$(basename $gitroot).gee.pw
+        declare -gr geePwFile="$(dirname "$gitroot")/$(basename "$gitroot").gee.pw"
         declare -gr geeInitDefaultVars=TRUE
-        debug initDefaultVars gitroot $gitroot gitignore $gitignore geePwFile $geePwFile
+        debug "initDefaultVars gitroot $gitroot gitignore $gitignore geePwFile $geePwFile"
     else
-        debug initDefaultVars already set
+        debug "initDefaultVars already set"
     fi
 }
 
 function createPreCommit() {
     # single-quotes around ENDINIT prevents evaluation of vars inside here document
-    cat  >| .git/hooks/pre-commit <<'ENDINIT'
+    cat >|.git/hooks/pre-commit <<'ENDINIT'
 #!/usr/bin/env bash
 # version 2.3.0
 # --- debug: Conditional debugging. All commands begin w/ debug.
 
 function debugSet()             { DebugFlag=TRUE; return 0; }
-function debug()                { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:'$* 1>&2 ; return 0; }
+function debug()                { [ "$DebugFlag" = TRUE ] && echo "DEBUG: $*" 1>&2 ; return 0; }
 
 function initDefaultVars() {
     declare -gr gitroot="$(git rev-parse --show-toplevel)"
-    declare -gr geePwFile=$(dirname "$gitroot")/$(basename "$gitroot").gee.pw
+    declare -gr geePwFile="$(dirname "$gitroot")/$(basename "$gitroot").gee.pw"
 }
 
 function main() {
     initDefaultVars
     cd "$gitroot"
-    debug pre-commit starting from $(pwd)
-    for file in $(find . -name '*.pws' -print) ; do
-        if ! [ -L "$file" ] ; then
+    debug "pre-commit starting from $(pwd)"
+    find . -name '*.pws' -print | while read -r file; do
+        if [ ! -L "$file" ] ; then
             echo 1>&2 File "$file" is not a symbolic link; exit 2
         fi
     done
-    for file in $(find . -name '*.gee' -type f -print) ; do
-        debug working on $file
-        _noGeeFile=$(basename $file .gee)
-        _noGeeDir=$(dirname $file)
+    find . -name '*.gee' -type f -print | while read -r file; do
+        debug "working on $file"
+        _noGeeFile="$(basename "$file" .gee)"
+        _noGeeDir="$(dirname "$file")"
         if [ -f "$_noGeeDir/$_noGeeFile"  ] ; then
-            [ "$_noGeeDir/$_noGeeFile" -nt $file ] && 1>&2 echo "$_noGeeDir/$_noGeeFile" newer than $file && exit 1
+            [ "$_noGeeDir/$_noGeeFile" -nt "$file" ] && 1>&2 echo "$_noGeeDir/$_noGeeFile newer than $file" && exit 1
             debug geeFile newer or equal to "$_noGeeDir/$_noGeeFile"
         else
            debug non-gee file for "$_noGeeDir/$_noGeeFile" not found
@@ -272,7 +365,7 @@ function main() {
     exit 0
 }
 
-main $*
+main "$@"
 ENDINIT
     res=$? && chmod 755 .git/hooks/pre-commit
     return $?
@@ -281,16 +374,17 @@ ENDINIT
 #############################################################################################
 
 function initMode() {
-    debug init mode
+    debug "init mode"
     exitIfNotInGitRepo
     initDefaultVars
-    cd $gitroot
-    [ ! -f $geePwFile ] && errorExit 30 Password file $geePwFile not found
-    [ ! -r $geePwFile ] && errorExit 31 Password file $geePwFile not readable
-    [ -f .gitignore ] && [ $(egrep '.gee$' .gitignore | wc -l) -gt 0 ] && errorExit 32 .gee files seem to be in .gitignore, please check
-    [ -f .git/hooks/pre-commit ] && errorExit 33 pre-commit already existing.
-    createPreCommit ; res=$?
-    [ $res -eq 0 ] && touch $gitroot/.git/gee && return 0 # make it detectable that gee is applied
+    cd "$gitroot" || return
+    [ ! -f "$geePwFile" ] && errorExit 30 "Password file $geePwFile not found"
+    [ ! -r "$geePwFile" ] && errorExit 31 "Password file $geePwFile not readable"
+    [ -f .gitignore ] && grep -q -E '.gee$' .gitignore && errorExit 32 ".gee files seem to be in .gitignore, please check"
+    [ -f .git/hooks/pre-commit ] && errorExit 33 "pre-commit already existing."
+    createPreCommit
+    res=$?
+    [ "$res" -eq 0 ] && touch "$gitroot/.git/gee" && return 0 # make it detectable that gee is applied
     return 39
 }
 
@@ -298,85 +392,87 @@ function initMode() {
 
 # endecryptFile2 syntax: (encrypt|decrypt) pw src-file dest-file
 function endecryptFile2() {
-    debug encryptFile $*
-    local _mode=$1
-    local _pw=$2
-    local _src=$3
-    local _dest=$4
-    [ $# -ne 4 ] && errorExit 60 wrong number of arguments to endecryptFile2 $#, $*
-    [ "$_mode" != encrypt -a "$_mode" != decrypt ] && errorExit 61 undefined mode for endecryptFile2 $_mode
-    [ ! -f "$_pw" ] && errorExit 62 pw file not a plain file
-    [ ! -f "$_src" ] && errorExit 63 src file not a plain file
+    debug "encryptFile $*"
+    local -r _mode=$1
+    local -r _pw=$2
+    local -r _src=$3
+    local -r _dest=$4
+    [ $# -ne 4 ] && errorExit 60 "wrong number of arguments to endecryptFile2 $#, $*"
+    [ "$_mode" != encrypt ] && [ "$_mode" != decrypt ] && errorExit 61 "undefined mode for endecryptFile2 $_mode"
+    [ ! -f "$_pw" ] && errorExit 62 "pw file not a plain file"
+    [ ! -f "$_src" ] && errorExit 63 "src file not a plain file"
 
-    TMP1=$(tempFile) ; trap "/bin/rm -f $TMP1 &>/dev/null" EXIT # create temporary file so that destination never holds file in unencrypted way
-    /bin/cp -f $_src $TMP1      || errorExit 65 error creating temporary file
-    echo -n "Procssesing file $_src " # as ansible-vault always creates output, let's look it nice
-    ansible-vault $_mode --vault-password-file $_pw $TMP1   || errorExit 66 encrypting file $TMP1
-    /bin/mv -f $TMP1 $_dest        || errorExit 67 moving encrypted file $TMP1 back
+    TMP1="$(tempFile)"
+    # Shellcheck warns about single quotes to delay expansion, but expanding here is fine
+    # shellcheck disable=SC2064
+    trap "/bin/rm -f \"$TMP1\" &>/dev/null" EXIT # create temporary file so that destination never holds file in unencrypted way
+    /bin/cp -f "$_src" "$TMP1" || errorExit 65 "error creating temporary file"
+    echo -n "Processing file $_src ->" # as ansible-vault always creates output, let's look it nice
+    ansible-vault "$_mode" --vault-password-file "$_pw" "$TMP1" || errorExit 66 "encrypting file $TMP1"
+    /bin/mv -f "$TMP1" "$_dest" || errorExit 67 "moving encrypted file $TMP1 back"
     return 0
 }
 
 # encryptFile is a wrapper for endecryptFile2 to reduce code duplication as routines are identical except for $_mode
 function encryptFile() {
-    endecryptFile2 encrypt $*
+    endecryptFile2 encrypt "$@"
 }
 
 # decryptFile is a wrapper for endecryptFile2 to reduce code duplication as routines are identical except for $_mode
 function decryptFile() {
-    endecryptFile2 decrypt $*
+    endecryptFile2 decrypt "$@"
 }
 
 ######################################################################################################
 
 function addMode() {
-    debug add mode
+    debug "add mode"
     exitIfNotInGitRepo
     initDefaultVars
     exitIfNotInGitGeeRepo
     exitIfBinariesNotFound ansible-vault
     shift
-    local file
-    for file in $* ; do
-        [ ! -e $file ] && errorExit 40 $file does not seem to exist
-        [ ! -f $file ] && errorExit 41 $file is not a plain file
-        [[ $file =~ .*.gee ]] && errorExit 42 not adding .gee files
-        [ -f $file.gee ] && errorExit 43 $file.gee already existing
-        local gitFile=$(git-root-relative-path $file)
-        if [ $(egrep $gitFile $gitignore 2>/dev/null | wc -l) -gt 0 ] ; then
-            1>&2 echo WARNING: file $file already in .gitignore
+    for file in "$@"; do
+        [ ! -e "$file" ] && errorExit 40 "$file does not seem to exist"
+        [ ! -f "$file" ] && errorExit 41 "$file is not a plain file"
+        [[ "$file" =~ .*.gee ]] && errorExit 42 "not adding .gee files"
+        [ -f "$file.gee" ] && errorExit 43 "$file.gee already existing"
+        local gitFile="$(git-root-relative-path "$file")"
+        if grep -q -E "$gitFile" "$gitignore"; then
+            echo 1>&2 "WARNING: file $file already in .gitignore"
         else
-            echo /$gitFile >> "$gitroot/.gitignore"
-            git add "$gitroot/.gitignore" || errorExit 44 adding .gitignore
+            echo "/$gitFile" >>"$gitroot/.gitignore"
+            git add "$gitroot/.gitignore" || errorExit 44 "adding .gitignore"
         fi
-        git rm --cached $file &>/dev/null # remove file if potentially in index
-        encryptFile $geePwFile $file $file.gee || errorExit 45 error encrypting file $file as $TMP2
-        debug4 adding $file.gee
-        git add $file.gee || errorExit 46 error adding encrypted file to index
+        git rm --cached "$file" &>/dev/null # remove file if potentially in index
+        encryptFile "$geePwFile" "$file" "$file.gee" || errorExit 45 "error encrypting file $file as $TMP1"
+        debug4 "adding $file.gee"
+        git add "$file.gee" || errorExit 46 "error adding encrypted file to index"
     done
 }
 
 #############################################################################################
 
 function cleanMode() {
-    debug clean mode
+    debug "clean mode"
     exitIfNotInGitRepo
     initDefaultVars
     exitIfNotInGitGeeRepo
     shift
-    if [ "$1" = -f -o "$1" = --force ] ; then _force=TRUE ; else _force= ; fi
-    cd $gitroot
+    if [ "$1" = -f ] || [ "$1" = --force ]; then _force=TRUE; else _force=; fi
+    cd "$gitroot" || return
     local basefile
-    for file in $(find . -name \*.gee  -type f -print ) ; do
-        basefile=$(dirname $file)/$(basename $file .gee)
-        if [ -f $basefile ] ; then
-            if [ $basefile -nt $file ] ; then
-                if [ "$_force" = TRUE ] ; then
-                    /bin/rm -f $basefile || errorExit 91 error deleting file $basefile
+    find . -name '*.gee' -type f -print | while read -r file; do
+        basefile="$(dirname "$file")/$(basename "$file" .gee)"
+        if [ -f "$basefile" ]; then
+            if [ "$basefile" -nt "$file" ]; then
+                if [ "$_force" = TRUE ]; then
+                    /bin/rm -f "$basefile" || errorExit 91 "error deleting file $basefile"
                 else
-                    errorExit 90 clean mode file $basefile newer than $file
+                    errorExit 90 "clean mode file $basefile newer than $file"
                 fi
             else
-                /bin/rm -f $basefile || errorExit 92 error deleting file $basefile
+                /bin/rm -f "$basefile" || errorExit 92 "error deleting file $basefile"
             fi
         fi
     done
@@ -386,37 +482,42 @@ function cleanMode() {
 
 # decryptModeFile is a helper for decryptMode
 function decryptModeFile() {
-    local file=$1
-    debug decryptModeFile processing file $file
-    _basefile=$(dirname $file)/$(basename $file .gee)    # make sure, we have the correspondig gee file
-    _geefile=$(dirname $file)/$(basename $file .gee).gee    # make sure, we have the correspondig gee file
-    [ ! -f $_geefile ] && errorExit 70 decryptModeFile file $_geefile does not exist for decryption
-    if [ ! -f $_basefile -o $_geefile -nt $_basefile -o "$_force" = TRUE ] ; then
-        decryptFile $geePwFile $_geefile $_basefile || errorExit 71 while decrypting file $_geefile
-        touch -r $_geefile $_basefile
-    elif [ $(mtime $_basefile) = $(mtime $_geefile) ] ; then
-        1>&2 echo No action: .gee file and related file have the same age: $_basefile
+    local -r file=$1
+    debug "decryptModeFile processing file $file"
+    local -r _basefile="$(dirname "$file")/$(basename "$file" .gee)"    # make sure, we have the correspondig gee file
+    local -r _geefile="$(dirname "$file")/$(basename "$file" .gee).gee" # make sure, we have the correspondig gee file
+    [ ! -f "$_geefile" ] && errorExit 70 "decryptModeFile file $_geefile does not exist for decryption"
+    if [ ! -f "$_basefile" ] || [ "$_geefile" -nt "$_basefile" ] || [ "$_force" = TRUE ]; then
+        decryptFile "$geePwFile" "$_geefile" "$_basefile" || errorExit 71 "while decrypting file $_geefile"
+        touch -r "$_geefile" "$_basefile"
+    elif [ "$(mtime "$_basefile")" = "$(mtime "$_geefile")" ]; then
+        # shellcheck disable=SC2086
+        echo 1>&2 "No action: .gee file and related file have the same age: $_basefile"
     else
-        1>&2 echo WARNING: not decrypting $_geefile as the correspondig unencrypted file is younger
+        # shellcheck disable=SC2086
+        echo 1>&2 "WARNING: not decrypting $_geefile as the correspondig unencrypted file is younger"
     fi
 }
 
 function decryptMode() {
-    debug decrypt mode
+    debug "decrypt mode"
     exitIfNotInGitRepo
     initDefaultVars
     exitIfNotInGitGeeRepo
     exitIfBinariesNotFound ansible-vault
     shift
-    if [ "$1" = -f -o "$1" = --force ] ; then _force=TRUE ; shift ; else _force= ; fi
+    if [ "$1" = -f ] || [ "$1" = --force ]; then
+        _force=TRUE
+        shift
+    else _force=; fi
     local file
-    if [ -z "$*" ] ; then # all gee file mode
-        for file in $(find $gitroot -name \*.gee  -type f -print ) ; do
-            decryptModeFile $file
+    if [ -z "$*" ]; then # all gee file mode
+        find "$gitroot" -name '*.gee' -type f -print | while read -r file; do
+            decryptModeFile "$file"
         done
     else
-        for file in $* ; do
-            decryptModeFile $file
+        for file in "$@"; do
+            decryptModeFile "$file"
         done
     fi
 }
@@ -425,22 +526,25 @@ function decryptMode() {
 
 # encryptModeFile called with non .gee suffix
 function encryptModeFile() {
-    local file=$1
-    debug encryptModeFile processing file $file
-    _basefile=$(dirname $file)/$(basename $file .gee)    # make sure, we have the correspondig gee file
-    _geefile=$(dirname $file)/$(basename $file .gee).gee    # make sure, we have the correspondig gee file
-    if [ -f $_basefile ] ; then
-        debug4 $_basefile existing
-        [ ! -f $_geefile ] && errorExit 100 required .gee file created by gee add does not exist for $_basefile
-        if [ $_basefile -nt $_geefile -o "$_force" = TRUE ] ; then
+    local -r file=$1
+    debug "encryptModeFile processing file $file"
+    local -r _basefile="$(dirname "$file")/$(basename "$file" .gee)"    # make sure, we have the correspondig gee file
+    local -r _geefile="$(dirname "$file")/$(basename "$file" .gee).gee" # make sure, we have the correspondig gee file
+    if [ -f "$_basefile" ]; then
+        debug4 "$_basefile existing"
+        [ ! -f "$_geefile" ] && errorExit 100 "required .gee file created by gee add does not exist for $_basefile"
+        if [ "$_basefile" -nt "$_geefile" ] || [ "$_force" = TRUE ]; then
+            # shellcheck disable=SC2086
             debug4 Encrypting file $_basefile ' '
-            encryptFile $geePwFile $_basefile $_geefile || errorExit 100 encrypting file $_basefile to $_geefile
-            git add $_geefile ||  errorExit 101 adding _geefile to index
+            encryptFile "$geePwFile" "$_basefile" "$_geefile" || errorExit 100 "encrypting file $_basefile to $_geefile"
+            git add "$_geefile" || errorExit 101 "adding _geefile to index"
         else
-            echo $_basefile not newer than $_geefile, no change, continuing
+            # shellcheck disable=SC2086
+            echo "$_basefile not newer than $_geefile, no change, continuing"
         fi
     else
-        echo NO $_basefile for $_geefile, continuing
+        # shellcheck disable=SC2086
+        echo "NO $_basefile for $_geefile, continuing"
     fi
 }
 
@@ -452,15 +556,18 @@ function encryptMode() {
     exitIfBinariesNotFound ansible-vault
     shift
     local file
-    if [ "$1" = -f -o "$1" = --force ] ; then _force=TRUE ; shift ; else _force= ; fi # in force mode, encrypt file anyway if unencrypted version exists
-    if [ -z "$*" ] ; then # all gee file mode
-        cd "$gitroot"
-        for file in $(find . -type f -name '*.gee' -print) ; do
-            encryptModeFile $file
+    if [ "$1" = -f ] || [ "$1" = --force ]; then
+        _force=TRUE
+        shift
+    else _force=; fi     # in force mode, encrypt file anyway if unencrypted version exists
+    if [ -z "$*" ]; then # all gee file mode
+        cd "$gitroot" || return
+        find . -type f -name '*.gee' -print | while read -r file; do
+            encryptModeFile "$file"
         done
     else # specificed gee file mode
-        for file in $* ; do
-            encryptModeFile $file
+        for file in "$@"; do
+            encryptModeFile "$file"
         done
     fi
 }
@@ -468,21 +575,21 @@ function encryptMode() {
 #############################################################################################
 
 function listMode() {
-    # created dependency by gee s
-    debug list mode
+    debug "list mode"
     shift
     exitIfNotInGitRepo
     initDefaultVars
-    verbosenl Listing from from git root directory:$gitroot
-    cd "$gitroot"
+    # shellcheck disable=SC2086
+    verbosenl "Listing from from git root directory: $gitroot"
+    cd "$gitroot" || return
     local found=0
     local file
-    for file in $(find . -type f -name '*.gee' -print) ; do
-        echo -n $file
-        _basefile=$(dirname $file)/$(basename $file .gee)
-        [ -f $_basefile ] && found=1 && echo -n " ($_basefile existing"
-        [ $_basefile -nt $file ] && echo ', modified)' && continue
-        [ $found -eq 1 ] && echo -n ')' && found=0
+    find . -type f -name '*.gee' -print | while read -r file; do
+        echo -n "$file"
+        local _basefile="$(dirname "$file")/$(basename "$file" .gee)"
+        [ -f "$_basefile" ] && found=1 && echo -n " ($_basefile existing"
+        [ "$_basefile" -nt "$file" ] && echo ', modified)' && continue
+        [ "$found" -eq 1 ] && echo -n ')' && found=0
         echo
     done
 }
@@ -492,46 +599,47 @@ function listMode() {
 
 function main() {
     exitIfBinariesNotFound tput basename dirname readlink git pwd
-    parseCLI $*
-    shift $(($OPTIND - 1))  # not working inside parseCLI
-    debug args after CLI parsing are $*
+    parseCLI "$@"
+    shift $((OPTIND - 1)) # not working inside parseCLI
+    debug args after CLI parsing are: "$@"
 
     case $1 in
-    a|add)
-        addMode $*
+    a | add)
+        addMode "$@"
         ;;
-    c|clean)
-        cleanMode $*
+    c | clean)
+        cleanMode "$@"
         ;;
-    h|help)
+    h | help)
         usage
         exit 1
         ;;
     init)
-        initMode $*
+        initMode "$@"
         ;;
-    l|li|list|lst)
-        listMode $* # created dependency by gee s
+    l | li | list | lst)
+        listMode "$@" # created dependency by gee s
         ;;
-    e|en|enc|encr|encry|encryp|encrypt|encrypted)
-        encryptMode $*
+    e | en | enc | encr | encry | encryp | encrypt | encrypted)
+        encryptMode "$@"
         ;;
-    d|de|dec|decr|decry|decryp|decrypt|u|un|une|unen|unencr|unencry|unencryp|unencrypt)
-        decryptMode $*
+    d | de | dec | decr | decry | decryp | decrypt | u | un | une | unen | unencr | unencry | unencryp | unencrypt)
+        decryptMode "$@"
         ;;
-    s|status)
-        git gee l | egrep --color ', modified\)$' # must be changed if the output format of l is changed
+    s | status)
+        git gee l | grep -E --color ', modified\)$' # must be changed if the output format of l is changed
         ;;
     version)
         echo $_appVersion
         exit 0
         ;;
-    *)  [ -z "$1" ] && exit 0
-        errorExit 10 unknown sub-command to git gee $1
+    *)
+        [ -z "$1" ] && exit 0
+        errorExit 10 "unknown sub-command to git gee $1"
         ;;
     esac
 }
 
-main $*
+main "$@"
 
 # EOF
