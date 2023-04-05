@@ -55,7 +55,11 @@ _pod="$($KUBECTL "${ns[@]}" get pod | grep -i "${other_opts[0]}" | awk '{ print 
 
 # Add to command to execute:
 # exec -n<ns> -it <pod_name> <other_opts>
-cmd_to_exec+=("exec" "${ns[@]}" "-it" "$_pod" "${container[@]}" "${other_opts[@]:1}")
+cmd_to_exec+=("exec" "${ns[@]}" "-it" "$_pod" "${container[@]}")
+# Add command separator if not user-supplied (it must be the 2nd positional arg)
+[ "${other_opts[1]}" != "--" ] &&
+    cmd_to_exec+=("--")
+cmd_to_exec+=("${other_opts[@]:1}")
 
 set -x
 "${cmd_to_exec[@]}"
