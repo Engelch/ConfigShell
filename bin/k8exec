@@ -12,10 +12,20 @@
 ## cmdline parsing
 declare -a other_opts=()
 declare -a ns=()
+declare -a container=()
 while [[ $# -gt 0 ]]; do
     case "$1" in
+    -c | --container)
+        # This is only parsed if it's before the first positional arg
+        # because if it's after the first positional arg, it may well be
+        # an option for the command in the container
+        if [ "${#other_opts[@]}" -eq 0 ]; then
+            container=("-c" "$2")
+            shift 2
+        fi
+        ;;
     -n | --namespace)
-        # This is only parsed if it's the first non-positional arg
+        # This is only parsed if it's before the first positional arg
         # because if it's after the first positional arg, it may well be
         # an option for the command in the container
         if [ "${#other_opts[@]}" -eq 0 ]; then
@@ -45,7 +55,7 @@ _pod="$($KUBECTL "${ns[@]}" get pod | grep -i "${other_opts[0]}" | awk '{ print 
 
 # Add to command to execute:
 # exec -n<ns> -it <pod_name> <other_opts>
-cmd_to_exec+=("exec" "${ns[@]}" "-it" "$_pod" "${other_opts[@]:1}")
+cmd_to_exec+=("exec" "${ns[@]}" "-it" "$_pod" "${container[@]}" "${other_opts[@]:1}")
 
 set -x
 "${cmd_to_exec[@]}"
