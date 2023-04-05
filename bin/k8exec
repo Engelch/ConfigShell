@@ -1,35 +1,51 @@
 #!/usr/bin/env bash
-# shellcheck disable=SC2155
-
-function err()          { echo "$*" 1>&2; }                 # just write to stderr
-function err4()         { echo '   ' "$*" 1>&2; }           # just write to stderr
-function err8()         { echo '       ' "$*" 1>&2; }       # just write to stderr
-function err12()        { echo '           ' "$*" 1>&2; }   # just write to stderr
-
-# function error()        { err 'ERROR:' $*; return 0; } # similar to err but with ERROR prefix and possibility to include
-# Write an error message to stderr. We cannot use err here as the spaces would be removed.
-function error()        { echo 'ERROR:'"$*" 1>&2;             return 0; }
-function error4()       { echo 'ERROR:    '"$*" 1>&2;         return 0; }
-function error8()       { echo 'ERROR:        '"$*" 1>&2;     return 0; }
-function error12()      { echo 'ERROR:            '"$*" 1>&2; return 0; }
-
-function errorExit()    { EXITCODE="$1" ; shift; error "$*" ; exit "$EXITCODE"; }
 
 ## k8exec just requires a unique part of the pod-name in the given or the default namespace
+## options (all optional):
+## -n namespace
+##
 ## options: -n namespace
 ## arguments, optional: command, default: /bin/bash
 
-[ -z "$KUBECTL" ] && errorExit 1 KUBECTL is not defined
+[ -z "$KUBECTL" ] && echo >&2 "KUBECTL environment variable is not set, exiting" && exit 1
 
-_namespace=""
-[ "$1" = '-n' -o "$1" = '--namespace' ] && shift && _namespace="-n $1" && shift;
+## cmdline parsing
+declare -a other_opts=()
+declare -a ns=()
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+    -n | --namespace)
+        # This is only parsed if it's the first non-positional arg
+        # because if it's after the first positional arg, it may well be
+        # an option for the command in the container
+        if [ "${#other_opts[@]}" -eq 0 ]; then
+            ns=("-n" "$2")
+            shift 2
+        fi
+        ;;
+    *)
+        other_opts+=("$1") # save positional arg
+        shift
+        ;;
+    esac
+done
 
-_pod=$($KUBECTL get pod "$_namespace" -o name | grep -i "$1" | cut -d ' ' -f 1);
-shift;
+declare -a cmd_to_exec=("$KUBECTL")
 
-cmd=;
-[ "$*" = "" ] && cmd=/bin/bash;
+[ "${#other_opts[@]}" -eq 0 ] && echo >&2 "ERROR: no pod name given" && exit 2
+# default to 'bash' with 1 positional arg (pod name)
+[ "${#other_opts[@]}" -eq 1 ] && other_opts+=("bash")
 
-$KUBECTL exec "$_namespace" -it "$_pod" -- "$cmd" "$@"
+_pod="$($KUBECTL "${ns[@]}" get pod | grep -i "${other_opts[0]}" | awk '{ print $1; }')"
+[ "$(echo "$_pod" | wc -l)" -gt 1 ] && echo >&2 -e "ERROR: too many pods matched:\n$_pod" && exit 3
+[ "$_pod" = '' ] || [ -z "${_pod+x}" ] && {
+    echo >&2 "ERROR: no pods matched with: ${other_opts[0]}"
+    exit 4
+}
 
-# EOF
+# Add to command to execute:
+# exec -n<ns> -it <pod_name> <other_opts>
+cmd_to_exec+=("exec" "${ns[@]}" "-it" "$_pod" "${other_opts[@]:1}")
+
+set -x
+"${cmd_to_exec[@]}"

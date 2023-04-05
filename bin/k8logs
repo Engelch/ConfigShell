@@ -1,34 +1,43 @@
 #!/usr/bin/env bash
-# shellcheck disable=SC2155
-
-function err()          { echo "$*" 1>&2; }                 # just write to stderr
-function err4()         { echo '   ' "$*" 1>&2; }           # just write to stderr
-function err8()         { echo '       ' "$*" 1>&2; }       # just write to stderr
-function err12()        { echo '           ' "$*" 1>&2; }   # just write to stderr
-
-# function error()        { err 'ERROR:' $*; return 0; } # similar to err but with ERROR prefix and possibility to include
-# Write an error message to stderr. We cannot use err here as the spaces would be removed.
-function error()        { echo 'ERROR:'"$*" 1>&2;             return 0; }
-function error4()       { echo 'ERROR:    '"$*" 1>&2;         return 0; }
-function error8()       { echo 'ERROR:        '"$*" 1>&2;     return 0; }
-function error12()      { echo 'ERROR:            '"$*" 1>&2; return 0; }
-
-function errorExit()    { EXITCODE="$1" ; shift; error "$*" ; exit "$EXITCODE"; }
 
 ## k8exec just requires a unique part of the pod-name in the given or the default namespace
 ## options: -n namespace
 ## arguments, optional: command, default: /bin/bash
 
-[ -z "$KUBECTL" ] && errorExit 1 KUBECTL is not defined
+[ -z "$KUBECTL" ] && echo >&2 "KUBECTL environment variable is not set, exiting" && exit 1
 
-## k8logs just requires a unique part of the pod-name. -f can be specified.
-## options: -f
-_namespace=""
-follow=
-[ "$1" = -f ] && shift && follow=-f
-[ "$1" = '-n' -o "$1" = '--namespace' ] && shift && _namespace="-n $1" && shift
-[ "$1" = -f ] && shift && follow=-f
-_pod=$($KUBECTL get po "$_namespace" | grep -i "$1" | cut -d ' ' -f 1)
-$KUBECTL logs "$_namespace" "$follow" "$_pod"
+## cmdline parsing
+declare -a other_opts=()
+declare -a ns=()
+declare follow=0
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+    -f)
+        follow=1
+        shift
+        ;;
+    -n | --namespace)
+        ns=("-n" "$2")
+        shift 2
+        ;;
+    *)
+        other_opts+=("$1") # save positional arg
+        shift
+        ;;
+    esac
+done
 
-# EOF
+declare -a cmd_to_exec=("$KUBECTL" "logs" "${ns[@]}")
+[ "$follow" -eq 1 ] && cmd_to_exec+=("-f")
+
+_pod="$($KUBECTL "${ns[@]}" get pod | grep -i "${other_opts[0]}" | awk '{ print $1; }')"
+[ "$(echo "$_pod" | wc -l)" -gt 1 ] && echo >&2 -e "ERROR: too many pods matched:\n$_pod" && exit 2
+
+# add pod name, first positional arg is expected to be the pod name
+cmd_to_exec+=("$($KUBECTL "${ns[@]}" get pod | grep -i "${other_opts[0]}" | awk '{ print $1; }')")
+
+# add rest of positional args (WITHOUT the first: the pod substring)
+cmd_to_exec+=("${other_opts[@]:1}")
+
+set -x
+"${cmd_to_exec[@]}"
