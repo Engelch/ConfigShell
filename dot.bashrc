@@ -221,19 +221,28 @@ function setPrompt() {
 # The function is currently designed to work only on systems with systemd
 function hadmRealUserDetermination() {
    debug8 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '...............................................'
-   if [[ $(id -un) == "hadm" ]] && "$(command -v "journalctl" &>/dev/null)" ; then
-      export HADM_LAST_LOGIN_FINGERPRINT=${HADM_LAST_LOGIN_FINGERPRINT:-$(sudo journalctl -r -u ssh -g 'Accepted publickey' -n 1 -q 2&>/dev/null| awk '{ print $NF }')}
+   if [[ $(id -un) == "hadm" ]]  && command -v journalctl &>/dev/null ; then
+      debug8 user hadm and journalctl existing
+      [ -z "$HADM_LAST_LOGIN_FINGERPRINT" ] && unset HADM_LAST_LOGIN_FINGERPRINT
+      export HADM_LAST_LOGIN_FINGERPRINT=${HADM_LAST_LOGIN_FINGERPRINT:-$(sudo journalctl -r -u ssh -g 'Accepted publickey' -n 1 -q 2>&1 | awk '{ print $NF }')}
+      debug8 HADM_LAST_LOGIN_FINGERPRINT "$HADM_LAST_LOGIN_FINGERPRINT"
+      debug8 "SSH_CLIENT $SSH_CLIENT"
 
-      if [ "$SSH_CLIENT" != "" -a ! -z "$HADM_LAST_LOGIN_FINGERPRINT" ] ; then
+      if [ "$SSH_CLIENT" != "" ] && [ ! -z "$HADM_LAST_LOGIN_FINGERPRINT" ] ; then
          for file in ~/.ssh/*.pub
          do
             if [ $(ssh-keygen -lf $file | grep $HADM_LAST_LOGIN_FINGERPRINT | wc -l) -eq 1 ] ; then
                export HADM_LAST_LOGIN_USER=$(basename $file .pub)
+               logger "You are user $HADM_LAST_LOGIN_USER logging in as hadm. Welcome."
                echo You are user "$HADM_LAST_LOGIN_USER" logging in as hadm. Welcome.
                break
             fi
          done
+      else
+         debug8 "SSH_CLIENT or HADM_LAST_LOGIN_FINGERPRINT not set"
       fi
+   else
+      debug8 "User not hadm $(id -un) or journalctl not existing" 
    fi
    debug8 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'   
 }
@@ -295,7 +304,7 @@ function main() {
 
 debug "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '...............................................'
 main "$@"
-export BASH_RC_VERSION="5.0.0-rc2"
+export BASH_RC_VERSION="5.0.0"
 debug BASH_RC_VERSION is $BASH_RC_VERSION
 [ ! -z $BASH_MMONRC_VERSION ] && [ $BASH_MMONRC_VERSION != $BASH_RC_VERSION ] && echo New ConfigShell bash version $BASH_RC_VERSION. 1>&2
 BASH_MMONRC_VERSION=$BASH_RC_VERSION
