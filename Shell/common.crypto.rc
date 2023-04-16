@@ -57,36 +57,18 @@ function TRAPEXIT() {
    [ $(id -u) -eq 0 ] && test -n "$SSH_AGENT_PID" && eval `/usr/bin/ssh-agent -k`  # kill agent if leaving root
 }
 
-# ---- TLS  -----------------------------------------------------------------------
-
-# split -p not existing under Linux .... > switch to simple ruby as existing on most plaforms
-# show certificate (replacing the package version tlsCertView) - removed awk against split
-# function tlsCert() {
-#    setopt +o nomatch ;
-#    local file
-#    local infile
-#    local tmpCertDir=$(mktemp -d tmpx.XXXXXX); trap "rm -fr $tmpCertDir" INT TERM EXIT;
-
-#    for file in $* ; do
-#       split -p "-----BEGIN CERTIFICATE" $file $tmpCertDir/$file.
-#       for infile in $tmpCertDir/$file*; do
-#          openssl x509 -in "$infile" -subject -email -issuer -dates -sha256 -serial -noout -ext 'subjectAltName' 2>/dev/null | sed -e "s,^,$(basename $infile .in):,"; openssl x509 -in "$infile" -modulus -noout 2>/dev/null | openssl sha256 |  sed -e "s,^.*= ,$(basename $infile .in):SHA256 Fingerprint=,";
-#       done;
-#    done
-#    setopt -o nomatch;
-# }
-
-
 ##########################################
 
 function common.crypto.init() {
-   debug4 common.crypto.init %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-   [ ! -z $NO_commonCrypto ] && debug exiting common.crypto.sh && return
    sshSetup # from zsh.common.crypto.sh
 }
 
-function common.crypto.del() {
-   debug4 common.crypto.del %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-}
+# function common.crypto.del() {
+#    debug4 common.crypto.del %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# }
+
+debug8 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '...............................................'
+common.crypto.init
+debug8 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'
 
 # EOF

@@ -2,17 +2,12 @@
 
 # Darwin- alias OSX-specific settings of aliases and shell-functions
 function setupOSX() {
-   debug8 setupOSX............s
-   export LS_COLOUR='-G'
-   export LSCOLORS=Exfxcxdxbxegedabagacad # change directory colour 1st letter; see man ls(1)
-   common.aliases.ls          # realias ls commands to reflect colour mode
+   debug8 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '...............................................'
    alias proc='ps -ef | grep -i '
    alias sublime='Sublime\ Text'
    alias subl=sublime
    alias o=open
    alias vnc='open /System/Library/CoreServices/Applications/Screen\ Sharing.app'
-   alias cleandns='sudo killall -HUP mDNSResponder;sudo killall mDNSResponderHelper;sudo dscacheutil -flushcache'
-   alias dns-clean=cleandns # name detectable by service
    # root should use default tools, /opt and /usr/local is of secondary concern only.
    [ $UID -ne 0 ] && for _newApp in getopt curl openssl ; do
       which $_newApp | egrep '^/opt/homebrew|/usr/local' > /dev/null || warning $_newApp does not seem to be from homebrew.
@@ -20,6 +15,7 @@ function setupOSX() {
 
    # useful only for Mac OS Silicon M1,
    # still working but useless for the other platforms
+   debug8 special docker command !!!!!!!!!!!
    docker() {
       if [[ `uname -m` == "arm64" ]] && [[ "$1" == "run" || "$1" == "build" ]]; then
          /usr/local/bin/docker "$1" --platform linux/amd64 "${@:2}"
@@ -28,25 +24,17 @@ function setupOSX() {
       fi
    }
 
-   pkgU() # upgrade homebrew, gcloud,  macTeX
-   {
-      echo homebrew........................................  1>&2
-      brew update && brew upgrade && brew upgrade --cask --greedy &&  brew autoremove && brew cleanup # casks are also updated to today's brew upgrade && brew cu -ay # cu := cask upgrade
-      echo Google Cloud SDK................................  1>&2
-      if $(command -v gcloud > /dev/null 2>&1) ;then
-         currentGCPSDK=$(gcloud components list 2>&1 | egrep 'Your current Cloud SDK version' | awk '{ print $NF }')
-         availableGCPSDK=$(gcloud components list 2>&1 | egrep 'The latest available version' | awk '{ print $NF }')
-         echo Installed version of GCP SDK: $currentGCPSDK, available version: $availableGCPSDK
-         [ ! "$currentGCPSDK" = "$availableGCPSDK" ] && sudo CLOUDSDK_PYTHON=python3.8 gcloud components update
-         [ "$currentGCPSDK" = "$availableGCPSDK" ] && echo No GCP SDK update found.
-      else warning gcloud does not seem to be installed ;fi
-      echo macTeX........................................... 1>&2
-      if $(command -v tlmgr > /dev/null 2>&1) ; then tlmgr --self --all update
-      else warning mactex does not seem to be installed ;fi
-      touch ~/.pkgU
+   debug8 special podman command !!!!!!!!!!!
+   podman() {
+      if [[ `uname -m` == "arm64" ]] && [[ "$1" == "run" || "$1" == "build" ]]; then
+         /opt/homebrew/bin/podman "$1" --platform linux/amd64 "${@:2}"
+      else
+         /opt/homebrew/bin/podman "$@"
+      fi
    }
 
    # start Xcode
+   debug8 xc for Xcode
    xc()
    {
       if [ `ls -d *.xcworkspace 2>/dev/null | wc -l` -eq 1 ] ; then
@@ -57,6 +45,7 @@ function setupOSX() {
    }
 
    ######### Xarmarin helpers # open visual studio, usually
+   debug8 sln for Xamarin
    sln()
    {
       if [ `ls -d *.sln 2>/dev/null | wc -l` -eq 1 ] ;
@@ -64,6 +53,8 @@ function setupOSX() {
       else error multiple sln files/directories or none found.
       fi
    }
+
+   debug8 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'
 }
 
 function setupOSX_PostgreSQL() {
@@ -89,14 +80,9 @@ function setupOSX_PostgreSQL() {
    fi
 }
 
-function os.Darwin.init() {
-   debug4 os.Darwin.init %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-   [ -z $NO_setupOSX ] && setupOSX
-   [ -z $NO_setupOSX_PostgreSQL ] && setupOSX_PostgreSQL
-}
-
-function os.Darwin.del() {
-   debug4 os.Darwin.del %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-}
+debug8 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '...............................................'
+setupOSX
+setupOSX_PostgreSQL
+debug8 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'
 
 # EOF

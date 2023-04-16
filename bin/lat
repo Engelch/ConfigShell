@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# OK: shellcheck
+
+# Format a LaTeX document in such a way that reformatting is not required anymore
+
+lat=${LATEX:-xelatex}
+for file in "$@"
+do
+    CURRENT_FILE=$(basename "$file" .tex)
+    CURRENT_FILE=$(basename "$CURRENT_FILE" .)     # allow calls like lat demo.
+    "$lat" "${CURRENT_FILE}"    && \
+       "$lat" "${CURRENT_FILE}" && \
+       "$lat" "${CURRENT_FILE}" && \
+       [ "$lat" = latex ]       && \
+       dvips "${CURRENT_FILE}"    # 3 times to get all references right, no dvips for pdflatex, xelatex
+done

@@ -1,7 +1,6 @@
+#!/usr/bin/env bash
 # vim:ts=2:sw=2
-# hadm-profile alias common-profile
-
-# echo common-profile.sh
+# shellcheck disable=SC2155 disable=SC2012 disable=SC2153
 
 # Copyright © 2021 by Christian ENGEL (mailto:engel-ch@outlook.com)
 # License: BSD
@@ -31,25 +30,22 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# DESCRIPTION:
-#  - common-profile can be used on its own as a default profile for bash and zsh.
-#
-# RELEASES:
-# << now in Shell/bash.version.sh>>
 
 export DebugFlag=${DebugFlag:-FALSE}
-export VerboseFlag=${VerboseFlasg:-FALSE}
 
 #########################################################################################
 # SKELETON FUNCTIONS, considered R/O, v0.4.1
+
+######################################
+# Skeleton functions, considered RO. v0.5.0
 
 # so helps to write a message in reverse mode
 function so()
 # always show such a message.  If known terminal, print the message
 # in reverse video mode. This is the other way, not using escape sequences
 {
-   [ "$1" != on -a "$1" != off ] && return
-    if [ "$TERM" = xterm -o "$TERM" = vt100 -o "$TERM" = xterm-256color  -o "$TERM" = screen ] ; then
+   [ "$1" != on ] && [ "$1" != off ] && 1>&2 echo "so: unsupported option $1" && return
+    if [ "$TERM" = xterm ] || [ "$TERM" = vt100 ] || [ "$TERM" = xterm-256color ] || [ "$TERM" = screen ] ; then
       [ "$1" = on ] && tput smso
       [ "$1" = off ] && tput rmso
     fi
@@ -57,17 +53,14 @@ function so()
 
 # --- debug: Conditional debugging. All commands begin w/ debug.
 
-function debugSet()             { DebugFlag=TRUE; return 0; }
+function debugSet()             { DebugFlag="TRUE"; return 0; }
 function debugUnset()           { DebugFlag=; return 0; }
-function debugExecIfDebug()     { [ "$DebugFlag" = TRUE ] && $*; return 0; }
-function debug()                { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:'$* 1>&2 ; return 0; }
-function debug4()               { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:    ' $* 1>&2 ; return 0; }
-function debug8()               { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:        ' $* 1>&2 ; return 0; }
-function debug12()              { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:            ' $* 1>&2 ; return 0; }
-
-function verbose()              { [ "$VerboseFlag" = TRUE ] && echo -n $* ; return 0; }
-function verbosenl()            { [ "$VerboseFlag" = TRUE ] && echo $* ; return 0; }
-function verboseSet()           { VerboseFlag=TRUE; return 0; }
+function debugExecIfDebug()     { [ "$DebugFlag" = TRUE ] && "$*"; return 0; }
+function debug()                { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:'"$*" 1>&2 ; return 0; }
+function debug4()               { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:    ' "$*" 1>&2 ; return 0; }
+function debug8()               { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:        ' "$*" 1>&2 ; return 0; }
+function debug12()              { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:            ' "$*" 1>&2 ; return 0; }
+function debug16()              { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:                ' "$*" 1>&2 ; return 0; }
 
 # --- Colour lines. It requires either linux echo or zsh built-in echo
 
@@ -79,26 +72,26 @@ function colBlink()     { printf "\e[5m"; return 0; }
 
 # function error()        { err 'ERROR:' $*; return 0; } # similar to err but with ERROR prefix and possibility to include
 # Write an error message to stderr. We cannot use err here as the spaces would be removed.
-function error()        { so on; echo 'ERROR:'$* 1>&2;            so off ; return 0; }
-function error4()       { so on; echo 'ERROR:    '$* 1>&2;        so off ; return 0; }
-function error8()       { so on; echo 'ERROR:        '$* 1>&2;    so off ; return 0; }
-function error12()      { so on; echo 'ERROR:            '$* 1>&2;so off ; return 0; }
+function error()        { so on; echo 'ERROR:'"$*" 1>&2;            so off ; return 0; }
+function error4()       { so on; echo 'ERROR:    '"$*" 1>&2;        so off ; return 0; }
+function error8()       { so on; echo 'ERROR:        '"$*" 1>&2;    so off ; return 0; }
+function error12()      { so on; echo 'ERROR:            '"$*" 1>&2;so off ; return 0; }
 
-function warning()      { so on; echo 'WARNING:'$* 1>&2;          so off; return 0; }
+function warning()      { so on; echo 'WARNING:'"$*" 1>&2;          so off; return 0; }
 
-function errorExit()    { EXITCODE=$1 ; shift; error $* 1>&2; exit $EXITCODE; }
-function exitIfErr()    { a="$1"; b="$2"; shift; shift; [ "$a" -ne 0 ] && errorExit $b App returned $b $*; }
+function errorExit()    { EXITCODE=$1 ; shift; error "$*" ; exit "$EXITCODE"; }
+function exitIfErr()    { a="$1"; b="$2"; shift; shift; "$a" || errorExit "$b" "App returned $b $*"; }
 
-function err()          { echo $* 1>&2; }                 # just write to stderr
-function err4()         { echo '   ' $* 1>&2; }           # just write to stderr
-function err8()         { echo '       ' $* 1>&2; }       # just write to stderr
-function err12()        { echo '           ' $* 1>&2; }   # just write to stderr
+function err()          { echo "$*" 1>&2; }                 # just write to stderr
+function err4()         { echo '   ' "$*" 1>&2; }           # just write to stderr
+function err8()         { echo '       ' "$*" 1>&2; }       # just write to stderr
+function err12()        { echo '           ' "$*" 1>&2; }   # just write to stderr
 
 # --- Existance checks
-function exitIfBinariesNotFound()       { for file in $@; do [ $(command -v "$file") ] || errorExit 253 binary not found: $file; done }
-function exitIfPlainFilesNotExisting()  { for file in $*; do [ ! -f $file ] && errorExit 254 'plain file not found:'$file 1>&2; done }
-function exitIfFilesNotExisting()       { for file in $*; do [ ! -e $file ] && errorExit 255 'file not found:'$file 1>&2; done }
-function exitIfDirsNotExisting()        { for dir in $*; do [ ! -d $dir ] && errorExit 252 "$APP:ERROR:directory not found:"$dir; done }
+function exitIfBinariesNotFound()       { for file in "$@"; do command -v "$file" &>/dev/null || errorExit 253 binary not found: "$file"; done }
+function exitIfPlainFilesNotExisting()  { for file in "$@"; do [ ! -f "$file" ] && errorExit 254 'plain file not found:'"$file" 1>&2; done }
+function exitIfFilesNotExisting()       { for file in "$@"; do [ ! -e "$file" ] && errorExit 255 'file not found:'"$file" 1>&2; done }
+function exitIfDirsNotExisting()        { for dir in  "$@"; do [ ! -d "$dir"  ] && errorExit 252 "$APP:ERROR:directory not found:$dir"; done }
 
 # --- Temporary file/directory  creation
 # -- file creation -- TMP1=$(tempFile); TMP2=$(tempFile) ;;;; trap "rm -f $TMP1 $TMP2" EXIT
@@ -108,41 +101,141 @@ function tempFile()                     { mktemp ${TMPDIR:-/tmp/}$_app.XXXXXXXX;
 function tempDir()                      { mktemp -d "${TMPDIR:-/tmp/}$_app.YYYYYYYYY"; }
 # realpath as shell, argument either supplied as stdin or as $1
 
+# debug "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '...............................................'
+# debug "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'
+
 # =========================================================================================
 # === normal use-case related functions ===================================================
 # =========================================================================================
 
-# user-specific pre/post/... configuration, duplicate in .bash_profile
+# user-specific pre/post/... configuration
 function loadSource() {
-   if [ -r "$HOME/.bashrc.$1" ] ; then debug loadSource .bashrc.$1 ; source "$HOME/.bashrc.$1" ; else
-      debug4 loadSource FILE NOT FOUND $HOME/.bashrc.$1
+   debug8 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '...............................................'
+   if [ -r "$HOME/.bashrc.$1" ] ; then debug8 "loadSource ~/.bashrc.$1" ; source "$HOME/.bashrc.$1" ; else
+      debug8 "loadSource FILE NOT FOUND $HOME/.bashrc.$1"
    fi
+   debug8 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'
 }
 
-# setHistFileUserShell sets the HISTFILE to individual files for each terminal. The related ssf command searches in all created
-# history files.
-function setHistFileUserShell() {
-   debug4 ......................... in setHistFileUserShell
-      # Avoid duplicates
+# change default cd behaviour
+function cd() {
+   builtin cd "$1" && ( [ -f 00DIR.txt ] && cat 00DIR.txt ; [ -r 00DIR.sh ] && /usr/bin/env bash 00DIR.sh )
+}
 
-   export HISTCONTROL=ignoredups:erasedups:ignorespace
-   export HISTSIZE=1000
-   export HISTFILESIZE=10000
-    export HISTTIMEFORMAT='%Y-%m-%d_%H%M%S: '
-   # When the shell exits, append to the history file instead of overwriting it
-   shopt -s histappend
-    [ -f ~/.history ] && /bin/rm -f ~/.history
-    [[ -d ~/.history ]] || mkdir ~/.history && debug8 creating history directory
-    [[ -d ~/.history ]] && chmod 0700 ~/.history && debug8 setting history directory permission
-   # previous version export HISTFILE=$(eval echo ~$USER/.bash_history)
-    [[ "$HISTFILE" == '' ||  "$HISTFILE" =~ bash_history ]] && HISTFILE=~/.history/history.$(date +%y%b%d-%H%M%S).$$
-   debug8 HISTFILE is $HISTFILE
-   #[ -f $HISTFILE ] && debug8 histfile existing && \
-#      local histfileUser=$(ls -l $HISTFILE | awk '{ print $3 } ') && \
-      USER=${USER:-root} # fix for docker
-      SHELL=${SHELL:-$(ps a | grep $$ | sed -n "/^ *$$/p" | awk '{ print $NF }')} # fix for docker
-#     [ $histfileUser != $USER ] && echo ownship of history file must be corrected from user $histfileUser to user $USER && sudo chown $USER $HISTFILE
-    [ $(du -sk ~/.history/ | cut -f1 ) -gt 99099 ] && echo Please consider deleting some files from ~/.history
+# setAliases sets the default aliases
+function setAliases() {
+   # ls aliases
+   alias la="/bin/ls    -aCF       $LS_COLOUR"
+   alias ll="/bin/ls    -lhF       $LS_COLOUR"
+   alias lla="/bin/ls   -laF       $LS_COLOUR"
+   alias lld="/bin/ls   -ldF       $LS_COLOUR"
+   alias llad="/bin/ls  -ladF      $LS_COLOUR"
+   alias ls="/bin/ls    -hCF       \$LS_COLOUR"
+   alias ls-bw="LS_COLOUR=--color=none ; reset"  
+   # cd aliases
+   alias ..='cd ..'
+   alias .2='cd ../..'
+   alias .3='cd ../../..'
+   alias .4='cd ../../../..'
+   alias .5='cd ../../../../..'
+   alias brmd='[ -f .DS_Store ] &&  /bin/rm -f .DS_Store ; cd .. ; rmdir "$OLDPWD"'
+   # alias helpers
+   alias a=alias
+   alias af='alias | ei '
+   # default commands
+   alias cp='cp -i'
+   alias e=egrep
+   alias ei='grep -iE'
+   alias eir='grep -iER'
+   alias enf='env | grep -Ei '   # search the environment in case-insensitive mode
+   alias fin='find . -name'      # search for a filename
+   alias fini='find . -iname'    # search for a filename in case-insensitive mode
+   alias h=history
+   alias hf='history | grep -Ei'
+   alias j=jobs
+   alias l=less
+   alias ln-s='ln -s'
+   alias mcd=mkcd
+   function mkcd(){ mkdir -p "$1" && cd "$1"; }
+   alias mv='mv -i'
+   alias po=popd
+   alias pu='pushd .'
+   alias rl="source ~/.bash_profile"
+   alias rl-debug="debugSet; source ~/.bash_profile; debugUnset"
+   alias rlFull=rl-debug            # backward compatibility
+   alias rm='rm -i'           # life assurance
+   alias rm~=rmbak            # rmbak is now a command in ConfigShell
+   alias wh=which
+   # Networking
+   alias ipi='curl https://ipinfo.io'
+   alias ipi2='curl http://ipinfo.io'
+   alias tm='tmux new -s'  # todo check tmux commnands, currently not working, and move tmux-qul,.. to scripts if possible
+   # X11 commands 
+   alias disp0='export DISPLAY=:0'
+   alias disp1='export DISPLAY=:1'
+   # sw development
+   alias cm=cmake
+   alias m=make
+}
+
+# setHistFileUserShell: largely simplified history file management
+function setHistFileUserShell() {
+   debug8 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '...............................................'
+   HISTFILE=~/.bash_history
+   HISTCONTROL=ignoredups:erasedups:ignorespace
+   HISTSIZE=10000
+   HISTFILESIZE=10000
+   HISTTIMEFORMAT='%Y-%m-%d_%H%M%S: '
+   PROMPT_COMMAND='history -a'
+   shopt -s histappend   # When the shell exits, append to the history file instead of overwriting it
+   debug8 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'
+}
+
+# gitContents is integrated here as it is required by setPrompt().
+# Helper for PS1, git bash prompt like, but much shorter and also working for darwin.
+function gitContents() {
+    if [[ $(git rev-parse --is-inside-work-tree 2>&1 | grep fatal | wc -l) -eq 0  ]] ; then
+            _gitBranch=$(git status -s -b | head -1 | sed 's/^##.//')
+            _gitStatus=$(git status -s -b | tail -n +2 | sed 's/^\(..\).*/\1/' | sort | uniq | tr "\n" " " | sed -e 's/ //g' -e 's/??/?/' -e 's/^[ ]*//')
+            echo $_gitStatus $_gitBranch
+    fi
+}
+
+# setPrompt
+function setPrompt() {
+   debug8 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '...............................................'
+   if [ $(id -u) -eq 0 ] ; then
+      debug8 bash ROOT shell
+      PATH=/sbin:/bin:/usr/sbin:/usr/bin:"$PATH" # security: no enhanced PATHs first
+      PS1='[$?] \033[0;31m\t | \u@\h | $(pwd) \033[0m##########################\n'
+   else
+      debug8 bash non-root shell
+      [ $(which watson | wc -l) -eq 0 ] && debug12 watson not found && alias watson='echo -- > /dev/null'
+      PS1='[$?] \033[34m\t\033[0m|\033[32m\u@\h\033[0m|\033[34m$(watson status)\033[0m|\033[0;31m$(gitContents)\033[0m|$AWS_PROFILE|\033[0;33m\w\e[0m\n'
+   fi
+   debug8 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'   
+}
+
+# todo check w/ Lx system
+# hadmRealUserDetermination determines the real user if logging is as hadm
+# The function is currently designed to work only on systems with systemd
+function hadmRealUserDetermination() {
+   debug8 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '...............................................'
+   if [[ $(id -un) == "hadm" ]] && "$(command -v "journalctl" &>/dev/null)" ; then
+      export HADM_LAST_LOGIN_FINGERPRINT=${HADM_LAST_LOGIN_FINGERPRINT:-$(sudo journalctl -r -u ssh -g 'Accepted publickey' -n 1 -q 2&>/dev/null| awk '{ print $NF }')}
+
+      if [ "$SSH_CLIENT" != "" -a ! -z "$HADM_LAST_LOGIN_FINGERPRINT" ] ; then
+         for file in ~/.ssh/*.pub
+         do
+            if [ $(ssh-keygen -lf $file | grep $HADM_LAST_LOGIN_FINGERPRINT | wc -l) -eq 1 ] ; then
+               export HADM_LAST_LOGIN_USER=$(basename $file .pub)
+               echo You are user "$HADM_LAST_LOGIN_USER" logging in as hadm. Welcome.
+               break
+            fi
+         done
+      fi
+   fi
+   debug8 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'   
 }
 
 ############################################################################
@@ -150,57 +243,62 @@ function setHistFileUserShell() {
 ############################################################################
 
 function main() {
+   debug4 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '...............................................'
    umask 0022
 
    case $- in
       *i*) #  "This shell is interactive"
-         # source .bash_profile if it was not done before
-         # .bash_profile calls .bashrc; in such a case, stop .bashrc sourcing here
-         [ -z "$BASH_ENV" -a -r ~/.bash_profile ] && . ~/.bash_profile && return
+         # source .bash_profile if it was not done before       
+         # shellcheck source=/dev/null
+         [ -z "$BASH_ENV" ] && [ -r ~/.bash_profile ] && source ~/.bash_profile && return
          loadSource pre
-         set -o ignoreeof                 # prevent ^d logout
-         set -o noclobber                 # overwrite protection, use >| to force
+         export USER=${USER:-root} # fix for docker
+         export SHELL=${SHELL:-$(ps a | grep $$ | sed -n "/^ *$$/p" | awk '{ print $NF }')} # fix for docker
          setHistFileUserShell                      # history file permission, ownership, settings
-
-         # env.*.sh are loading in bash_profile
-         for file in $PROFILES_CONFIG_DIR/Shell/common.*.sh $PROFILES_CONFIG_DIR/Shell/bash.*.sh; do
-            if [ -f $file  ] ; then
-               source $file
-               $(basename $file .sh).init # call the file-local initialiser
-            else
-               warning $file is not a plain file  1>&2
+         setPrompt
+         $(which aws_completer &>/dev/null) && debug4 aws completion helper found && complete -C "$(which aws_completer)" aws
+         setAliases
+         hadmRealUserDetermination
+         
+         # changed to common2.* and bash2.* files
+         for file in $PROFILES_CONFIG_DIR/Shell/common.*.rc $PROFILES_CONFIG_DIR/Shell/bash.*.rc $PROFILES_CONFIG_DIR/Shell/os."$(uname)".rc; do    
+            if [ -f "$file"  ] && [ -r "$file" ] ; then
+               # shellcheck source=/dev/null
+               source "$file" # removing constructor style: $(basename $file .sh).init # call the file-local initialiser          
             fi
          done
-
-         # load os-specifics
-         if [ -f "$PROFILES_CONFIG_DIR/Shell/os.$(uname).sh" ] ; then
-            source "$PROFILES_CONFIG_DIR/Shell/os.$(uname).sh"
-            os.$(uname).init
-         else
-            warning No OS-specific path file "$PROFILES_CONFIG_DIR/Shell/os.$(uname).sh" found
-         fi
-         local sshCompletionList=$HOME/.ssh/completion.lst
-         [ -f $sshCompletionList ] && complete -W "$(cat $sshCompletionList)" -- ssh && complete -f -d -W "$(cat $sshCompletionList)" -- rsync
-         if [ -z $NO_loadPost ] ; then
-            loadSource post
-            for file in $HOME/.bashrc.d/*.rc ; do
-               [ "$file" = "$HOME/.bashrc.d/"'*.rc' ] && continue # in case that no file is found
-               [ -r "$file" ] && debug4 sourcing "$file" && source "$file"
-               [ -r "$file" ] || err could not read "$file"
-            done
-            for file in $HOME/.bashrc.d/*.sh ; do
-               [ "$file" = "$HOME/.bashrc.d/"'*.sh' ] && continue # in case that no file is found
-               [ -r "$file" ] && debug4 executing "$file" && bash "$file"
-               [ -r "$file" ] || err could not read "$file"
-            done
-         fi
+         
+         # load ssh and rsync completion, the completion list can be created with ssh-createCompletionList
+         local sshCompletionList="$HOME/.ssh/completion.lst"
+         [ -f $sshCompletionList ] && \
+            complete -W "$(cat $sshCompletionList)" -- ssh && \
+            complete -f -d -W "$(cat $sshCompletionList)" -- rsync
+          
+         loadSource post
+         for file in $HOME/.bashrc.d/*.rc ; do
+            [ "$file" = "$HOME/.bashrc.d/"'*.rc' ] && continue # in case that no file is found
+            [ -r "$file" ] && debug4 sourcing "$file" && source "$file"
+            [ -r "$file" ] || err could not read "$file"
+         done
+         for file in $HOME/.bashrc.d/*.sh ; do
+            [ "$file" = "$HOME/.bashrc.d/"'*.sh' ] && continue # in case that no file is found
+            [ -r "$file" ] && debug4 executing "$file" && bash "$file"
+            [ -r "$file" ] || err could not read "$file"
+         done
          ;;
       *) #echo "This is a script";;
          debug non-interactive shell
          ;;
    esac
+   debug4 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'
 }
 
-main $@
+debug "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '...............................................'
+main "$@"
+export BASH_RC_VERSION="5.0.0-rc2"
+debug BASH_RC_VERSION is $BASH_RC_VERSION
+[ ! -z $BASH_MMONRC_VERSION ] && [ $BASH_MMONRC_VERSION != $BASH_RC_VERSION ] && echo New ConfigShell bash version $BASH_RC_VERSION. 1>&2
+BASH_MMONRC_VERSION=$BASH_RC_VERSION
+debug "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'
 
 #################### EOF

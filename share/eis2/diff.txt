@@ -1,0 +1,12 @@
+-s  ::= show if files are the same
+-q  ::= just output a brief line if 2 files differ
+--color=[<<when>>]  ::= The possible values of when are “never”, “always”
+            and “auto”.  auto will use color if the output is a tty and
+            the COLORTERM environment variable is set to a non-empty string.
+
+-r  ::= recursive
+-x <<pattern>> ::=  exclude files. Patterns are matched using shell-style globbing via fnmatch(3).
+
+-i  ::= ignore case
+-w  ::= ignore all blanks. E.g., “if ( a == b )” will compare equal to “if(a==b)”.
+-b  ::= ignore trailing blanks

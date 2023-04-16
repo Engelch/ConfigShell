@@ -1,0 +1,4 @@
+
+/opt/ConfigShell/ConfigDarwin/bin-amd64/
+
+# eof

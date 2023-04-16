@@ -6,6 +6,7 @@ function setupAliases_Abbreviations
     alias a=alias
     alias cp='cp -i'
     alias rm='rm -i'
+    alias rm~=rmbak
     alias mv='mv -i'
     abbr -a -g  wh which
 
@@ -122,18 +123,22 @@ function setupPath
         # build up OSX elements
         if test (uname) = Darwin
             for dir in /opt/homebrew/bin /opt/homebrew/sbin /opt/homebrew/opt/ \
-                    /opt/homebrew/opt/gnu-getopt/bin /usr/local/opt/gnu-getopt/bin \
                     /usr/local/homebrew/bin /usr/local/homebrew/sbin \
-                    "/opt/homebrew/opt/openssl@1.1/bin" "/usr/local/opt/openssl@1.1/bin" \
                     /opt/homebrew/opt/curl/bin  /usr/local/opt/curl/bin/ /usr/local/opt/gnu-getopt/bin \
+                    /opt/homebrew/opt/gnu-getopt/bin /usr/local/opt/gnu-getopt/bin \
+                    "/opt/homebrew/opt/openssl@1.1/bin" "/usr/local/opt/openssl@1.1/bin" \
                     /opt/homebrew/opt/java/bin /usr/local/opt/java/bin /Library/Java/JavaVirtualMachines/current/bin \
                     /usr/local/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/bin \
                     "/Applications/Visual Studio Code.app/Contents/Resources/app/bin/" \
                     "/Applications/Sublime Text.app/Contents/MacOS/" \
-                    /usr/local/texlive/2022/bin/universal-darwin/ \
+                    /usr/local/texlive/2025/bin/universal-darwin/ \
+                    /usr/local/texlive/2024/bin/universal-darwin/ \
+                    /usr/local/texlive/2023/bin/universal-darwin/ \
                     ~/.rubies/*/bin \
-                    ~/.iterm2
-                fish_add_path -p "$dir"
+                    ~/.iterm2 \
+                    /opt/ConfigShell/ConfigDarwin/bin/ \
+                    /opt/ConfigShell/ConfigDarwin/bin-$(uname -m)/
+                [ -d "$dir" ] && fish_add_path -p "$dir"
             end
         end
     end
