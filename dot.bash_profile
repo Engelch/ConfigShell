@@ -168,6 +168,16 @@ function envVars() {
     export EDITOR="$VISUAL"       # bsroot has no notion about VISUAL
     export BLOCKSIZE=1K
 
+    export KUBECTL=kubectl
+    if which docker 2&>/dev/null ; then
+        export CONTAINER=docker
+        debug8 CONTAINER $CONTAINER
+    fi
+    if which podman 2&>/dev/null ; then
+        export CONTAINER=podman
+        debug8 CONTAINER $CONTAINER
+    fi
+
     export BASH_SILENCE_DEPRECATION_WARNING=1   # OSX suppress bash warning
     export LS_COLOUR='-G'
     export LSCOLORS=Exfxcxdxbxegedabagacad # change directory colour 1st letter; see man ls(1)

@@ -125,11 +125,11 @@ function cd() {
 # setAliases sets the default aliases
 function setAliases() {
    # ls aliases
-   alias la="/bin/ls    -aCF       $LS_COLOUR"
-   alias ll="/bin/ls    -lhF       $LS_COLOUR"
-   alias lla="/bin/ls   -laF       $LS_COLOUR"
-   alias lld="/bin/ls   -ldF       $LS_COLOUR"
-   alias llad="/bin/ls  -ladF      $LS_COLOUR"
+   alias la="/bin/ls    -aCF       \$LS_COLOUR"
+   alias ll="/bin/ls    -lhF       \$LS_COLOUR"
+   alias lla="/bin/ls   -laF       \$LS_COLOUR"
+   alias lld="/bin/ls   -ldF       \$LS_COLOUR"
+   alias llad="/bin/ls  -ladF      \$LS_COLOUR"
    alias ls="/bin/ls    -hCF       \$LS_COLOUR"
    alias ls-bw="LS_COLOUR=--color=none ; reset"  
    # cd aliases
@@ -144,7 +144,7 @@ function setAliases() {
    alias af='alias | ei '
    # default commands
    alias cp='cp -i'
-   alias e=egrep
+   alias e='grep -E'
    alias ei='grep -iE'
    alias eir='grep -iER'
    alias enf='env | grep -Ei '   # search the environment in case-insensitive mode
@@ -169,12 +169,18 @@ function setAliases() {
    # Networking
    alias ipi='curl https://ipinfo.io'
    alias ipi2='curl http://ipinfo.io'
+   alias ssf=ssh-grep
    alias tm='tmux new -s'  # todo check tmux commnands, currently not working, and move tmux-qul,.. to scripts if possible
+   alias tj='tmux join-pane -s'
    # X11 commands 
    alias disp0='export DISPLAY=:0'
    alias disp1='export DISPLAY=:1'
    # sw development
    alias cm=cmake
+   alias gm=gmake
+   alias k=$KUBECTL
+   alias k8=$KUBECTL
+   alias k8s=$KUBECTL
    alias m=make
 }
 

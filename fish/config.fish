@@ -10,11 +10,14 @@ function setupAliases_Abbreviations
     alias mv='mv -i'
     abbr -a -g  wh which
 
-    alias la "ls -aCF $LS_COLOUR"
-    alias ll "ls -lhF $LS_COLOUR"
-    alias lla "ls   -laF       $LS_COLOUR"
-    alias lld "ls   -ldF       $LS_COLOUR"
-    alias llad "ls  -ladF      $LS_COLOUR"
+    alias la "ls -aCF           \$LS_COLOUR"
+    alias ll "ls -lhF           \$LS_COLOUR"
+    alias lla "ls   -laF        \$LS_COLOUR"
+    alias lld "ls   -ldF        \$LS_COLOUR"
+    alias llad "ls  -ladF       \$LS_COLOUR"
+    alias ls    "/bin/ls    -hCF       \$LS_COLOUR"
+    alias ls-bw "set -g -x LS_COLOUR '--color=none' ; reset"
+    set -g -x LS_COLOUR '--color=auto'
 
     abbr -a -g cd.. 'cd ..'
     alias ..='cd ..'
@@ -22,8 +25,7 @@ function setupAliases_Abbreviations
     alias .3='cd ../../..'
     alias .4='cd ../../../..'
     alias .5='cd ../../../../..'
-    alias .6='cd ../../../../../..'
-    alias .7='cd ../../../../../../..'
+
     alias brmd='[ -f .DS_Store ] &&  /bin/rm -f .DS_Store ; set -l a $PWD ; cd .. ; rmdir "$a"; set -e a'
     alias mcd=mkcd
     function mkcd
@@ -43,7 +45,6 @@ function setupAliases_Abbreviations
     abbr -a -g ei 'grep -Ei'
     abbr -a -g eir 'grep -EiR'
     abbr -a -g er 'grep -ER'
-    abbr -a -g f 'grep -F'
 
     abbr -a -g enf 'env | grep -Ei'
 
@@ -60,14 +61,11 @@ function setupAliases_Abbreviations
     abbr -a -g proc 'ps -ef | grep -Ei'
 
     abbr -a -g ipi 'curl https://ipinfo.io'
-    abbr -a -g pkgU pkgUpgrade          # pkgU was old name for pkgUpgrade
-    abbr -a -g osUpgrade pkgUpgrade     # create intuitive names for pkgUpgrade
+
     abbr -a -g rl 'source ~/.config/fish/config.fish'
     abbr -a -g ssf ssh-grep
 
     abbr -a -g tm 'tmux new -s'
-    abbr -a -g tw 'tmux new-window -n'
-    alias tn=tw
     abbr -a -g tj 'tmux join-pane -s'
     abbr -a -g tmux-prd 'tmux select-pane -P "fg=white,bg=color052"'
     abbr -a -g prd 'tmux select-pane -P "fg=white,bg=color052"'
@@ -97,12 +95,6 @@ function setupAliases_Abbreviations
     abbr -a -g k        $KUBECTL
     abbr -a -g k8       $KUBECTL
     abbr -a -g k8s      $KUBECTL
-
-    # golang-specific commands
-    abbr  -a -g gode goexec-debug
-    abbr  -a -g gore goexec-release
-    abbr  -a -g godue goexec-upx
-
 end
 
 function setupPath
@@ -161,26 +153,35 @@ function optSourceFile
     source $argv[1]
 end
 
-# function git_prompt_status
-#     if [ (git rev-parse --is-inside-work-tree 2>&1 | grep fatal | wc -l) -eq 0  ]
-#         set -l _gitBranch (git status -s -b | head -1 | sed 's/^##.//')
-#         set -l _gitStatus (git status -s -b | tail -n +2 | sed 's/^\(..\).*/\1/' | sort | uniq | tr "\n" " " | sed -e 's/ //g' -e 's/??/?/' -e 's/^[ ]*//')
-#         echo $_gitStatus $_gitBranch
-#     end
-# end
+ function git_prompt_status
+     if [ (git rev-parse --is-inside-work-tree 2>&1 | grep fatal | wc -l) -eq 0  ]
+         set -l _gitBranch (git status -s -b | head -1 | sed 's/^##.//')
+         set -l _gitStatus (git status -s -b | tail -n +2 | sed 's/^\(..\).*/\1/' | sort | uniq | tr "\n" " " | sed -e 's/ //g' -e 's/??/?/' -e 's/^[ ]*//')
+         echo $_gitStatus $_gitBranch
+     end
+ end
 
-# function fish_cloud_prompt
-#     test -n "$AWS_PROFILE" && echo " <AWS:$AWS_PROFILE> "
-# end
-#
-# function fish_vcs_prompt
-#     set_color yellow
-#     set -l out (git_prompt_status or fish_hg_prompt $argv)
-#     test -n "$out" && echo " ($out)"  # use or own bash way to show git status
-#     set_color magenta
-#     fish_cloud_prompt   # not nice to integrate it here but changes are minimal than changing the complete prompt mechanism
-#     set_color normal
-# end
+ function fish_cloud_prompt
+     test -n "$AWS_PROFILE" && echo " <AWS:$AWS_PROFILE> "
+ end
+
+ function fish_vcs_prompt
+     set_color yellow
+     set -l out (git_prompt_status or fish_hg_prompt $argv)
+     test -n "$out" && echo " ($out)"  # use or own bash way to show git status
+     set_color magenta
+     fish_cloud_prompt   # not nice to integrate it here but changes are minimal than changing the complete prompt mechanism
+     set_color normal
+ end
+
+function fish_prompt
+    command -v watson &>/dev/null && alias watson 'echo >/dev/null'
+    printf '%s@%s · %s%s%s · %s%s%s · %s%s%s · %s%s%s\n>' $USER $hostname \
+        (set_color green) AWS_PROFILE:$AWS_PROFILE (set_color normal) \
+        (set_color magenta) (watson status) (set_color normal) \
+        (set_color yellow) (pwd) (set_color normal) \
+        (set_color red) (git_prompt_status) (set_color normal)
+end
 
 function setupCompletion
     if test -r ~/.ssh/completion.lst
@@ -230,9 +231,9 @@ function setupExportVars
     set -g -x VISUAL vim
     set -g -x EDITOR vim       # bsroot has no notion about VISUAL
     set -g -x BLOCKSIZE 1K
-    set -g -x FISH_RC_VERSION "1.19.0"
+    set -g -x FISH_RC_VERSION "2.0.0-rc1"
     if test -n "$_current_FISH_RC_VERSION" -a "$FISH_RC_VERSION" != "$_current_FISH_RC_VERSION"
-        echo new FISH_RC_VERSION "$FISH_RC_VERSION"
+        echo New FISH_RC_VERSION "$FISH_RC_VERSION"
     end
     set -g _current_FISH_RC_VERSION "$FISH_RC_VERSION"
 end
@@ -253,14 +254,14 @@ if status is-interactive
     #for file in $HOME/.config/fish/conf.d/*.fish
     #    optSourceFile $file
     #end
-    set -g theme_color_scheme nord
-    set -g theme_display_date yes
-    set -g theme_display_jobs_verbose yes
-    set -g theme_display_k8s_namespace yes
-    set -g theme_newline_cursor yes
-    set -g theme_display_ruby yes
-    set -g theme_display_node yes
-    set -g theme_show_exit_status yes
+#    set -g theme_color_scheme nord
+#    set -g theme_display_date yes
+#    set -g theme_display_jobs_verbose yes
+#    set -g theme_display_k8s_namespace yes
+#    set -g theme_newline_cursor yes
+#    set -g theme_display_ruby yes
+#    set -g theme_display_node yes
+#    set -g theme_show_exit_status yes
     for file in $HOME/.config/fish/conf.d/*.sh
         bash $file
     end
