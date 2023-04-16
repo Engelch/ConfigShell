@@ -4,7 +4,6 @@ function setupLinux() {          # Linux-specific settings of aliases and shell-
    debug8 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '...............................................'   
    eval $(dircolors)
    export LS_COLOUR='--color=auto'
-   common.aliases.ls             # realias ls commands to reflect colour mode
    alias proc='ps -ef | grep -i '
    alias o=xdg-open
    alias open=o
