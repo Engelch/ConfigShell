@@ -231,7 +231,7 @@ function setupExportVars
     set -g -x VISUAL vim
     set -g -x EDITOR vim       # bsroot has no notion about VISUAL
     set -g -x BLOCKSIZE 1K
-    set -g -x FISH_RC_VERSION "2.0.0-rc2"
+    set -g -x FISH_RC_VERSION "5.0.0-rc3"
     if test -n "$_current_FISH_RC_VERSION" -a "$FISH_RC_VERSION" != "$_current_FISH_RC_VERSION"
         echo New FISH_RC_VERSION "$FISH_RC_VERSION"
     end
@@ -247,21 +247,8 @@ end
 
 # main code
 if status is-interactive
-    # Commands to run in interactive sessions can go here
-
     optSourceFile ~/.config/fish/pre.fish
-    #  COMPATIBILITY WITH OH-MY-FISH
-    #for file in $HOME/.config/fish/conf.d/*.fish
-    #    optSourceFile $file
-    #end
-#    set -g theme_color_scheme nord
-#    set -g theme_display_date yes
-#    set -g theme_display_jobs_verbose yes
-#    set -g theme_display_k8s_namespace yes
-#    set -g theme_newline_cursor yes
-#    set -g theme_display_ruby yes
-#    set -g theme_display_node yes
-#    set -g theme_show_exit_status yes
+
     for file in $HOME/.config/fish/conf.d/*.sh
         bash $file
     end
