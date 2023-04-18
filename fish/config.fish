@@ -129,7 +129,7 @@ function setupPath
                     ~/.rubies/*/bin \
                     ~/.iterm2 \
                     /opt/ConfigShell/ConfigDarwin/bin/ \
-                    /opt/ConfigShell/ConfigDarwin/bin-$(uname -m)/
+                    /opt/ConfigShell/ConfigDarwin/bin-(uname -m)/
                 [ -d "$dir" ] && fish_add_path -p "$dir"
             end
         end
@@ -175,7 +175,7 @@ end
  end
 
 function fish_prompt
-    command -v watson &>/dev/null && alias watson 'echo >/dev/null'
+    command -v watson &>/dev/null || alias watson 'echo >/dev/null'
     printf '%s@%s · %s%s%s · %s%s%s · %s%s%s · %s%s%s\n>' $USER $hostname \
         (set_color green) AWS_PROFILE:$AWS_PROFILE (set_color normal) \
         (set_color magenta) (watson status) (set_color normal) \
@@ -231,7 +231,7 @@ function setupExportVars
     set -g -x VISUAL vim
     set -g -x EDITOR vim       # bsroot has no notion about VISUAL
     set -g -x BLOCKSIZE 1K
-    set -g -x FISH_RC_VERSION "2.0.0-rc1"
+    set -g -x FISH_RC_VERSION "2.0.0-rc2"
     if test -n "$_current_FISH_RC_VERSION" -a "$FISH_RC_VERSION" != "$_current_FISH_RC_VERSION"
         echo New FISH_RC_VERSION "$FISH_RC_VERSION"
     end
