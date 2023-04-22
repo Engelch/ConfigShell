@@ -147,9 +147,13 @@ function setAliases() {
    alias e='grep -E'
    alias ei='grep -iE'
    alias eir='grep -iER'
+   alias er='grep -ER'
+
    alias enf='env | grep -Ei '   # search the environment in case-insensitive mode
+
    alias fin='find . -name'      # search for a filename
    alias fini='find . -iname'    # search for a filename in case-insensitive mode
+
    alias h=history
    alias hf='history | grep -Ei'
    alias j=jobs
@@ -161,14 +165,11 @@ function setAliases() {
    alias po=popd
    alias pu='pushd .'
    alias rl="source ~/.bash_profile"
-   alias rl-debug="debugSet; source ~/.bash_profile; debugUnset"
-   alias rlFull=rl-debug            # backward compatibility
+   alias rlDebug="debugSet; source ~/.bash_profile; debugUnset"
+   alias rlFull=rlDebug            # backward compatibility
    alias rm='rm -i'           # life assurance
    alias rm~=rmbak            # rmbak is now a command in ConfigShell
    alias wh=which
-   # Networking
-   alias ipi='curl https://ipinfo.io'
-   alias ipi2='curl http://ipinfo.io'
    alias ssf=ssh-grep
    alias tm='tmux new -s'  # todo check tmux commnands, currently not working, and move tmux-qul,.. to scripts if possible
    alias tj='tmux join-pane -s'

@@ -15,11 +15,11 @@ function errorExit()    { EXITCODE=$1 ; shift; error "$@" ; exit "${EXITCODE}"; 
 declare -r version=0.3.0
 _uname=$(uname)
 if [[ ${_uname} == Darwin ]] ; then
-   echo homebrew........................................  1>&2
+   echo homebrew....................................................................  1>&2
    brew update && brew upgrade && brew upgrade --cask --greedy && \
       brew autoremove && \
       brew cleanup # casks are also updated to today's brew upgrade && brew cu -ay # cu := cask upgrade
-   echo Google Cloud SDK................................  1>&2
+   echo Google Cloud SDK....................................................................  1>&2
    if command -v gcloud > /dev/null 2>&1 ;then
       currentGCPSDK=$(gcloud components list 2>&1 | \
          grep -E 'Your current Cloud SDK version' | awk '{ print $NF }')
@@ -31,7 +31,7 @@ if [[ ${_uname} == Darwin ]] ; then
    else
       warning gcloud does not seem to be installed ;
    fi
-   echo macTeX........................................... 1>&2
+   echo macTeX.................................................................... 1>&2
    if command -v tlmgr > /dev/null 2>&1 ; then tlmgr --self --all update
    else warning mactex does not seem to be installed ;fi
    touch ~/.pkgUpgrade

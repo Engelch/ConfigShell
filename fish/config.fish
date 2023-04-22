@@ -1,4 +1,21 @@
+function err
+    echo $argv 1>&2
+end
+
+function debug
+    test "$DEBUG_Flag" = "TRUE"; and echo 1>&2 "DEBUG: $argv"
+end
+
+function debugSet
+    set -g DEBUG_Flag TRUE
+end
+
+function debugUnset
+    set -e DEBUG_Flag
+end 
+
 function setupAliases_Abbreviations
+    debug in setupAliases_Abbreviations
     set -g -x GREP_OPTIONS "--color=auto"
     abbr -a -g l less
     alias j=jobs
@@ -10,14 +27,14 @@ function setupAliases_Abbreviations
     alias mv='mv -i'
     abbr -a -g  wh which
 
+    set -g -x LS_COLOUR '--color'
     alias la "ls -aCF           \$LS_COLOUR"
     alias ll "ls -lhF           \$LS_COLOUR"
     alias lla "ls   -laF        \$LS_COLOUR"
     alias lld "ls   -ldF        \$LS_COLOUR"
     alias llad "ls  -ladF       \$LS_COLOUR"
     alias ls    "/bin/ls    -hCF       \$LS_COLOUR"
-    alias ls-bw "set -g -x LS_COLOUR '--color=none' ; reset"
-    set -g -x LS_COLOUR '--color=auto'
+    alias ls-bw "set -g -x LS_COLOUR '--color=none'"
 
     abbr -a -g cd.. 'cd ..'
     alias ..='cd ..'
@@ -25,7 +42,6 @@ function setupAliases_Abbreviations
     alias .3='cd ../../..'
     alias .4='cd ../../../..'
     alias .5='cd ../../../../..'
-
     alias brmd='[ -f .DS_Store ] &&  /bin/rm -f .DS_Store ; set -l a $PWD ; cd .. ; rmdir "$a"; set -e a'
     alias mcd=mkcd
     function mkcd
@@ -60,96 +76,79 @@ function setupAliases_Abbreviations
     abbr -a -g hs 'history search --reverse --contains' # new command from fish. If it is good, it shall replace/become hf
     abbr -a -g proc 'ps -ef | grep -Ei'
 
-    abbr -a -g ipi 'curl https://ipinfo.io'
-
     abbr -a -g rl 'source ~/.config/fish/config.fish'
+    abbr -a -g rlDebug 'debugSet ; source ~/.config/fish/config.fish ; debugUnset'
+    alias rlFull=rlDebug
     abbr -a -g ssf ssh-grep
 
     abbr -a -g tm 'tmux new -s'
     abbr -a -g tj 'tmux join-pane -s'
-    abbr -a -g tmux-prd 'tmux select-pane -P "fg=white,bg=color052"'
-    abbr -a -g prd 'tmux select-pane -P "fg=white,bg=color052"'
-    abbr -a -g tmux-prd2 'tmux select-pane -P "fg=red,bg=color016"'
-    abbr -a -g prd2 'tmux select-pane -P "fg=red,bg=color016"'
-    abbr -a -g tmux-qul 'tmux select-pane -P "fg=black,bg=color179"'
-    abbr -a -g qul 'tmux select-pane -P "fg=black,bg=color179"'
-    abbr -a -g tmux-dvl 'tmux select-pane -P "fg=white,bg=color017"'
-    abbr -a -g dvl 'tmux select-pane -P "fg=white,bg=color017"'
-    abbr -a -g tmux-loc 'tmux select-pane -P "fg=white,bg=color237"'
-    abbr -a -g loc 'tmux select-pane -P "fg=white,bg=color237"'
-    abbr -a -g tmux-whbl 'tmux select-pane -P "fg=white,bg=black"'
-    abbr -a -g whbl 'tmux select-pane -P "fg=white,bg=black"'
-    abbr -a -g tmux-blwh 'tmux select-pane -P "fg=black,bg=white"'
-    abbr -a -g blwh 'tmux select-pane -P "fg=black,bg=white"'
 
     set -g -x KUBECTL kubectl
-    if which docker 2&>/dev/null
-        set -g -x CONTAINER docker
-        #echo set container $CONTAINER
-    end
-    if which podman 2&>/dev/null
-        set -g -x CONTAINER podman
-        #echo set container $CONTAINER
-    end
+    command -q docker ; and set -g -x CONTAINER docker
+    command -q podman ; and set -g -x CONTAINER podman
+    debug "  set CONTAINER $CONTAINER"
 
     abbr -a -g k        $KUBECTL
     abbr -a -g k8       $KUBECTL
     abbr -a -g k8s      $KUBECTL
 end
 
-function setupPath
-    if test (id -u) -eq 0
-        set fish_user_paths /bin /usr/bin/ /sbin /usr/sbin /usr/local/bin /usr/local/sbin
-    else
-        set fish_user_paths /bin /usr/bin/ /sbin /usr/sbin /usr/local/bin /usr/local/sbin
-        # build up elements to come before default ones
-        for dir in $HOME/bin $HOME/.cargo/bin $HOME/go/bin /opt/ConfigShell/bin $HOME/Library/Android/sdk/platform-tools /usr/local/share/dotnet /usr/local/go/bin \
-                ~/.local/share/JetBrains/Toolbox/scripts/ \
-                $HOME/.dotnet/tools $HOME/.rvm/bin /usr/local/google-cloud-sdk/ $HOME/google-cloud-sdk/ \
-                $HOME/.pub-cache/bin /opt/flutter/bin $HOME/.linkerd2/bin $HOME/google-cloud-sdk/bin \
-                /usr/local/google-cloud-sdk/bin \
-                /opt/android-studio/bin /opt/1Password/ /opt/Xmind/ \
-                /opt/ConfigShell/Config(uname)/bin_(uname)-(uname -m)
-            fish_add_path -p "$dir"
-        end
-        # build up OSX elements
-        if test (uname) = Darwin
-            for dir in /opt/homebrew/bin /opt/homebrew/sbin /opt/homebrew/opt/ \
-                    /usr/local/homebrew/bin /usr/local/homebrew/sbin \
-                    /opt/homebrew/opt/curl/bin  /usr/local/opt/curl/bin/ /usr/local/opt/gnu-getopt/bin \
-                    /opt/homebrew/opt/gnu-getopt/bin /usr/local/opt/gnu-getopt/bin \
-                    "/opt/homebrew/opt/openssl@1.1/bin" "/usr/local/opt/openssl@1.1/bin" \
-                    /opt/homebrew/opt/java/bin /usr/local/opt/java/bin /Library/Java/JavaVirtualMachines/current/bin \
-                    /usr/local/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/bin \
-                    "/Applications/Visual Studio Code.app/Contents/Resources/app/bin/" \
-                    "/Applications/Sublime Text.app/Contents/MacOS/" \
-                    /usr/local/texlive/2025/bin/universal-darwin/ \
-                    /usr/local/texlive/2024/bin/universal-darwin/ \
-                    /usr/local/texlive/2023/bin/universal-darwin/ \
-                    ~/.rubies/*/bin \
-                    ~/.iterm2 \
-                    /opt/ConfigShell/ConfigDarwin/bin/ \
-                    /opt/ConfigShell/ConfigDarwin/bin-(uname -m)/
-                [ -d "$dir" ] && fish_add_path -p "$dir"
-            end
+function build_path_by_config_files
+    debug in build_path_by_config_files
+    for pathfile in \
+            $PROFILES_CONFIG_DIR/Shell/path.prepend.txt \
+            $PROFILES_CONFIG_DIR/Shell/path.(uname).prepend.txt \
+            $PROFILES_CONFIG_DIR/Shell/path.(uname).(uname -m).prepend.txt \
+            $PROFILES_CONFIG_DIR/Shell/path.append.txt \
+            $PROFILES_CONFIG_DIR/Shell/path.(uname).append.txt \
+            $PROFILES_CONFIG_DIR/Shell/path.(uname).(uname -m).append.txt
+        if test -r "$pathfile"
+            debug "  Pathfile $pathfile existing"
+            grep -v '^$' "$pathfile" | while read -l line 
+                set line (echo "$line" | xargs)
+                if test -d "$line"
+                   if string match -r '\.prepend\.txt$' "$pathfile" >/dev/null
+                       debug "    Prepending path with $line"
+                       fish_add_path -p "$line"
+                   else if string match -r '\.append\.txt$' "$pathfile" >/dev/null
+                       debug "    Appending path with $line"
+                       fish_add_path -a "$line"
+                   else
+                       echo 1>&2 ERROR path file not matching specifications
+                   end
+                else
+                   debug "    NOT found $line on system"
+                end
+           end
+        else
+            debug "  NOT existing Pathfile $pathfile"
         end
     end
 end
-
-function err
-    echo $argv 1>&2
+    
+function setupPath
+    debug in setupPath
+    set -g -x UID (id -u)
+    if test "$UID" -eq 0
+        debug "  UID is 0, root path setup"
+        set fish_user_paths /bin /usr/bin/ /sbin /usr/sbin  # no /usr/local,... for root
+    else
+        debug "  UID is $UID, non root path setup"
+        set fish_user_paths /bin /usr/bin/ /sbin /usr/sbin /usr/local/bin /usr/local/sbin
+        build_path_by_config_files
+    end
 end
 
 function optSourceFile
+    debug in optSourceFile $argv
     if ! count $argv >/dev/null         #err no argument supplied to optSourceFile
-        return
-    end
-    if ! test -f $argv[1]                #err supplied argument not a plain file
         return
     end
     if ! test -r $argv[1]               #err supplied plain file is not readable
         return
     end
+    debug "  sourcing $argv[1]"
     source $argv[1]
 end
 
@@ -161,104 +160,107 @@ end
      end
  end
 
- function fish_cloud_prompt
-     test -n "$AWS_PROFILE" && echo " <AWS:$AWS_PROFILE> "
- end
-
- function fish_vcs_prompt
-     set_color yellow
-     set -l out (git_prompt_status or fish_hg_prompt $argv)
-     test -n "$out" && echo " ($out)"  # use or own bash way to show git status
-     set_color magenta
-     fish_cloud_prompt   # not nice to integrate it here but changes are minimal than changing the complete prompt mechanism
-     set_color normal
- end
-
 function fish_prompt
-    command -v watson &>/dev/null || alias watson 'echo >/dev/null'
-    printf '%s@%s · %s%s%s · %s%s%s · %s%s%s · %s%s%s\n>' $USER $hostname \
+    set -l res $status
+    printf '[%s] · %s@%s · %s%s%s · %s%s%s · %s%s%s · %s%s%s\n>' $res $USER $hostname \
         (set_color green) AWS_PROFILE:$AWS_PROFILE (set_color normal) \
         (set_color magenta) (watson status) (set_color normal) \
-        (set_color yellow) (pwd) (set_color normal) \
-        (set_color red) (git_prompt_status) (set_color normal)
+        (set_color red) (git_prompt_status) (set_color normal) \
+        (set_color yellow) (pwd) (set_color normal) 
 end
 
 function setupCompletion
+    debug in setupCompletion
     if test -r ~/.ssh/completion.lst
         complete -F -c rsync -a ~/.ssh/completion.lst
-        # complete -F -c scp -a ~/.ssh/completion.lst       # working from scratch. there seems to be more logic behind it
         complete -x -c ssh -a ~/.ssh/completion.lst
     end
 end
 
-function err
-    echo $argv 1>&2
-end
-
 function start_ssh_agent
-   # start the ssh-agent and store the variable for ssh-add in a file for next shells
-   set -l ssh_agent_output (ssh-agent)
-   set -e -g SSH_AUTH_SOCK
-   set -x -U SSH_AUTH_SOCK (echo $ssh_agent_output | grep SSH_AUTH_SOCK | sed 's/^.*SSH_AUTH_SOCK=//' | sed 's/;.*//')
-   ssh-add
+    debug in start_ssh_agent
+    set -l ssh_agent_output (ssh-agent)    # start the ssh-agent and store the variable for ssh-add in a file for next shells
+    set -e -g SSH_AUTH_SOCK
+    set -x -U SSH_AUTH_SOCK (echo $ssh_agent_output | grep SSH_AUTH_SOCK | sed 's/^.*SSH_AUTH_SOCK=//' | sed 's/;.*//')
+    ssh-add
 end
 
 function setupSsh
+    debug in setupSsh
     [ -n "$SSH_AUTH_SOCK" ] && [ -n "$SSH_TTY" ] && return
 
     ssh-add -l 2>/dev/null 1>&2 ; set -l res $status
     switch $res
-    case 0      # ssh-agent loaded, keys loaded
-        #echo agent found, keys loaded
+    case 0
+        debug "  ssh agent found, keys loaded (status 0)"
         return
-    case 1      # ssh-agent loaded, but no identities loaded
-        #echo found agent status 1
+    case 1
+        debug "  ssh-agent loaded, but no identities loaded (status 1)"
         ssh-add
-    case 2      # ssh-agent could not be contacted, starting
-        #echo no agent found
+    case 2
+        debug "  ssh-agent could not be contacted, starting (status 2)"
         start_ssh_agent $ssh_auth_sock_file
     case '*'
-        err setupSsh unknown answer from ssh-add $status
+        debug "  ssh-agent unknown return status ($res)"
+        err "setupSsh unknown answer from ssh-add $res"
     end
 end
 
+function hadmRealUser
+    debug in hadmRealUser
+    if test (id -un) = "hadm" ; and test -z "$HADM_LAST_LOGIN_FINGERPRINT" ; and command -q journalctl
+        set -g HADM_LAST_LOGIN_FINGERPRINT (sudo journalctl -r -u ssh -g 'Accepted publickey' -n 1 -q 2>&1 | awk '{ print $NF }')
+        debug "  HADM_LAST_LOGIN_FINGERPRINT $HADM_LAST_LOGIN_FINGERPRINT"
+        debug "  SSH_CLIENT $SSH_CLIENT"
+        if ! test -z "$SSH_CLIENT"
+            for file in ~/.ssh/*.pub
+                if test (ssh-keygen -lf $file | grep -c $HADM_LAST_LOGIN_FINGERPRINT) -eq 1
+                    set -x -g HADM_LAST_LOGIN_USER (basename $file .pub)
+                    logger "You are user $HADM_LAST_LOGIN_USER logging in as hadm. Welcome."
+                    echo You are user "$HADM_LAST_LOGIN_USER" logging in as hadm. Welcome.
+                    break
+                end # if
+            end # for
+        end # if
+    end # if test (id -un)...        
+end
+
 function setupExportVars
+    debug in setupExportVars
     umask 0022
     set -g -x LESS '-iR'
     set -g -x RSYNC_FLAGS "-rltHpDvu" # Windows FS updates file-times only every 2nd second
     set -g -x RSYNC_Add_Windows "--modfiy-window=1" # Windows FS updates file-times only every 2nd second
-    set -g -x RSYNC_Add_RemoveSLinks "--copy-links"  # convert links into files
+    set -g -x RSYNC_Add_RemoveSLinks "--copy-links"  # convert links into fi    les
     set -g -x VISUAL vim
     set -g -x EDITOR vim       # bsroot has no notion about VISUAL
     set -g -x BLOCKSIZE 1K
-    set -g -x FISH_RC_VERSION "5.0.0-rc3"
+    set -g -x PROFILES_CONFIG_DIR /opt/ConfigShell
+    set -g -x FISH_RC_VERSION "5.0.0-rc4"
     if test -n "$_current_FISH_RC_VERSION" -a "$FISH_RC_VERSION" != "$_current_FISH_RC_VERSION"
         echo New FISH_RC_VERSION "$FISH_RC_VERSION"
     end
     set -g _current_FISH_RC_VERSION "$FISH_RC_VERSION"
 end
 
-function execIfExisting
-    for file in $argv
-        test -f $file && bash $file
-    end
-end
-
-
-# main code
-if status is-interactive
+if status is-interactive # main code
+    debug main - is-interactive case
     optSourceFile ~/.config/fish/pre.fish
 
-    for file in $HOME/.config/fish/conf.d/*.sh
-        bash $file
+    for file in $HOME/.config/fish/conf.d/*.sh $HOME/.bashrc.d/*.sh
+        debug "  executing $file"
+        command -q bash ; and bash $file
     end
     setupExportVars
+    command -v watson &>/dev/null ; or alias watson 'echo >/dev/null' # required for setupPath
+    set -g fish_greeting 'Welcome to the ConfigShell fish setup'
     setupPath
     setupAliases_Abbreviations
     setupCompletion
     setupSsh
 
     optSourceFile ~/.config/fish/post.fish
+    hadmRealUser
 end
 
 # EOF
