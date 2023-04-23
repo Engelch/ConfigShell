@@ -118,8 +118,11 @@ function loadSource() {
 }
 
 # change default cd behaviour
-function cd() {
-   builtin cd "$1" && ( [ -f 00DIR.txt ] && cat 00DIR.txt ; [ -r 00DIR.sh ] && /usr/bin/env bash 00DIR.sh )
+function cd() {   # cd "$1" does not return to $HOME, if the 1st argument is given, but empty
+   [ -z "$1" ] && builtin cd
+   [ -n "$1" ] && builtin cd "$1"
+   [ -f 00DIR.txt ] && cat 00DIR.txt
+   [ -r 00DIR.sh ] && /usr/bin/env bash 00DIR.sh
 }
 
 # setAliases sets the default aliases
@@ -131,7 +134,7 @@ function setAliases() {
    alias lld="/bin/ls   -ldF       \$LS_COLOUR"
    alias llad="/bin/ls  -ladF      \$LS_COLOUR"
    alias ls="/bin/ls    -hCF       \$LS_COLOUR"
-   alias ls-bw="LS_COLOUR=--color=none ; reset"  
+   alias ls-bw="LS_COLOUR=--color=none"  
    # cd aliases
    alias ..='cd ..'
    alias .2='cd ../..'
@@ -311,7 +314,7 @@ function main() {
 
 debug "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '...............................................'
 main "$@"
-export BASH_RC_VERSION="5.0.1"
+export BASH_RC_VERSION="5.0.4"
 debug BASH_RC_VERSION is $BASH_RC_VERSION
 [ ! -z $BASH_MMONRC_VERSION ] && [ $BASH_MMONRC_VERSION != $BASH_RC_VERSION ] && echo New ConfigShell bash version $BASH_RC_VERSION. 1>&2
 BASH_MMONRC_VERSION=$BASH_RC_VERSION

@@ -106,7 +106,7 @@ function build_path_by_config_files
         if test -r "$pathfile"
             debug "  Pathfile $pathfile existing"
             grep -v '^$' "$pathfile" | while read -l line 
-                set line (echo "$line" | xargs)
+                set line (echo "$line" | xargs | sed -e "s,^~,$HOME," | sed -e "s,^\$HOME,$HOME,")
                 if test -d "$line"
                    if string match -r '\.prepend\.txt$' "$pathfile" >/dev/null
                        debug "    Prepending path with $line"
