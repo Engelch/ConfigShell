@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+version=1.1.0
 flagFile=
 
 function isOlderThanHours() {
@@ -33,7 +34,7 @@ function conditionalUpdateGitRepo() {
             touch $flagFile
             cd $OLDPWD
         else 
-            echo NOT upgrading
+            echo NOT trying to upgrade
             res=0
         fi
     else
@@ -50,6 +51,7 @@ function conditionalUpdateGitRepo() {
 function main() {
     # update configShell
     local res
+    if [ "$1" = '-V' ] || [ "$1" = '--version' ] ; then echo $version ; exit 1 ; fi
     if [ ! -z "$1" ] ; then
         res=0
         for file in $* ; do
