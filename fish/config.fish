@@ -26,12 +26,8 @@ function setupAliases_Abbreviations
     alias mv='mv -i'
     abbr -a -g  wh which
 
+    # ls aliases, all others as scripts in /opt/ConfigShell/bin
     set -g -x LS_COLOUR '--color'
-    alias la "ls -aCF           \$LS_COLOUR" # evaluate LS_COLOUR every time ⇒ \ in front of it
-    alias ll "ls -lhF           \$LS_COLOUR"
-    alias lla "ls   -laF        \$LS_COLOUR"
-    alias lld "ls   -ldF        \$LS_COLOUR"
-    alias llad "ls  -ladF       \$LS_COLOUR"
     alias ls    "/bin/ls    -hCF       \$LS_COLOUR"
     alias ls-bw "set -g -x LS_COLOUR '--color=none'"
 
@@ -231,7 +227,7 @@ function setupExportVars
     set -g -x EDITOR vim       # bsroot has no notion about VISUAL
     set -g -x BLOCKSIZE 1K
     set -g -x PROFILES_CONFIG_DIR /opt/ConfigShell
-    set -g -x FISH_RC_VERSION "5.0.0-rc4"
+    set -g -x FISH_RC_VERSION "5.0.0-rc5"
     if test -n "$_current_FISH_RC_VERSION" -a "$FISH_RC_VERSION" != "$_current_FISH_RC_VERSION"
         echo New FISH_RC_VERSION "$FISH_RC_VERSION"
     end

@@ -127,14 +127,9 @@ function cd() {   # cd "$1" does not return to $HOME, if the 1st argument is giv
 
 # setAliases sets the default aliases
 function setAliases() {
-   # ls aliases
-   alias la="/bin/ls    -aCF       \$LS_COLOUR"
-   alias ll="/bin/ls    -lhF       \$LS_COLOUR"
-   alias lla="/bin/ls   -laF       \$LS_COLOUR"
-   alias lld="/bin/ls   -ldF       \$LS_COLOUR"
-   alias llad="/bin/ls  -ladF      \$LS_COLOUR"
+   # ls aliases, all others as scripts in /opt/ConfigShell/bin
    alias ls="/bin/ls    -hCF       \$LS_COLOUR"
-   alias ls-bw="LS_COLOUR=--color=none"  
+   alias ls-bw="export LS_COLOUR=--color=none"
    # cd aliases
    alias ..='cd ..'
    alias .2='cd ../..'
@@ -310,7 +305,7 @@ function main() {
 
 debug "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '...............................................'
 main "$@"
-export BASH_RC_VERSION="5.0.4"
+export BASH_RC_VERSION="5.0.5"
 debug BASH_RC_VERSION is $BASH_RC_VERSION
 [ ! -z $BASH_MMONRC_VERSION ] && [ $BASH_MMONRC_VERSION != $BASH_RC_VERSION ] && echo New ConfigShell bash version $BASH_RC_VERSION. 1>&2
 BASH_MMONRC_VERSION=$BASH_RC_VERSION

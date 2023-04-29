@@ -1,0 +1,3 @@
+#!/usr/bin/env bash --norc --noprofile
+
+ls -aCF "$LS_COLOUR" "$@"
