@@ -23,12 +23,11 @@ function setupAliases_Abbreviations
     alias a=alias
     alias cp='cp -i'
     alias rm='rm -i'
-    alias rm~=rmbak
     alias mv='mv -i'
     abbr -a -g  wh which
 
     set -g -x LS_COLOUR '--color'
-    alias la "ls -aCF           \$LS_COLOUR"
+    alias la "ls -aCF           \$LS_COLOUR" # evaluate LS_COLOUR every time ⇒ \ in front of it
     alias ll "ls -lhF           \$LS_COLOUR"
     alias lla "ls   -laF        \$LS_COLOUR"
     alias lld "ls   -ldF        \$LS_COLOUR"
@@ -49,10 +48,6 @@ function setupAliases_Abbreviations
     end
     alias po=popd
     alias pu='pushd .'
-
-    abbr -a -g cm cmake
-    abbr -a -g gm gmake
-    abbr -a -g m make
 
     alias disp0='export DISPLAY=:0'
     alias disp1='export DISPLAY=:1'

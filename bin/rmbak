@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
+#
+
 
 find . -name \*~    -print -exec /bin/rm {} \; 
 find . -name \*.bak -print -exec /bin/rm {} \;
+[ "$(pwd)" = "/opt/ConfigShell/bin" ] &&  echo recreating rm~ && ln -s rmbak rm~ 
+
+# eof

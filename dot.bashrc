@@ -171,7 +171,6 @@ function setAliases() {
    alias rlDebug="debugSet; source ~/.bash_profile; debugUnset"
    alias rlFull=rlDebug            # backward compatibility
    alias rm='rm -i'           # life assurance
-   alias rm~=rmbak            # rmbak is now a command in ConfigShell
    alias wh=which
    alias ssf=ssh-grep
    alias tm='tmux new -s'  # todo check tmux commnands, currently not working, and move tmux-qul,.. to scripts if possible
@@ -180,12 +179,9 @@ function setAliases() {
    alias disp0='export DISPLAY=:0'
    alias disp1='export DISPLAY=:1'
    # sw development
-   alias cm=cmake
-   alias gm=gmake
    alias k=$KUBECTL
    alias k8=$KUBECTL
    alias k8s=$KUBECTL
-   alias m=make
 }
 
 # setHistFileUserShell: largely simplified history file management
