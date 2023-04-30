@@ -1,10 +1,8 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2155 disable=SC2012 disable=SC2153
 
-export DebugFlag=${DebugFlag:-FALSE}
-
 ######################################
-# Skeleton functions, considered RO. v0.5.0
+# Skeleton functions, considered RO. v1.0.0
 
 # so helps to write a message in reverse mode
 function so()
@@ -12,14 +10,14 @@ function so()
 # in reverse video mode. This is the other way, not using escape sequences
 {
    [ "$1" != on ] && [ "$1" != off ] && 1>&2 echo "so: unsupported option $1" && return
-    if [ "$TERM" = xterm ] || [ "$TERM" = vt100 ] || [ "$TERM" = xterm-256color ] || [ "$TERM" = screen ] ; then
-      [ "$1" = on ] && tput smso
-      [ "$1" = off ] && tput rmso
+    if [ "$TERM" = "xterm" ] || [ "$TERM" = "vt100" ] || [ "$TERM" = "xterm-256color" ] || [ "$TERM" = "screen" ] ; then
+      [ "$1" = "on" ] && tput smso
+      [ "$1" = "off" ] && tput rmso
     fi
 }
 
 # --- debug: Conditional debugging. All commands begin w/ debug.
-
+export DebugFlag=${DebugFlag:-FALSE}
 function debugSet()             { DebugFlag="TRUE"; return 0; }
 function debugUnset()           { DebugFlag=; return 0; }
 function debugExecIfDebug()     { [ "$DebugFlag" = TRUE ] && "$*"; return 0; }
@@ -27,7 +25,6 @@ function debug()                { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:'"$*" 1
 function debug4()               { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:    ' "$*" 1>&2 ; return 0; }
 function debug8()               { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:        ' "$*" 1>&2 ; return 0; }
 function debug12()              { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:            ' "$*" 1>&2 ; return 0; }
-function debug16()              { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:                ' "$*" 1>&2 ; return 0; }
 
 # --- Colour lines. It requires either linux echo or zsh built-in echo
 

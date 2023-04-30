@@ -70,10 +70,6 @@ function setupAliases_Abbreviations
     abbr -a -g rl 'source ~/.config/fish/config.fish'
     abbr -a -g rlDebug 'debugSet ; source ~/.config/fish/config.fish ; debugUnset'
     alias rlFull=rlDebug
-    abbr -a -g ssf ssh-grep
-
-    abbr -a -g tm 'tmux new -s'
-    abbr -a -g tj 'tmux join-pane -s'
 
     set -g -x KUBECTL kubectl
     command -q docker ; and set -g -x CONTAINER docker
@@ -158,7 +154,6 @@ function fish_prompt
     else
         set resString "$(set_color -o red)$res$(set_color white)"
     end
-    echo resString is $resString
     printf '[%s]%s · %s%s@%s%s · %s%s%s · %s%s%s · %s%s%s · %s%s%s\n>' \
         $resString (set_color blue) \
         (set_color white) $USER $hostname (set_color blue) \
@@ -235,7 +230,7 @@ function setupExportVars
     set -g -x EDITOR vim       # bsroot has no notion about VISUAL
     set -g -x BLOCKSIZE 1K
     set -g -x PROFILES_CONFIG_DIR /opt/ConfigShell
-    set -g -x FISH_RC_VERSION "5.0.0-rc7"
+    set -g -x FISH_RC_VERSION "5.0.0-rc8"
     if test -n "$_current_FISH_RC_VERSION" -a "$FISH_RC_VERSION" != "$_current_FISH_RC_VERSION"
         echo New FISH_RC_VERSION "$FISH_RC_VERSION"
     end

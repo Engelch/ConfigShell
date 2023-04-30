@@ -2,7 +2,7 @@
 # vim:ts=2:sw=2
 # shellcheck disable=SC2155 disable=SC2012 disable=SC2153
 
-# Copyright © 2021 by Christian ENGEL (mailto:engel-ch@outlook.com)
+# Copyright © 2023 by Christian ENGEL (mailto:engel-ch@outlook.com)
 # License: BSD
 # All rights reserved.
 # Redistribution and use in source and binary forms, with or without
@@ -18,26 +18,9 @@
 # 4. Neither the name of the <organization> nor the
 #    names of its contributors may be used to endorse or promote products
 #    derived from this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY <COPYRIGHT HOLDER> ''AS IS'' AND ANY
-# EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-# DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY
-# DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#
-
-export DebugFlag=${DebugFlag:-FALSE}
-
-#########################################################################################
-# SKELETON FUNCTIONS, considered R/O, v0.4.1
 
 ######################################
-# Skeleton functions, considered RO. v0.5.0
+# Skeleton functions, considered RO. v1.0.0
 
 # so helps to write a message in reverse mode
 function so()
@@ -45,14 +28,14 @@ function so()
 # in reverse video mode. This is the other way, not using escape sequences
 {
    [ "$1" != on ] && [ "$1" != off ] && 1>&2 echo "so: unsupported option $1" && return
-    if [ "$TERM" = xterm ] || [ "$TERM" = vt100 ] || [ "$TERM" = xterm-256color ] || [ "$TERM" = screen ] ; then
-      [ "$1" = on ] && tput smso
-      [ "$1" = off ] && tput rmso
+    if [ "$TERM" = "xterm" ] || [ "$TERM" = "vt100" ] || [ "$TERM" = "xterm-256color" ] || [ "$TERM" = "screen" ] ; then
+      [ "$1" = "on" ] && tput smso
+      [ "$1" = "off" ] && tput rmso
     fi
 }
 
 # --- debug: Conditional debugging. All commands begin w/ debug.
-
+export DebugFlag=${DebugFlag:-FALSE}
 function debugSet()             { DebugFlag="TRUE"; return 0; }
 function debugUnset()           { DebugFlag=; return 0; }
 function debugExecIfDebug()     { [ "$DebugFlag" = TRUE ] && "$*"; return 0; }
@@ -60,7 +43,6 @@ function debug()                { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:'"$*" 1
 function debug4()               { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:    ' "$*" 1>&2 ; return 0; }
 function debug8()               { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:        ' "$*" 1>&2 ; return 0; }
 function debug12()              { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:            ' "$*" 1>&2 ; return 0; }
-function debug16()              { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:                ' "$*" 1>&2 ; return 0; }
 
 # --- Colour lines. It requires either linux echo or zsh built-in echo
 
@@ -148,7 +130,6 @@ function setAliases() {
    alias er='grep -ER'
 
    alias enf='env | grep -Ei '   # search the environment in case-insensitive mode
-
    alias fin='find . -name'      # search for a filename
    alias fini='find . -iname'    # search for a filename in case-insensitive mode
 
@@ -167,9 +148,6 @@ function setAliases() {
    alias rlFull=rlDebug            # backward compatibility
    alias rm='rm -i'           # life assurance
    alias wh=which
-   alias ssf=ssh-grep
-   alias tm='tmux new -s'  # todo check tmux commnands, currently not working, and move tmux-qul,.. to scripts if possible
-   alias tj='tmux join-pane -s'
    # X11 commands 
    alias disp0='export DISPLAY=:0'
    alias disp1='export DISPLAY=:1'
@@ -311,8 +289,7 @@ debug BASH_RC_VERSION is $BASH_RC_VERSION
 BASH_MMONRC_VERSION=$BASH_RC_VERSION
 debug "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'
 
-#################### EOF
-
-#THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
-export SDKMAN_DIR="$HOME/.sdkman"
+export SDKMAN_DIR="$HOME/.sdkman" #THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
 [[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
+
+#################### EOF
