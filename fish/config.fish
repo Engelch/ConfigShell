@@ -159,11 +159,13 @@ function fish_prompt
         set resString "$(set_color -o red)$res$(set_color white)"
     end
     echo resString is $resString
-    printf '[%s] · %s@%s · %s%s%s · %s%s%s · %s%s%s · %s%s%s\n>' $resString $USER $hostname \
-        (set_color green) AWS:$AWS_PROFILE (set_color normal) \
-        (set_color magenta) (watson status) (set_color normal) \
+    printf '[%s]%s · %s%s@%s%s · %s%s%s · %s%s%s · %s%s%s · %s%s%s\n>' \
+        $resString (set_color blue) \
+        (set_color white) $USER $hostname (set_color blue) \
+        (set_color green) AWS:$AWS_PROFILE (set_color blue) \
+        (set_color magenta) (watson status) (set_color blue) \
         (set_color red) (git_prompt_status) (set_color blue) \
-        (set_color yellow) (pwd | sed -E "s,$HOME,~,") (set_color normal) 
+        (set_color yellow) (pwd | sed -E "s,$HOME,~,") (set_color white) 
 end
 
 function setupCompletion
@@ -233,7 +235,7 @@ function setupExportVars
     set -g -x EDITOR vim       # bsroot has no notion about VISUAL
     set -g -x BLOCKSIZE 1K
     set -g -x PROFILES_CONFIG_DIR /opt/ConfigShell
-    set -g -x FISH_RC_VERSION "5.0.0-rc6"
+    set -g -x FISH_RC_VERSION "5.0.0-rc7"
     if test -n "$_current_FISH_RC_VERSION" -a "$FISH_RC_VERSION" != "$_current_FISH_RC_VERSION"
         echo New FISH_RC_VERSION "$FISH_RC_VERSION"
     end
