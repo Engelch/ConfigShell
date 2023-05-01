@@ -36,9 +36,11 @@ If you are new to ConfigShell, it is recommended to
 
 ---
 
-# Release 2 Changelog
+## Release 2 Changelog
 
-todo
+### bashlib
+Header of bash shellscripts factored out to `/opt/ConfigShell/lib/bashlib.sh`
+
 ---
 
 # Release 1.* Changelog
