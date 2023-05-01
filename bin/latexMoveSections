@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2155 disable=SC2046 disable=SC2001 disable=SC2086
 # vim: set expandtab: ts=3: sw=3
 #
 # TITLE: $_app
@@ -43,81 +44,17 @@
 
 # readonly skeleton_version=0.4.1 # variable normally not required
 
-readonly _app=$(basename $0)
-readonly _appDir=$(dirname $0)
-readonly _absoluteAppDir=$(cd $_appDir; /bin/pwd)
+readonly _app="$(basename $0)"
+readonly _appDir="$(dirname $0)"
 readonly _appVersion="0.0.1" # use semantic versioning
-export DebugFlag=${DebugFlag:-FALSE}
-export VerboseFlag=${VerboseFlasg:-FALSE}
 
 #########################################################################################
-# SKELETON FUNCTIONS, considered R/O, v0.5.0
-
-# so helps to write a message in reverse mode
-function so()
-# always show such a message.  If known terminal, print the message
-# in reverse video mode. This is the other way, not using escape sequences
-{
-   [ "$1" != on -a "$1" != off ] && return
-    if [ "$TERM" = xterm -o "$TERM" = vt100 -o "$TERM" = xterm-256color  -o "$TERM" = screen ] ; then
-      [ "$1" = on ] && tput smso
-      [ "$1" = off ] && tput rmso
-    fi
-}
-
-# --- debug: Conditional debugging. All commands begin w/ debug.
-
-function debugSet()             { DebugFlag=TRUE; return 0; }
-function debugUnset()           { DebugFlag=; return 0; }
-function debugExecIfDebug()     { [ "$DebugFlag" = TRUE ] && $*; return 0; }
-function debug()                { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:'$* 1>&2 ; return 0; }
-function debug4()               { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:    ' $* 1>&2 ; return 0; }
-function debug8()               { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:        ' $* 1>&2 ; return 0; }
-function debug12()              { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:            ' $* 1>&2 ; return 0; }
-
-function verbose()              { [ "$VerboseFlag" = TRUE ] && echo -n $* ; return 0; }
-function verbosenl()            { [ "$VerboseFlag" = TRUE ] && echo $* ; return 0; }
-function verboseSet()           { VerboseFlag=TRUE; return 0; }
-
-# --- Colour lines. It requires either linux echo or zsh built-in echo
-
-function colBold()      { printf '\e[1m'; return 0; }
-function colNormal()    { printf "\e[0m"; return 0; }
-function colBlink()     { printf "\e[5m"; return 0; }
-
-# --- Exits
-
-# function error()        { err 'ERROR:' $*; return 0; } # similar to err but with ERROR prefix and possibility to include
-# Write an error message to stderr. We cannot use err here as the spaces would be removed.
-function error()        { so on; echo 'ERROR:'$* 1>&2;            so off ; return 0; }
-function error4()       { so on; echo 'ERROR:    '$* 1>&2;        so off ; return 0; }
-function error8()       { so on; echo 'ERROR:        '$* 1>&2;    so off ; return 0; }
-function error12()      { so on; echo 'ERROR:            '$* 1>&2;so off ; return 0; }
-
-function warning()      { so on; echo 'WARNING:'$* 1>&2;          so off; return 0; }
-
-
-function errorExit()    { EXITCODE=$1 ; shift; error $* ; exit $EXITCODE; }
-function exitIfErr()    { a="$1"; b="$2"; shift; shift; [ "$a" -ne 0 ] && errorExit $b App returned $b $*; }
-
-function err()          { echo $* 1>&2; }                 # just write to stderr
-function err4()         { echo '   ' $* 1>&2; }           # just write to stderr
-function err8()         { echo '       ' $* 1>&2; }       # just write to stderr
-function err12()        { echo '           ' $* 1>&2; }   # just write to stderr
-
-# --- Existance checks
-function exitIfBinariesNotFound()       { for file in $@; do [ $(command -v "$file") ] || errorExit 253 binary not found: $file; done }
-function exitIfPlainFilesNotExisting()  { for file in $*; do [ ! -f $file ] && errorExit 254 'plain file not found:'$file 1>&2; done }
-function exitIfFilesNotExisting()       { for file in $*; do [ ! -e $file ] && errorExit 255 'file not found:'$file 1>&2; done }
-function exitIfDirsNotExisting()        { for dir in $*; do [ ! -d $dir ] && errorExit 252 "$APP:ERROR:directory not found:"$dir; done }
-
-# --- Temporary file/directory  creation
-# -- file creation -- TMP1=$(tempFile); TMP2=$(tempFile) ;;;; trap "rm -f $TMP1 $TMP2" EXIT
-# -- directory creation -- TMPDIR=$(tempDir) ;;;;;  trap "rm -fr $TMPDIR;" EXIT
-#
-function tempFile()                     { mktemp ${TMPDIR:-/tmp/}$_app.XXXXXXXX; }
-function tempDir()                      { mktemp -d "${TMPDIR:-/tmp/}$_app.YYYYYYYYY"; }
-# realpath as shell, argument either supplied as stdin or as $1
+# ConfigShell lib 1.1 (codebase 1.0.0)
+bashLib="/opt/ConfigShell/lib/bashlib.sh"
+[ ! -f "$bashLib" ] && 1>&2 echo "bash-library $bashLib not found" && exit 127
+# shellcheck source=/opt/ConfigShell/lib/bashlib.sh
+source "$bashLib"
+unset bashLib
 
 # application-specific functions  ===============================================================================
 
@@ -125,30 +62,29 @@ function usage()
 {
     err DESCRIPTION
     err
-    err $_app
     err SYNOPSIS
-    err4 $_app '[-D] up [ file ... ]'
-    err4 $_app '[-D] down [ file ... ]'
-    err4 $_app '-h'
+    err4 "$_app" '[-D] down [ file ... ]'
+    err "$_app"
+    err4 "$_app" '-h'
+    err4 "$_app" '[-D] up [ file ... ]'
     err
     err VERSION
-    err4 $_appVersion
     err
     err OPTIONS
+    err4 "$_appVersion"
     err4 '-D      ::= enable debug output'
     err4 '-h      ::= show usage message and exit with exit code 1'
     err4 todo .......
 }
 
 function parseCLI() {
-    local currentOption
     while getopts "Dfh" options; do         # Loop: Get the next option;
         case "${options}" in                    # TIMES=${OPTARG}
             D)  err Debug enabled ; debugSet
                 ;;
             h)  usage ; exit 1
                 ;;
-            *)  err Help with $_app -h
+            *)  err Help with "$_app" -h
                 exit 2  # Exit abnormally.
                 ;;
         esac
@@ -157,109 +93,109 @@ function parseCLI() {
 
 function verifyNotExistingSection() {
     # PRE: arg1 is readable file
-    debug In verifyNotExistingSection $*
-    [ -z $2 ] && error Internal error, no search section provided. && return 30
+    debug In verifyNotExistingSection "$*"
+    [ -z "$2" ] && error Internal error, no search section provided. && return 30
     #debug search start for $2 by "\\$2{"
     # cat $1 | sed 's/%.*//' | grep "[\]$2{"
     #debug search end
-    if [ $(cat $1 | sed 's/%.*//' | grep "[\]$2{" | wc -l) -gt 0 ] ; then
-        error found not expected sectioning type $2
-        debug4 found $2
+    if [ $(sed 's/%.*//' < "$1" | grep -c "[\]$2{") -gt 0 ] ; then
+        error found not expected sectioning type "$2"
+        debug4 found "$2"
         return 31
     fi
-    debug4 not found $2
+    debug4 not found "$2"
     return 0
 }
 
 function verifyOneSection() {
     # PRE: arg1 is readable file
-    debug In verifyOneSection $*
-    [ -z $2 ] && error Internal error, no search section provided. && return 35
-    debug4 n\# section are: $(cat $1 | sed 's/%.*//' | grep "[\]$2{" | wc -l)
-    if [ $(cat $1 | sed 's/%.*//' | grep "[\]$2{" | wc -l) -gt 1 ] ; then
-        debug4 more than one $2 found
-        error more than one element $2 found
+    debug In verifyOneSection "$*"
+    [ -z "$2" ] && error Internal error, no search section provided. && return 35
+    debug4 n\# section are: $(sed 's/%.*//' < "$1" | grep -c "[\]$2{")
+    if [ $(sed 's/%.*//' < "$1" | grep -c "[\]$2{") -gt 1 ] ; then
+        debug4 more than one "$2" found
+        error more than one element "$2" found
         return 36
     fi
-    debug4 Found $2 not more than once
+    debug4 Found "$2" not more than once
     return 0
 }
 
 function changefile() {
     # PRE: $1 source file, existing
     #      $2 destination file, existing
-    sed -E "s/[\]$3{/\\\\$4{/" < $1 > $2
+    sed -E "s/[\]$3{/\\\\$4{/" < "$1" > "$2"
 }
 
 function moveUp() {
     local res1
-    debug up mode for file $file
-    if [ ! -r $file ] ; then
-        error File $file not existing or not readable.
+    debug up mode for file "$file"
+    if [ ! -r "$file" ] ; then
+        error File "$file" not existing or not readable.
         return 20
     fi
-    verifyNotExistingSection $file title ; res1=$?    # currently, no support for part (report, book document-classes)
-    [ $res1 -ne 0 ] && return 21
-    verifyOneSection $file section ; res1=$?         # as only 1 title must exist
-    [ $res1 -ne 0 ] && return 22
-    TMP1=$(tempFile); TMP2=$(tempFile); trap "rm -f $TMP1 $TMP2" EXIT
-    changefile $1    $TMP1 section          title
-    debug step0 tmp file is now $(cat $TMP1)
-    changefile $TMP1 $TMP2 subsection       section
-    debug step1 tmp file is now $(cat $TMP2)
-    changefile $TMP2 $TMP1 subsubsection    subsection
-    debug step2 tmp file is now $(cat $TMP1)
-    changefile $TMP1 $TMP2 paragraph        subsubsection
-    debug step3 tmp file is now $(cat $TMP2)
-    changefile $TMP2 $TMP1 subparagraph     paragraph
-    cat $TMP1
+    verifyNotExistingSection "$file" title ; res1=$?    # currently, no support for part (report, book document-classes)
+    [ "$res1" -ne 0 ] && return 21
+    verifyOneSection "$file" section ; res1=$?         # as only 1 title must exist
+    [ "$res1" -ne 0 ] && return 22
+    TMP1=$(tempFile); TMP2=$(tempFile); trap 'rm -f $TMP1 $TMP2' EXIT
+    changefile "$1"    "$TMP1" section          title
+    debug step0 tmp file is now $(cat "$TMP1")
+    changefile "$TMP1" "$TMP2" subsection       section
+    debug step1 tmp file is now $(cat "$TMP2")
+    changefile "$TMP2" "$TMP1" subsubsection    subsection
+    debug step2 tmp file is now $(cat "$TMP1")
+    changefile "$TMP1" "$TMP2" paragraph        subsubsection
+    debug step3 tmp file is now $(cat "$TMP2")
+    changefile "$TMP2" "$TMP1" subparagraph     paragraph
+    cat "$TMP1"
 }
 
 function moveDown() {
     local res1
-    debug down mode for file $file
-    if [ ! -r $file ] ; then
-        error File $file not existing or not readable.
+    debug down mode for file "$file"
+    if [ ! -r "$file" ] ; then
+        error File "$file" not existing or not readable.
         return 25
     fi
-    verifyNotExistingSection $file subparagraph ; res1=$?
-    [ $res1 -ne 0 ] && return 26
-    TMP1=$(tempFile); TMP2=$(tempFile); trap "rm -f $TMP1 $TMP2" EXIT
-    changefile $1    $TMP1 paragraph        subparagraph
-    debug step0 tmp file is now $(cat $TMP1)
-    changefile $TMP1 $TMP2 subsubsection    paragraph
-    debug step1 tmp file is now $(cat $TMP2)
-    changefile $TMP2 $TMP1 subsection       subsubsection
-    debug step2 tmp file is now $(cat $TMP1)
-    changefile $TMP1 $TMP2 section          subsection
-    debug step3 tmp file is now $(cat $TMP2)
-    changefile $TMP2 $TMP1 title            section
-    cat $TMP1
+    verifyNotExistingSection "$file" subparagraph ; res1=$?
+    [ "$res1" -ne 0 ] && return 26
+    TMP1=$(tempFile); TMP2=$(tempFile); trap 'rm -f $TMP1 $TMP2' EXIT
+    changefile  "$1"   "$TMP1" paragraph        subparagraph
+    debug step0 tmp file is now $(cat "$TMP1")
+    changefile "$TMP1" "$TMP2" subsubsection    paragraph
+    debug step1 tmp file is now $(cat "$TMP2")
+    changefile "$TMP2" "$TMP1" subsection       subsubsection
+    debug step2 tmp file is now $(cat "$TMP1")
+    changefile "$TMP1" "$TMP2" section          subsection
+    debug step3 tmp file is now $(cat "$TMP2")
+    changefile "$TMP2" "$TMP1" title            section
+    cat "$TMP1"
 }
 
 function main() {
     exitIfBinariesNotFound pwd tput basename dirname mktemp
-    parseCLI $*
-    shift $(($OPTIND - 1))  # not working inside parseCLI
-    debug args are $*
+    parseCLI "$@"
+    shift $((OPTIND - 1))  # not working inside parseCLI
+    debug args are "$*"
     mode=$1 ; shift
     case $mode in
-    u*|U*)  for file in $* ; do
-                moveUp $file; res=$(( res + $? ))
+    u*|U*)  for file in "$@" ; do
+                moveUp "$file"; res=$(( res + $? ))
             done
             ;;
-    d*|D*)  for file in $* ; do
-                moveDown $file; res=$(( res + $? ))
+    d*|D*)  for file in "$@" ; do
+                moveDown "$file"; res=$(( res + $? ))
             done
             ;;
     *)      usage
-            errorExit 10 Unknown mode $mode
+            errorExit 10 Unknown mode "$mode"
             ;;
     esac
-    return $res
+    return "$res"
 }
 
-main $*
-exit $res
+main "$@"
+exit "$res"
 
 # EOF
