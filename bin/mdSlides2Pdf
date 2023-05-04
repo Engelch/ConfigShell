@@ -9,8 +9,21 @@ bashLib="/opt/ConfigShell/lib/bashlib.sh"
 source "$bashLib"
 
 #########################################################################################
+while true
+do
+    echo 1st arg is "$1"
+    if [[ "$1" =~ ^-- ]] ; then
+         echo maching arg
+         arg="$arg $1" ; shift # multiple options would be nicer
+    else
+        break
+    fi
+done
+[ -z "$arg" ] && arg="--pdf"
+
 processFile="${1:-ConfigShellNewDoc.md}"
 [ ! -r "$processFile" ] && 1>&2 echo Markdown file to be processed not found: "$processFile" && exit 1
-exec marp --pdf --allow-local-files "$processFile"
+echo marp --allow-local-files $arg "$processFile"
+exec marp --allow-local-files $arg "$processFile"
 
 # EOF

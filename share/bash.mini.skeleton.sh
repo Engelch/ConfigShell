@@ -40,6 +40,7 @@ NAME
     $_app
 SYNOPSIS
     $_app [-D] [dir...]
+    $_app [-V]
     $_app -h
 VERSION
     $_appVersion
@@ -47,14 +48,18 @@ DESCRIPTION
  ...
 OPTIONS
  -D      ::= enable debug output
+ -V      ::= output the version number and exit code 127
  -h      ::= show usage message and exit with exit code 1
 HERE
 }
 
 function parseCLI() {
-    while getopts "Dh" options; do         # Loop: Get the next option;
+    while getopts "DVh" options; do         # Loop: Get the next option;
         case "${options}" in                    # TIMES=${OPTARG}
             D)  err Debug enabled ; debugSet
+                ;;
+            V)  1>&2 echo $_appVersion
+                exit 127
                 ;;
             h)  usage ; exit 1
                 ;;
