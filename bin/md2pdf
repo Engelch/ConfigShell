@@ -24,13 +24,17 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
+# CHANGELOG
+# 0.1
+# - -o allows for output to a given file
+
 #########################################################################################
 # VARIABLES, CONSTANTS
 
 #########################################################################################
 readonly _app="$(basename $0)"
 readonly _appDir="$(dirname $0)"
-readonly _appVersion="0.0.3" # use semantic versioning
+readonly _appVersion="0.1.0" # use semantic versioning
 
 #########################################################################################
 # ConfigShell lib 1.1 (codebase 1.0.0)
@@ -50,7 +54,7 @@ function usage()
     err4 into the pandoc call.
     err
     err SYNOPSIS
-    err4 "$_app" '[-D] [-f] [dir...]'
+    err4 "$_app" '[-D] [-f] [ -o file ] <<markdown-filename>>'
     err4 "$_app" '-V'
     err4 "$_app" '-h'
     err
@@ -62,10 +66,11 @@ function usage()
     err4 '-V      ::= output the version number and exit with code 127'
     err4 '-h      ::= show usage message and exit with exit code 1'
     err4 '-f      ::= overwrite if output file already exists'
+    err4 '-o      ::= output PDF file to the given file-name'
 }
 
 function parseCLI() {
-    while getopts "DVfh" options; do         # Loop: Get the next option;
+    while getopts "DVfho:" options; do         # Loop: Get the next option;
         case "${options}" in                    # TIMES=${OPTARG}
             D)  err Debug enabled ; debugSet
                 ;;
@@ -74,6 +79,9 @@ function parseCLI() {
             f)  debug forcedMode; forcedMode=TRUE
                 ;;
             h)  usage ; exit 1
+                ;;
+            o)  debug outputfile is ${OPTARG}
+                declare -g outfile="${OPTARG}"
                 ;;
             *)
                 err Help with "$_app" -h
@@ -88,19 +96,19 @@ function main() {
     exitIfFilesNotExisting /opt/ConfigShell/share/Markdown-Document/listing-ssetup.tex
     parseCLI "$@"
     shift "$(( OPTIND - 1 ))"  # not working inside parseCLI
-    debug args are "$*"
+    debug args are "$@"
     debug forcedMode is "${forcedMode:-FALSE}"
-    for file in $* ; do
-        debug working on file "$file"
-        exitIfPlainFilesNotExisting "$file"
-        outfile="$(basename "$file" .md).pdf"
-        [ -f "$outfile" ] && [ "$forcedMode" != TRUE ] && errorExit 10 Output file "$outfile" already existing, not overwriting.
-        header=
-        [ -f latex.tex ] && debug including latex.tex to command && header="-H latex.tex"
-        debug pandoc --pdf-engine=xelatex --listings $header -H /opt/ConfigShell/share/Markdown-Document/listing-ssetup.tex -o "$outfile" "$file"
-        pandoc --pdf-engine=xelatex --listings $header -H /opt/ConfigShell/share/Markdown-Document/listing-ssetup.tex -o "$outfile" "$file"
 
-    done
+    file="$1"
+    debug working on file "$file"
+    exitIfPlainFilesNotExisting "$file"
+    [ -z "$outfile" ] && fileGenerated="$(basename "$file" .md).pdf"
+    [ -n "$outfile" ] && fileGenerated="$outfile"
+    [ -f "$fileGenerated" ] && [ "$forcedMode" != TRUE ] && errorExit 10 Output file "$fileGenerated" already existing, not overwriting.
+    header=
+    [ -f latex.tex ] && debug including latex.tex to command && header="-H latex.tex"
+    debug pandoc --pdf-engine=xelatex --listings $header -H /opt/ConfigShell/share/Markdown-Document/listing-ssetup.tex -o "$fileGenerated" "$file"
+    pandoc --pdf-engine=xelatex --listings $header -H /opt/ConfigShell/share/Markdown-Document/listing-ssetup.tex -o "$fileGenerated" "$file"
 }
 
 main "$@"
