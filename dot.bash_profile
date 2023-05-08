@@ -81,12 +81,12 @@ function setupPathsFromFiles() {
          if [ -d "$line"  ] ; then debug12 "Found path $line ::prepending" ; PATH="$line:$PATH"
          else debug12 "NOT found path $line" ; fi
        done < "$PROFILES_CONFIG_DIR/Shell/path.prepend.txt"
-    
+
     # 2
     debug12 "PREPENDING os-specific PATH ENTRIES ........"
     [ -r "$PROFILES_CONFIG_DIR/Shell/path.$(uname).prepend.txt" ] && \
        while IFS= read -r line &>/dev/null; do
-          line=$(echo "$line" | xargs)
+          line=$(echo "$line" | sed -e "s,^~,$HOME," | sed -e "s,^\$HOME,$HOME,")
           if [ -d "$line" ] ; then debug12 "Found path $line ::prepending" ; PATH="$line:$PATH"
           else debug12 "NOT found path $line" ; fi
        done < "$PROFILES_CONFIG_DIR/Shell/path.$(uname).prepend.txt"
@@ -95,7 +95,7 @@ function setupPathsFromFiles() {
     debug12 "PREPENDING architecture-specific PATH ENTRIES ........"
     [ -r "$PROFILES_CONFIG_DIR/Shell/path.$(uname).$(uname -m).prepend.txt" ] && \
        while IFS= read -r line &>/dev/null; do
-          line=$(echo "$line" | xargs)
+          line=$(echo "$line" | sed -e "s,^~,$HOME," | sed -e "s,^\$HOME,$HOME,")
           if [ -d "$line" ] ; then debug12 "Found path $line ::prepending" ; PATH="$line:$PATH"
           else debug12 "NOT found path $line" ; fi
        done < "$PROFILES_CONFIG_DIR/Shell/path.$(uname).$(uname -m).prepend.txt"
@@ -104,7 +104,7 @@ function setupPathsFromFiles() {
     debug12 "APPENDING global PATH ENTRIES ........"
     [ -r "$PROFILES_CONFIG_DIR/Shell/path.append.txt" ] && \
        while IFS= read -r line; do
-          line=$(echo "$line" | xargs) # trim outer space
+          line=$(echo "$line" | sed -e "s,^~,$HOME," | sed -e "s,^\$HOME,$HOME,") # trim outer space
           if [ -d "$line" ] ; then debug12 "Found path $line ::appending" ; PATH="$PATH:$line"
           else debug12 "NOT found path $line" ; fi
        done < "$PROFILES_CONFIG_DIR/Shell/path.append.txt"
@@ -113,8 +113,8 @@ function setupPathsFromFiles() {
     debug12 "APPENDING os-specific PATH ENTRIES ........"
     [ -r "$PROFILES_CONFIG_DIR/Shell/path.$(uname).append.txt" ] && \
        while IFS= read -r line; do
-          line=$(echo "$line" | xargs)
-          if [ -d "$line" ] ; then debug12 "Found path $line ::appending" ; PATH="$PATH:$line" ; 
+          line=$(echo "$line" | sed -e "s,^~,$HOME," | sed -e "s,^\$HOME,$HOME,")
+          if [ -d "$line" ] ; then debug12 "Found path $line ::appending" ; PATH="$PATH:$line" ;
           else debug12 "NOT found path $line" ; fi
        done < "$PROFILES_CONFIG_DIR/Shell/path.$(uname).append.txt"
 
@@ -122,7 +122,7 @@ function setupPathsFromFiles() {
     debug12 "APPENDING architecture-specific PATH ENTRIES ........"
     [ -r "$PROFILES_CONFIG_DIR/Shell/path.$(uname).$(uname -m).append.txt" ] && \
        while IFS= read -r line; do
-          line=$(echo "$line" | xargs)
+          line=$(echo "$line" | sed -e "s,^~,$HOME," | sed -e "s,^\$HOME,$HOME,")
           if [ -d "$line" ] ; then debug12 "Found path $line ::apppending" ; PATH="$PATH:$line"
           else debug12 "NOT found path $line" ; fi
        done < "$PROFILES_CONFIG_DIR/Shell/path.$(uname).$(uname -m).append.txt"
@@ -143,7 +143,7 @@ function setupPath() {
         PATH=/sbin:/usr/sbin:/bin:/usr/bin
     fi
     # add directories if existing for all platforms
-    setupPathsFromFiles    
+    setupPathsFromFiles
     debug8 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'
 }
 
