@@ -105,6 +105,7 @@ function cd() {   # cd "$1" does not return to $HOME, if the 1st argument is giv
    [ -n "$1" ] && builtin cd "$1"
    [ -f 00DIR.txt ] && cat 00DIR.txt
    [ -r 00DIR.sh ] && /usr/bin/env bash 00DIR.sh
+   return 0
 }
 
 # setAliases sets the default aliases
@@ -148,7 +149,7 @@ function setAliases() {
    alias rlFull=rlDebug            # backward compatibility
    alias rm='rm -i'           # life assurance
    alias wh=which
-   # X11 commands 
+   # X11 commands
    alias disp0='export DISPLAY=:0'
    alias disp1='export DISPLAY=:1'
    # sw development
@@ -192,7 +193,7 @@ function setPrompt() {
       [ $(which watson | wc -l) -eq 0 ] && debug12 watson not found && alias watson='echo -- > /dev/null'
       PS1='[$?] \033[34m\t\033[0m|\033[32m\u@\h\033[0m|\033[34m$(watson status)\033[0m|\033[0;31m$(gitContents)\033[0m|$AWS_PROFILE|\033[0;33m\w\e[0m\n'
    fi
-   debug8 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'   
+   debug8 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'
 }
 
 # todo check w/ Lx system
@@ -221,9 +222,9 @@ function hadmRealUserDetermination() {
          debug8 "SSH_CLIENT or HADM_LAST_LOGIN_FINGERPRINT not set"
       fi
    else
-      debug8 "User not hadm $(id -un) or journalctl not existing" 
+      debug8 "User not hadm $(id -un) or journalctl not existing"
    fi
-   debug8 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'   
+   debug8 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'
 }
 
 ############################################################################
@@ -236,7 +237,7 @@ function main() {
 
    case $- in
       *i*) #  "This shell is interactive"
-         # source .bash_profile if it was not done before       
+         # source .bash_profile if it was not done before
          # shellcheck source=/dev/null
          [ -z "$BASH_ENV" ] && [ -r ~/.bash_profile ] && source ~/.bash_profile && return
          loadSource pre
@@ -247,21 +248,21 @@ function main() {
          $(which aws_completer &>/dev/null) && debug4 aws completion helper found && complete -C "$(which aws_completer)" aws
          setAliases
          hadmRealUserDetermination
-         
+
          # changed to common2.* and bash2.* files
-         for file in $PROFILES_CONFIG_DIR/Shell/common.*.rc $PROFILES_CONFIG_DIR/Shell/bash.*.rc $PROFILES_CONFIG_DIR/Shell/os."$(uname)".rc; do    
+         for file in $PROFILES_CONFIG_DIR/Shell/common.*.rc $PROFILES_CONFIG_DIR/Shell/bash.*.rc $PROFILES_CONFIG_DIR/Shell/os."$(uname)".rc; do
             if [ -f "$file"  ] && [ -r "$file" ] ; then
                # shellcheck source=/dev/null
-               source "$file" # removing constructor style: $(basename $file .sh).init # call the file-local initialiser          
+               source "$file" # removing constructor style: $(basename $file .sh).init # call the file-local initialiser
             fi
          done
-         
+
          # load ssh and rsync completion, the completion list can be created with ssh-createCompletionList
          local sshCompletionList="$HOME/.ssh/completion.lst"
          [ -f $sshCompletionList ] && \
             complete -W "$(cat $sshCompletionList)" -- ssh && \
             complete -f -d -W "$(cat $sshCompletionList)" -- rsync
-          
+
          loadSource post
          for file in $HOME/.bashrc.d/*.rc ; do
             [ "$file" = "$HOME/.bashrc.d/"'*.rc' ] && continue # in case that no file is found
@@ -283,7 +284,7 @@ function main() {
 
 debug "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '...............................................'
 main "$@"
-export BASH_RC_VERSION="5.0.5"
+export BASH_RC_VERSION="5.0.6"
 debug BASH_RC_VERSION is $BASH_RC_VERSION
 [ ! -z $BASH_MMONRC_VERSION ] && [ $BASH_MMONRC_VERSION != $BASH_RC_VERSION ] && echo New ConfigShell bash version $BASH_RC_VERSION. 1>&2
 BASH_MMONRC_VERSION=$BASH_RC_VERSION
