@@ -373,6 +373,12 @@ function main() {
             debug non-gee file for "$_noGeeDir/$_noGeeFile" not found
         fi
     done < <(find . -name '*.gee' -type f -print0)
+    if [ -r ./pre-commit.sh ]; then
+        bash ./pre-commit.sh
+        res=$?
+        [ "$res" -ne 0 ] && echo 1>&2 "ERROR pre-commit.sh returned with exit code $res"
+        exit $res
+    fi
     exit 0
 }
 main "$@"
