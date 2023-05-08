@@ -347,7 +347,6 @@ function initDefaultVars() {
 }
 function main() {
     initDefaultVars
-    debugSet
     cd "$gitroot"
     debug "pre-commit starting from $(pwd)"
     # This for loop CANNOT be run in a subshell as shellcheck suggests (find | while read)
