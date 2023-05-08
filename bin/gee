@@ -333,38 +333,48 @@ function createPreCommit() {
 #!/usr/bin/env bash
 # version 2.3.0
 # --- debug: Conditional debugging. All commands begin w/ debug.
-
-function debugSet()             { DebugFlag=TRUE; return 0; }
-function debug()                { [ "$DebugFlag" = TRUE ] && echo "DEBUG: $*" 1>&2 ; return 0; }
-
+function debugSet() {
+    DebugFlag=TRUE
+    return 0
+}
+function debug() {
+    [ "$DebugFlag" = TRUE ] && echo "DEBUG: $*" 1>&2
+    return 0
+}
 function initDefaultVars() {
     declare -gr gitroot="$(git rev-parse --show-toplevel)"
     declare -gr geePwFile="$(dirname "$gitroot")/$(basename "$gitroot").gee.pw"
 }
-
 function main() {
     initDefaultVars
+    debugSet
     cd "$gitroot"
     debug "pre-commit starting from $(pwd)"
-    find . -name '*.pws' -print | while read -r file; do
-        if [ ! -L "$file" ] ; then
-            echo 1>&2 File "$file" is not a symbolic link; exit 2
+    # This for loop CANNOT be run in a subshell as shellcheck suggests (find | while read)
+    # because otherwise the exits are exiting the subshell created by the pipe
+    # instead of the main program
+    # shellcheck disable=SC2044
+    while IFS= read -r -d '' loopfile; do
+        if [ ! -L "$loopfile" ]; then
+            echo 1>&2 ERROR File "$loopfile" is not a symbolic link
+            exit 2
         fi
-    done
-    find . -name '*.gee' -type f -print | while read -r file; do
-        debug "working on $file"
-        _noGeeFile="$(basename "$file" .gee)"
-        _noGeeDir="$(dirname "$file")"
-        if [ -f "$_noGeeDir/$_noGeeFile"  ] ; then
-            [ "$_noGeeDir/$_noGeeFile" -nt "$file" ] && 1>&2 echo "$_noGeeDir/$_noGeeFile newer than $file" && exit 1
+    done < <(find . -name '*.pws' -print0)
+    # same as above
+    # shellcheck disable=SC2044
+    while IFS= read -r -d '' loopfile; do
+        debug "working on $loopfile"
+        _noGeeFile="$(basename "$loopfile" .gee)"
+        _noGeeDir="$(dirname "$loopfile")"
+        if [ -f "$_noGeeDir/$_noGeeFile" ]; then
+            [ "$_noGeeDir/$_noGeeFile" -nt "$loopfile" ] && echo 1>&2 "ERROR: $_noGeeDir/$_noGeeFile newer than $loopfile" && exit 1
             debug geeFile newer or equal to "$_noGeeDir/$_noGeeFile"
         else
-           debug non-gee file for "$_noGeeDir/$_noGeeFile" not found
+            debug non-gee file for "$_noGeeDir/$_noGeeFile" not found
         fi
-    done
+    done < <(find . -name '*.gee' -type f -print0)
     exit 0
 }
-
 main "$@"
 ENDINIT
     res=$? && chmod 755 .git/hooks/pre-commit
