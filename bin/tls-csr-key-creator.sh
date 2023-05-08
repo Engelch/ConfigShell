@@ -3,6 +3,8 @@
 # shellcheck disable=SC2155
 #
 # RELEASE NOTES / CHANGELOG
+# 2.1.1:
+# - removed checking for binary named nop
 # 2.1.0:
 # - -V  version
 # - no CSR is no subject field is set
@@ -20,7 +22,7 @@
 readonly _app=$(basename "$0")
 readonly _appDir=$(dirname "$0")
 readonly _absoluteAppDir=$(cd "$_appDir" || errorExit 1 cannot determine absolute path of app_dir; /bin/pwd)
-readonly _appVersion="2.1.0" # use semantic versioning
+readonly _appVersion="2.1.1" # use semantic versioning
 export DebugFlag=${DebugFlag:-FALSE}
 
 # dry run mode, either supposed to be empty or to be echo
@@ -286,7 +288,7 @@ function createSubjectStringC_O_OU_CN() {
 }
 
 function main() {
-    exitIfBinariesNotFound pwd basename dirname mktemp openssl nop
+    exitIfBinariesNotFound pwd basename dirname mktemp openssl
     parseCLI "$@"
     shift $(( OPTIND - 1 ))  # not working inside parseCLI
     debug args are "$*"
