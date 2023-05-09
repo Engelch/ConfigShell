@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 #
 
 goAndExec() {
@@ -8,4 +8,6 @@ goAndExec() {
     cd ..
 }
 
-find . -name '*test.sh' | while read file; do goAndExec "$file" ; done
+while read -r -d '' file; do
+    goAndExec "$file"
+done < <(find . -name '*test.sh' -print0)
