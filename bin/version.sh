@@ -7,6 +7,7 @@
 # - version.txt is now checked first
 # - shellcheck
 # - test-framework in /opt/ConfigShell/lib/tests/version.sh
+# - exit code 10 if no version could be determine in default case (else branch)
 #
 #########################################################################################
 # ConfigShell lib 1.1 (codebase 1.0.0)
@@ -90,7 +91,7 @@ function main() {
     declare -r _app="$(basename "$0")"
     declare -r _appDir="$(dirname "$0")"
     declare -r _absoluteAppDir=$(cd "$_appDir" || exit 126; /bin/pwd)
-    declare -r _version="2.2.0"
+    declare -r _version="2.2.2"
 
     exitIfBinariesNotFound pwd tput basename dirname mktemp
 
@@ -111,22 +112,33 @@ function main() {
         [ "$(echo "$_versionFilePattern" | wc -w )" -ne 2 ] && 1>&2 echo 'Versionpattern file should be of the format <filename> <pattern for selecting the line in the file>'
         _file=$(echo "$_versionFilePattern" | awk '{ print $1 }')
         _pattern=$(echo "$_versionFilePattern" | awk '{ print $2 }')
-        find . -name "$_file" -print | while read -r match; do output=$(grep -iE --colour=never "$_pattern" "$match" /dev/null | grep -v '^$' | grep -vE '^[[:space:]]*#')
+        debug file pattern is "$_file"
+        debug pattern is "$_pattern"
+        declare -g fileFound=''
+        while read -r -d '' match; do
+            output=$(grep -iE --colour=never "$_pattern" "$match" /dev/null | grep -v '^$' | grep -vE '^[[:space:]]*#')
+            [ "$fileFound" = TRUE ] && 1>&2 echo "ERROR:multiple files match for version information" && exit 10
+            fileFound=TRUE
             [ -n "$output" ] && if [ "$_showFileName" = TRUE ] ; then
                 echo -n "$(sed 's/:.*/:/' <<< "${output}")"
                 sed 's/.*[ =]\"//g' <<< "${output}" | sed 's/\".*$//'
             else
                 sed 's/^.*://' <<< "$output" | sed 's/.*[ =]\"//g' | sed 's/\".*$//'
             fi
-        done
+        done < <(find . -name "$_file" -print0) # find .... | while  >>>> executes the while block in a subshell
+        [ -z "$fileFound" ] && 1>&2 echo 'ERROR:Version versionFilePattern mode, information could not be determined.' && exit 10
     else
         # find file(s) with app.?version information included. It should result in exactly one file.
         # should only return one line or less => -quit option
+        fileFound=''
         while read -r -d '' matchfile; do
+            [ "$fileFound" = TRUE ] && 1>&2 echo "ERROR:multiple files match for version information" && exit 10
+            fileFound=TRUE
             [ -z "$matchfile" ] && 1>&2 echo Could not determine version file. Variable files returned "$matchfile". && exit 1
             [ "$_showFileName" = TRUE ] && echo -n "$matchfile:"
             grep -EiH --colour=never 'app.?version[[:space:]]*=' "$matchfile" | grep -E --colour=never '[0-9]+\.[0-9]+\.[0-9]+' | tail -n1 | sed 's/.*[ =]\"//g' | sed 's/\".*$//'
-        done < <(find . -name \*.go -maxdepth 1 -exec grep -Eiq 'app.?version[[:space:]]*=' {} \; -print0 -quit)
+        done < <(find . -name \*.go -maxdepth 1 -exec grep -Eiq 'app.?version[[:space:]]*=' {} \; -print0)
+        [ -z "$fileFound" ] && 1>&2 echo 'ERROR:Version information could not be determined.' && exit 10
         exit 0
     fi
 }
