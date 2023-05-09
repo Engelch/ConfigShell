@@ -3,6 +3,8 @@
 # shellcheck disable=SC2155
 #
 # RELEASE NOTES / CHANGELOG
+# 2.1.2:
+# - improved help page
 # 2.1.1:
 # - removed checking for binary named nop
 # 2.1.0:
@@ -22,7 +24,7 @@
 readonly _app=$(basename "$0")
 readonly _appDir=$(dirname "$0")
 readonly _absoluteAppDir=$(cd "$_appDir" || errorExit 1 cannot determine absolute path of app_dir; /bin/pwd)
-readonly _appVersion="2.1.1" # use semantic versioning
+readonly _appVersion="2.1.2" # use semantic versioning
 export DebugFlag=${DebugFlag:-FALSE}
 
 # dry run mode, either supposed to be empty or to be echo
@@ -114,23 +116,27 @@ function usage()
     err4 $_appVersion
     err
     err OPTIONS
-    err4 '-2      ::= create RSA2048 key material. Implies -g'
-    err4 '-c val  ::= set CN field in CSR'
-    err4 '-d      ::= set DNS subject alternate name'
-    err4 '-e ciph ::= specify ECC key generation and the cipher to be used. It implies -g'
-    err4 '-i      ::= set IP subject alternate name'
-    err4 '-k      ::= key creation only, no CSR'
-    err4 '-l      ::= list supported ECC ciphers'
-    err4 '-g      ::= generate key pair mode. By default, it is expected to exist'
-    err4 '-o val  ::= set O field in CSR, default: ""'
-    err4 '-u val  ::= set OU field in CSR'
-    err4 '-s val  ::= set C field in CSR, default: CH'
-    err4 '-x val  ::= create SAN field, like: -x "certificatePolicies = 1.2.3.4"'
+    err4 KEY-creation-relation options
+    err4 '-k          ::= key creation only, no CSR'
+    err4 '-2          ::= create RSA2048 key material. Default is RSA4096. It implies -g'
+    err4 '-e <<ciph>> ::= specify ECC key generation and the cipher to be used. It implies -g'
+    err4 '-l          ::= list ECC ciphers that are supported by this command'
+    err4 '-g          ::= generate key pair mode. By default, it is expected to exist'
     err
-    err4 '-D      ::= enable debug output'
-    err4 '-V      ::= show version'
-    err4 '-n      ::= dry-run mode'
-    err4 '-h      ::= show usage message and exit with exit code 1'
+    err4 CSR-related options
+    err4 '-c <<val>>  ::= set CN field in CSR'
+    err4 '-o <<val>>  ::= set O field in CSR, default: ""'
+    err4 '-u <<val>>  ::= set OU field in CSR'
+    err4 '-s <<val>>  ::= set C field in CSR, default: CH'
+    err4 '-x <<val>>  ::= create SAN field, like: -x "certificatePolicies = 1.2.3.4"'
+    err4 '-d <<FQDN>> ::= set DNS subject alternate name'
+    err4 '-i <<IP>    ::= set IP subject alternate name'
+    err
+    err4 General options
+    err4 '-D          ::= enable debug output'
+    err4 '-V          ::= show version'
+    err4 '-n          ::= dry-run mode'
+    err4 '-h          ::= show usage message and exit with exit code 1'
 }
 
 # EXIT 1    usage
