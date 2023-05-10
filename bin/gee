@@ -6,7 +6,12 @@
 # DESCRIPTION: <see usage function below>
 #
 # CHANGELOG:
-# - 1.0.0: initial
+# 2.4
+# - version info in pre-commit to be checked during git gee init
+# 2.3
+# - fix subshell issue
+# 1.0
+# - initial
 #
 # COPYRIGHT © 2022 Christian Engel (mailto:engel-ch@outlook.com)
 #
@@ -39,7 +44,7 @@
 # shellcheck disable=SC2155
 readonly _app=$(basename "${0}")
 readonly _appDir=$(dirname "$(readlink -f "${0}")")
-readonly _appVersion="2.3.0" # use semantic versioning
+readonly _appVersion="2.4.0" # use semantic versioning
 export DebugFlag=${DebugFlag:-FALSE}
 
 #########################################################################################
@@ -331,7 +336,7 @@ function createPreCommit() {
     # single-quotes around ENDINIT prevents evaluation of vars inside here document
     cat >|.git/hooks/pre-commit <<'ENDINIT'
 #!/usr/bin/env bash
-# version 2.3.0
+# gee:version:2.4.0
 # --- debug: Conditional debugging. All commands begin w/ debug.
 function debugSet() {
     DebugFlag=TRUE
@@ -395,8 +400,8 @@ function initMode() {
     cd "$gitroot" || return
     [ ! -f "$geePwFile" ] && errorExit 30 "Password file $geePwFile not found"
     [ ! -r "$geePwFile" ] && errorExit 31 "Password file $geePwFile not readable"
-    [ -f .gitignore ] && grep -q -E '.gee$' .gitignore && errorExit 32 ".gee files seem to be in .gitignore, please check"
-    [ -f .git/hooks/pre-commit ] && errorExit 33 "pre-commit already existing."
+    # [ -f .gitignore ] && grep -q -E '.gee$' .gitignore && errorExit 32 ".gee files seem to be in .gitignore, please check"
+    # [ -f .git/hooks/pre-commit ] && errorExit 33 "pre-commit already existing."
     createPreCommit
     res=$?
     [ "$res" -eq 0 ] && touch "$gitroot/.git/gee" && return 0 # make it detectable that gee is applied
@@ -610,6 +615,29 @@ function listMode() {
 }
 
 #############################################################################################
+
+# checkGeeVersions compares the git gee version and the installed version of the pre-commit.
+#
+# exit 20 :-- no pre-commit found
+# exit 21 :-- git pre-commit hook version cannot be determined
+function checkGeeVersions() {
+    local commit_version=''
+    initDefaultVars
+    [ ! -f "$gitroot/.git/hooks/pre-commit" ] && \
+        1>&2 echo 'no pre-commit is installed. Consider running git gee init?' && exit 20
+    commit_version=$(grep  '# gee:version:' "$gitroot/.git/hooks/pre-commit")
+    [ -z "$commit_version" ] && \
+        1>&2 echo 'Cannot determine version of the pre-commit hook. Consider a reinstall using git init?' &&
+        exit 21
+    commit_version=$(echo "$commit_version" | sed 's/.*://')
+    debug commit_version is: "$commit_version"
+    [ "$commit_version" != "$_appVersion" ] && \
+        1>&2 echo pre-commit hook version is: "$commit_version" && \
+        1>&2 echo "git gee version is: $_appVersion" && \
+        1>&2 echo "Please align" && exit 22
+}
+
+#############################################################################################
 #############################################################################################
 
 function main() {
@@ -633,15 +661,19 @@ function main() {
         initMode "$@"
         ;;
     l | li | list | lst)
+        checkGeeVersions
         listMode "$@" # created dependency by gee s
         ;;
     e | en | enc | encr | encry | encryp | encrypt | encrypted)
+        checkGeeVersions
         encryptMode "$@"
         ;;
     d | de | dec | decr | decry | decryp | decrypt | u | un | une | unen | unencr | unencry | unencryp | unencrypt)
+        checkGeeVersions
         decryptMode "$@"
         ;;
     s | status)
+        checkGeeVersions
         git gee l | grep -E --color ', modified\)$' # must be changed if the output format of l is changed
         ;;
     version)
