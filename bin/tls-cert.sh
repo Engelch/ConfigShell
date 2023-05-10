@@ -1,19 +1,20 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2155 disable=SC2046 disable=SC2001
 
-function debugSet()             { DebugFlag=TRUE; return 0; }
-function debugUnset()           { DebugFlag=; return 0; }
-function debug()                { [ "$DebugFlag" = TRUE ] && echo "DEBUG:$*" 1>&2 ; return 0; }
-function debug4()               { [ "$DebugFlag" = TRUE ] && echo "DEBUG:    $*" 1>&2 ; return 0; }
-function debug8()               { [ "$DebugFlag" = TRUE ] && echo "DEBUG:        $*" 1>&2 ; return 0; }
-function debug12()              { [ "$DebugFlag" = TRUE ] && echo "DEBUG:            $*" 1>&2 ; return 0; }
+# Changelog
+# 2.3.:
+#  - move to ConfigShell/lib
+# 2.2.:
+# - -r mode   accepts now http(s)?://bla.com/jdlssjlkj and filters bla.com
 
-function err() { 1>&2 echo "$@"; }
-function error()        { echo 'ERROR:'"$*" 1>&2;             return 0; }
-function error4()       { echo 'ERROR:    '"$*" 1>&2;         return 0; }
-
-function errorExit()                { EXITCODE=$1 ; shift; error "$*" ; exit "$EXITCODE"; }
-function exitIfBinariesNotFound()   { for file in "$@"; do [ $(command -v "${file}") ] || errorExit 253 binary not found: "$file"; done }
+#########################################################################################
+# ConfigShell lib 1.1 (codebase 1.0.0)
+bashLib="/opt/ConfigShell/lib/bashlib.sh"
+[ ! -f "$bashLib" ] && 1>&2 echo "bash-library $bashLib not found" && exit 127
+# shellcheck source=/opt/ConfigShell/lib/bashlib.sh
+source "$bashLib"
+unset bashLib
+#########################################################################################
 
 function tlsCert2LeafCn2() {
    for file in "$@" ; do
@@ -124,47 +125,56 @@ function tlsServerCert2() {
    # be removed from the call.
     [ -z "$1" ] && 1>&2 echo no argument specified && return 1
     url="$1"
-    # strip potential leading ^http.?://
-    [[ $url =~ ^http.?:// ]] && url=$(echo "$url" | sed 's,^.*://,,')
+    # strip potential leading ^http.?:// and strip /... after the FQDN or IP-address
+    url=$(echo "$url" | sed -E 's,http(s)?://,,' | sed -E 's,/.*,,')
     debug url: "$url"
     gnutls-cli --print-cert --no-ca-verification "$url"  < /dev/null
 }
 
-
 function usage() {
-   err Show certificate information. The default it to output the complete chain if existing.
-   err
-   err "$App" '-h'
-   err "$App" '-V'
-   err "$App" '[<<file>>]'
-   err "$App" '[-D] -c [<<file>>]'
-   err "$App" '[-D] -s [<<file>>]'
-   err "$App" '[-D] -i [<<file>>]'
-   err "$App" '[-D] -f [<<file>>...]'
-   err "$App" '[-D] -x [<<file>>...]'
-   err "$App" '[-D] -e <<expirationInDays>> [<<file>>]'
-   err "$App" '[-D] -r [<<[https://]remoteServer>>]'
-   err
-   err '-h                    ::= help'
-   err '-V                    ::= show version'
-   err '-D                    ::= enable debug'
-   err '-c                    ::= just show leaf CN field'
-   err '-i                    ::= just show issuer of leaf certificate'
-   err '-s                    ::= just show leaf subject field'
-   err '-f                    ::= show the fingerprint for certificates, private, and public keys, and CSRs'
-   err '-r remote-host        ::= show certificate of remote server'
-   err '-x                    ::= show validity start and stop dates'
-   err '-e <<expiry in days>> ::= show if the certificate expired in the specified amount of days'
-   err '       Exit codes'
-   err '             0 certificate not expiring in the next specified days'
-   err '             1 certificate is expiring in the specified timeframe'
-   err '             2 certificate is already expired'
-   err '             3 unknown option'
-   err '            99 error, the certificate could not be read'
-   err '           100 expiryInDays is not a number'
-   err '           101 specified file is not a plain file'
-}
+   cat <<HERE
+DESCRIPTION
+   Show certificate information. The default it to output the complete
+   chain if existing.
 
+SYNOPSIS
+   $App -h
+   $App -V
+   $App [<<file>>]
+   $App [-D] -c [<<file>>]
+   $App [-D] -s [<<file>>]
+   $App [-D] -i [<<file>>]
+   $App [-D] -f [<<file>>...]
+   $App [-D] -x [<<file>>...]
+   $App [-D] -e <<expirationInDays>> [<<file>>]
+   $App [-D] -r [<<[https://]remoteHost/...>>]
+
+OPTIONS
+   -h                    ::= help
+   -V                    ::= show version
+   -D                    ::= enable debug
+
+   -c                    ::= just show leaf CN field
+   -i                    ::= just show issuer of leaf certificate
+   -s                    ::= just show leaf subject field
+   -f                    ::= show the fingerprint for certificates, private,
+                             and public keys, and CSRs
+   -r remoteHost         ::= show certificate of remote server, remote server
+                             can be an IP-address, URL, or an FQDN
+   -x                    ::= show validity/expiry start and stop dates
+   -e <<expiry in days>> ::= show if the certificate expired in the specified
+                             amount of days
+
+EXIT CODES
+             0 certificate not expiring in the next specified days
+             1 certificate is expiring in the specified timeframe
+             2 certificate is already expired
+             3 unknown option
+            99 error, the certificate could not be read
+           100 expiryInDays is not a number
+           101 specified file is not a plain file
+HERE
+}
 
 function deleteOptionalTempfile() {
    debug in deleteOptionalTempfile
@@ -202,7 +212,7 @@ function parseCLIOptions() {
          D) debugSet; debug debug enabled
             ;;
          V) # version #
-            echo 1>&2 "2.0.0"
+            echo 1>&2 "2.2.0"
             exit 3
             ;;
          c) # show leaf CN field
@@ -307,6 +317,5 @@ function main() {
 }
 
 main "$@"
-
 
 # EOF
