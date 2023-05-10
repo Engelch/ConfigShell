@@ -150,9 +150,9 @@ end
 function fish_prompt
     set -l res $status
     if test "$res" -eq 0
-        set resString $(set_color white)"$res"
+        set resString (set_color white)"$res"
     else
-        set resString $(set_color -o red)"$res"(set_color white)
+        set resString (set_color -o red)"$res"(set_color white)
     end
     printf '[%s]%s · %s%s@%s%s · %s%s%s · %s%s%s · %s%s%s · %s%s%s\n>' \
         $resString (set_color blue) \
