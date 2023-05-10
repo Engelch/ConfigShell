@@ -12,6 +12,7 @@
     - [ok:....](#ok)
     - [ERROR:.... or FAIL:...](#error-or-fail)
     - [Other output](#other-output)
+  - [Running individual tests](#running-individual-tests)
   - [Example Output](#example-output)
 
 
@@ -65,6 +66,13 @@ FAIL:<<testNameOrDirectoryName>>:<<what was tested>>
 ### Other output
 
 Other output must not begin with `ok:`, `ERRROR:`, or `FAIL:`. This output shall be minimised and best not existing.
+
+## Running individual tests
+
+To run a single test of tests, do the following:
+
+1. `cd ...` to the directory of the tests.
+2. Execute the `test.sh` script(s) in this directory.
 
 ## Example Output
 
