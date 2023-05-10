@@ -21,6 +21,6 @@ testExitCode() {
   echo "ERROR:$(pwd | xargs basename):$1 should return exit code $3 but returned $res"
 }
 
-testExitCode "test1 version.sh"     "version.sh"      "10"
-testExitCode "test1 version.sh -v"  "version.sh -v"   "10"
+testExitCode "test1 version.sh"     "version.sh"      "14"
+testExitCode "test1 version.sh -v"  "version.sh -v"   "14"
 

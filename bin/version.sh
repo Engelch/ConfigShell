@@ -8,6 +8,10 @@
 # - shellcheck
 # - test-framework in /opt/ConfigShell/lib/tests/version.sh
 # - exit code 10 if no version could be determine in default case (else branch)
+# - exit code 11 in version.txt case
+# - exit code 12
+# - exit code 13
+# - exit code 14
 #
 #########################################################################################
 # ConfigShell lib 1.1 (codebase 1.0.0)
@@ -40,16 +44,20 @@ DESCRIPTION
     1. The scripts checks for a file version.txt. If this file exists,
        the version number is extracted from this file. Empty lines in
        version.txt are ignored.
+       If no version number can be obtained, exit code 11 is returned.
+       If multiple lines are obtained, exit code 12 is returned.
     2. Otherwise, it checks for the existence of the file:
        ./versionFilePattern
        If it exists, empty lines are ignored in this file. One line is
        supposed to contain content of the form:
        <<filename>> <<pattern to extract version info from the file>>
-       The pattern is applied in case-insensitive mode to given filename
+       The pattern is applied in case-insensitive mode to given filename.
+       If multiple files match, exit code 13 is returned.
     3. Otherwise, it searches in all *.go files in the CWD if they
        contain a match for the reg-expr pattern 'app.?version[[:space:]]*='
        If exactly one match can be found, the version information is
        extracted from this line.
+       If multiple files match with version information, exit code 14 is returned.
     4. Otherwise, it fails with exit code 10
 
     A testing framework exists for version.sh in
@@ -94,7 +102,7 @@ function main() {
     declare -r _app="$(basename "$0")"
     declare -r _appDir="$(dirname "$0")"
     declare -r _absoluteAppDir=$(cd "$_appDir" || exit 126; /bin/pwd)
-    declare -r _version="2.2.2"
+    declare -r _version="2.2.4"
 
     exitIfBinariesNotFound pwd tput basename dirname mktemp
 
@@ -107,8 +115,10 @@ function main() {
 
     if [ -f "$versionFile" ] ; then
             [ "$_showFileName" = TRUE ] && echo -n 'version.txt:'
-            grep -Ev '^[[:space:]]*#' "$versionFile"| grep -Ev '^$'
-            return
+            output=$(grep -Ev '^[[:space:]]*#' "$versionFile"| grep -Ev '^$')
+            [ -z "$output" ] && 1>&2 echo "ERROR:version number could not be obtained from version.txt file." && exit 11
+            [ "$(echo "$output" | wc -l)" -gt 1 ] && 1>&2 echo "ERROR:multiple lines were obtained from version.txt file." && exit 12
+            echo "$output"
     elif [ -f "$versionFilePattern" ] ; then
         # _versionFilePattern can either contain specific filenames to search for version information or a pattern
         _versionFilePattern=$(grep -v '^$' < "$versionFilePattern" | grep -Ev '^[[:space:]]*#' | sed 's/[[:space:]]*#.*$//')
@@ -120,7 +130,7 @@ function main() {
         declare -g fileFound=''
         while read -r -d '' match; do
             output=$(grep -iE --colour=never "$_pattern" "$match" /dev/null | grep -v '^$' | grep -vE '^[[:space:]]*#')
-            [ "$fileFound" = TRUE ] && 1>&2 echo "ERROR:multiple files match for version information" && exit 10
+            [ "$fileFound" = TRUE ] && 1>&2 echo "ERROR:multiple files match for version information" && exit 13
             fileFound=TRUE
             [ -n "$output" ] && if [ "$_showFileName" = TRUE ] ; then
                 echo -n "$(sed 's/:.*/:/' <<< "${output}")"
@@ -135,7 +145,7 @@ function main() {
         # should only return one line or less => -quit option
         fileFound=''
         while read -r -d '' matchfile; do
-            [ "$fileFound" = TRUE ] && 1>&2 echo "ERROR:multiple files match for version information" && exit 10
+            [ "$fileFound" = TRUE ] && 1>&2 echo "ERROR:multiple files match for version information" && exit 14
             fileFound=TRUE
             [ -z "$matchfile" ] && 1>&2 echo Could not determine version file. Variable files returned "$matchfile". && exit 1
             [ "$_showFileName" = TRUE ] && echo -n "$matchfile:"
