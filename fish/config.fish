@@ -12,7 +12,7 @@ end
 
 function debugUnset
     set -e DEBUG_Flag
-end 
+end
 
 function setupAliases_Abbreviations
     debug in setupAliases_Abbreviations
@@ -92,7 +92,7 @@ function build_path_by_config_files
             $PROFILES_CONFIG_DIR/Shell/path.(uname).(uname -m).append.txt
         if test -r "$pathfile"
             debug "  Pathfile $pathfile existing"
-            grep -v '^$' "$pathfile" | while read -l line 
+            grep -v '^$' "$pathfile" | while read -l line
                 set line (echo "$line" | xargs | sed -e "s,^~,$HOME," | sed -e "s,^\$HOME,$HOME,")
                 if test -d "$line"
                    if string match -r '\.prepend\.txt$' "$pathfile" >/dev/null
@@ -113,7 +113,7 @@ function build_path_by_config_files
         end
     end
 end
-    
+
 function setupPath
     debug in setupPath
     set -g -x UID (id -u)
@@ -150,9 +150,9 @@ end
 function fish_prompt
     set -l res $status
     if test "$res" -eq 0
-        set resString "$(set_color white)$res"
+        set resString $(set_color white)"$res"
     else
-        set resString "$(set_color -o red)$res$(set_color white)"
+        set resString $(set_color -o red)"$res"(set_color white)
     end
     printf '[%s]%s · %s%s@%s%s · %s%s%s · %s%s%s · %s%s%s · %s%s%s\n>' \
         $resString (set_color blue) \
@@ -160,7 +160,7 @@ function fish_prompt
         (set_color green) AWS:$AWS_PROFILE (set_color blue) \
         (set_color magenta) (watson status) (set_color blue) \
         (set_color red) (git_prompt_status) (set_color blue) \
-        (set_color yellow) (pwd | sed -E "s,$HOME,~,") (set_color white) 
+        (set_color yellow) (pwd | sed -E "s,$HOME,~,") (set_color white)
 end
 
 function setupCompletion
@@ -216,7 +216,7 @@ function hadmRealUser
                 end # if
             end # for
         end # if
-    end # if test (id -un)...        
+    end # if test (id -un)...
 end
 
 function setupExportVars
