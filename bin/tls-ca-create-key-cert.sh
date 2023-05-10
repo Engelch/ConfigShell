@@ -3,6 +3,9 @@
 # shellcheck disable=SC2155
 #
 # RELEASE NOTES / CHANGELOG
+# 2.1.0:
+# - removed wrong nop binary existence check
+# - introduced -V option to get the version number
 # 2.0.0:
 # - ECC support
 # - Allow creation of key-material only
@@ -16,7 +19,7 @@
 readonly _app=$(basename "$0")
 readonly _appDir=$(dirname "$0")
 readonly _absoluteAppDir=$(cd "$_appDir" || errorExit 1 cannot determine absolute path of app_dir; /bin/pwd)
-readonly _appVersion="2.0.0" # use semantic versioning
+readonly _appVersion="2.1.0" # use semantic versioning
 export DebugFlag=${DebugFlag:-FALSE}
 
 # dry run mode, either supposed to be empty or to be echo
@@ -122,7 +125,7 @@ function usage()
 }
 
 function parseCLI() {
-    while getopts "2Dc:e:ghlno:s:u:y:" options; do         # Loop: Get the next option;
+    while getopts "2VDc:e:ghlno:s:u:y:" options; do         # Loop: Get the next option;
         case "${options}" in                    # TIMES=${OPTARG}
             2)  debug RSA key material 2048bit
                 KEY_CREATION=TRUE
@@ -130,6 +133,9 @@ function parseCLI() {
                 ;;
             D)  err Debug enabled
                 debugSet
+                ;;
+            V)  err "$_appVersion"
+                exit 1
                 ;;
             c)  CN=$OPTARG
                 debug setting CN to "$CN"
@@ -263,7 +269,7 @@ function createSubjectStringC_O_OU_CN() {
 }
 
 function main() {
-    exitIfBinariesNotFound pwd basename dirname mktemp openssl nop
+    exitIfBinariesNotFound pwd basename dirname mktemp openssl
     parseCLI "$@"
     shift $(( OPTIND - 1 ))  # not working inside parseCLI
     debug args are "$*"
