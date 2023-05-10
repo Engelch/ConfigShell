@@ -21,6 +21,7 @@ function csrShowFingerprint() {
    local file
    for file in "$@"; do
       # [ -n "$VERBOSE" ] && echo -n "$file":
+      debug pubkey is $(openssl req -in "$file" -noout -pubkey)
       openssl req -in "$file" -noout -pubkey | tls-rsa-pub-fingerprint.sh
    done
 }
@@ -34,12 +35,12 @@ DESCRIPTION
 
 SYNOPSIS
    $(basename "$0") -h
-   $(basename "$0") [ -d ] [ -v ] <<file>>
-   $(basename "$0") [ -d ] [ -f ] [ -v ] <<file>>
+   $(basename "$0") [ -D ] [ -v ] <<file>>
+   $(basename "$0") [ -D ] [ -f ] [ -v ] <<file>>
 
 OPTIONS
    -h ::= show help
-   -d ::= show debug information
+   -D ::= show debug information
    -v ::= split output CSRs by a separator line
    -f ::= show the fingerprint of the public key inside the CSR
 HERE
@@ -47,12 +48,12 @@ HERE
 
 # exit codes 1..9
 function parseCLI() {
-   while getopts "Vdhvf" options; do         # Loop: Get the next option;
+   while getopts "VDhvf" options; do         # Loop: Get the next option;
       case "${options}" in                    # TIMES=${OPTARG}
          V)    1>&2 echo "1.2.0"
                exit 2
                ;;
-         d)    debugSet
+         D)    debugSet
                debug Debug is on
                ;;
          v)    VERBOSE=TRUE
@@ -75,7 +76,7 @@ function main() {
    shift $(($OPTIND - 1))  # not working inside parseCLI
    if [ -n "$FINGERPRINT" ] ; then
       for file in "$@" ; do # fingerprint output
-         [ -n "$VERBOSE" ] && csrShowFingerprint "$file" | sed "s/$/ $file/"
+         [ -n "$VERBOSE" ] && output="$(csrShowFingerprint "$file")" && echo "$output $file"
          [ -z "$VERBOSE" ] && csrShowFingerprint "$file"
       done
    else

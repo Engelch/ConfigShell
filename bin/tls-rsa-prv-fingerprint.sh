@@ -35,9 +35,8 @@ elif [ "$1" = -v ] ; then       # show filenames
 fi
 for file in "$@" ; do
    [ ! -f "$file" ] && err ERROR "$file" is not a regualar file && exit 10
-   [ -n "$VERBOSE" ] && prvFingerprint "$file" | sed "s/$/ $file/"
+   [ -n "$VERBOSE" ] && output="$(prvFingerprint "$file")" && echo "$output $file"
    [ -z "$VERBOSE" ] && prvFingerprint "$file"
-
 done
 
 # EOF

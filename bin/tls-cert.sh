@@ -57,13 +57,13 @@ function fingerprint2() {
    debug "${FUNCNAME[0]}"............
    unset found
    debug working on file "$file"
-   [[ "$file" =~ .*\.crt$  ]] && found=TRUE && debug exec tlsCertFingerprint3 && tlsCertFingerprint3 "$file"
-   [[ "$file" =~ .*\.pem$  ]] && found=TRUE && debug exec tlsCertFingerprint3 && tlsCertFingerprint3 "$file"
-   [[ "$file" =~ .*\.pub$  ]] && found=TRUE && debug exec tls-rsa-pub-fingerprint && tls-rsa-pub-fingerprint.sh -v "$file"
-   [[ "$file" =~ .*\.prv$  ]] && found=TRUE && debug exec tls-rsa-prv-fingerprint && tls-rsa-prv-fingerprint.sh -v "$file"
-   [[ "$file" =~ .*\.key$  ]] && found=TRUE && debug exec tls-rsa-prv-fingerprint && tls-rsa-prv-fingerprint.sh -v "$file"
-   [[ "$file" =~ .*\.csr$  ]] && found=TRUE && debug exec tlsCsr && tlsCsr -v -f "$file"
-   [[ "$file" =~ .*\.p7b$  ]] && found=TRUE && debug exec tls-p7b-to-pem && tls-p7b-to-pem.sh "$file" | tlsCertFingerprint3
+   [[ "$file" =~ .*\.crt$  ]] && found=TRUE && debug calling tlsCertFingerprint3 && tlsCertFingerprint3 "$file"
+   [[ "$file" =~ .*\.pem$  ]] && found=TRUE && debug calling tlsCertFingerprint3 && tlsCertFingerprint3 "$file"
+   [[ "$file" =~ .*\.pub$  ]] && found=TRUE && debug calling tls-rsa-pub-fingerprint && tls-rsa-pub-fingerprint.sh -v "$file"
+   [[ "$file" =~ .*\.prv$  ]] && found=TRUE && debug calling tls-rsa-prv-fingerprint && tls-rsa-prv-fingerprint.sh -v "$file"
+   [[ "$file" =~ .*\.key$  ]] && found=TRUE && debug calling tls-rsa-prv-fingerprint && tls-rsa-prv-fingerprint.sh -v "$file"
+   [[ "$file" =~ .*\.csr$  ]] && found=TRUE && debug calling tlsCsr && tlsCsr -v -f "$file"
+   [[ "$file" =~ .*\.p7b$  ]] && found=TRUE && debug calling tls-p7b-to-pem && tls-p7b-to-pem.sh "$file" | tlsCertFingerprint3
    [ -z "$found" ] && errorExit 20 ERROR file "$file" not supported
 }
 
