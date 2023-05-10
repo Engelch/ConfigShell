@@ -1,43 +1,60 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2155
 
-function error()        { echo 'ERROR:'"$*" 1>&2;             return 0; }
-function error4()       { echo 'ERROR:    '"$*" 1>&2;         return 0; }
-function error8()       { echo 'ERROR:        '"$*" 1>&2;     return 0; }
-function errorExit()    { EXITCODE=$1 ; shift; error "$*" ; exit "$EXITCODE"; }
-function err()          { 1>&2 echo "$@"; }
+#########################################################################################
+# ConfigShell lib 1.1 (codebase 1.0.0)
+bashLib="/opt/ConfigShell/lib/bashlib.sh"
+[ ! -f "$bashLib" ] && 1>&2 echo "bash-library $bashLib not found" && exit 127
+# shellcheck source=/opt/ConfigShell/lib/bashlib.sh
+source "$bashLib"
+unset bashLib
+#########################################################################################
 
 function tlsCsr2() {
    local file;
-   for file in $*; do
+   for file in "$@"; do
       openssl req -in "$file"  -noout -utf8 -text | sed "s,^,$file:," | egrep -v '.*:.*:.*:'
    done
 }
 
 function csrShowFingerprint() {
    local file
-   for file in "$*"; do
+   for file in "$@"; do
       # [ -n "$VERBOSE" ] && echo -n "$file":
       openssl req -in "$file" -noout -pubkey | tls-rsa-pub-fingerprint.sh
    done
 }
 
 function usage() {
-   err Show CSR values
-   err
-   err $(basename "$0") "-h"
-   err $(basename "$0") "[ -v ] <<file>>"
-   err $(basename "$0") "[ -f ] [ -v ] <<file>>"
-   err
-   err '-h ::= show help'
-   err '-v ::= split output CSRs by a separator line'
-   err '-f ::= show the fingerprint of the public key inside the CSR'
+   cat <<HERE
+DESCRIPTION
+   Show CSR fields (aka attributes) or show the fingerprint for a CSR. The
+   fingerprint will only be based on the contained public key using the
+   modulus and the exponent of it.
+
+SYNOPSIS
+   $(basename "$0") -h
+   $(basename "$0") [ -d ] [ -v ] <<file>>
+   $(basename "$0") [ -d ] [ -f ] [ -v ] <<file>>
+
+OPTIONS
+   -h ::= show help
+   -d ::= show debug information
+   -v ::= split output CSRs by a separator line
+   -f ::= show the fingerprint of the public key inside the CSR
+HERE
 }
 
 # exit codes 1..9
 function parseCLI() {
-   while getopts "hvf" options; do         # Loop: Get the next option;
+   while getopts "Vdhvf" options; do         # Loop: Get the next option;
       case "${options}" in                    # TIMES=${OPTARG}
+         V)    1>&2 echo "1.2.0"
+               exit 2
+               ;;
+         d)    debugSet
+               debug Debug is on
+               ;;
          v)    VERBOSE=TRUE
                ;;
          f)    FINGERPRINT=TRUE
@@ -57,13 +74,12 @@ function main() {
    parseCLI $*
    shift $(($OPTIND - 1))  # not working inside parseCLI
    if [ -n "$FINGERPRINT" ] ; then
-      for file in "$@" ; do
-
+      for file in "$@" ; do # fingerprint output
          [ -n "$VERBOSE" ] && csrShowFingerprint "$file" | sed "s/$/ $file/"
          [ -z "$VERBOSE" ] && csrShowFingerprint "$file"
       done
    else
-      for file in "$@" ; do
+      for file in "$@" ; do # output csr
          [ ! -f "$file" ] && err ERROR "$file" is not a regualar file && exit 10
          tlsCsr2 "$file"
       done
