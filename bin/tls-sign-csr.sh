@@ -16,7 +16,7 @@
 readonly _app=$(basename "$0")
 readonly _appDir=$(dirname "$0")
 readonly _absoluteAppDir=$(cd "$_appDir" || errorExit 1 cannot determine absolute path of app_dir; /bin/pwd)
-readonly _appVersion="1.0.0" # use semantic versioning
+readonly _appVersion="1.1.0" # use semantic versioning
 export DebugFlag=${DebugFlag:-FALSE}
 
 # dry run mode, either supposed to be empty or to be echo
@@ -85,6 +85,7 @@ function usage()
     err
     err4 \# help
     err4 "$_app" '-h'
+    err4 "$_app" '-V'
     err
     err VERSION
     err4 $_appVersion
@@ -95,13 +96,17 @@ function usage()
     err4 '-s                ::= create server certificate'
     err4 '-D                ::= enable debug output'
     err4 '-h                ::= show usage message and exit with exit code 1'
+    err4 '-V                ::= get the app version and exit 2'
 }
 
 # exit 1, 2
 function parseCLI() {
-    while getopts "Dc:d:hs" options; do         # Loop: Get the next option;
+    while getopts "DVc:d:hs" options; do         # Loop: Get the next option;
         case "${options}" in                    # TIMES=${OPTARG}
             D)  debugSet
+                ;;
+            V)  err "$_appVersion"
+                exit 2
                 ;;
             c)  cabase=$OPTARG
                 ;;
@@ -121,7 +126,7 @@ function parseCLI() {
 
 function main() {
     declare -g serverCert=
-    exitIfBinariesNotFound pwd basename dirname mktemp openssl nop
+    exitIfBinariesNotFound pwd basename dirname mktemp openssl
     parseCLI "$@"
     shift $(( OPTIND - 1 ))  # not working inside parseCLI
     debug args are "$*"
