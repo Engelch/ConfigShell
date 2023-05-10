@@ -51,6 +51,9 @@ DESCRIPTION
        If exactly one match can be found, the version information is
        extracted from this line.
     4. Otherwise, it fails with exit code 10
+
+    A testing framework exists for version.sh in
+    /opt/ConfigShell/lib/tests/version.sh
 OPTIONS
  -D      ::= enable debug output
  -V      ::= output the version number and exit w/ 3
