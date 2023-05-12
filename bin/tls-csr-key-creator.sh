@@ -3,6 +3,8 @@
 # shellcheck disable=SC2155
 #
 # RELEASE NOTES / CHANGELOG
+# 2.2:
+# - mail option added
 # 2.1.2:
 # - improved help page
 # 2.1.1:
@@ -24,7 +26,7 @@
 readonly _app=$(basename "$0")
 readonly _appDir=$(dirname "$0")
 readonly _absoluteAppDir=$(cd "$_appDir" || errorExit 1 cannot determine absolute path of app_dir; /bin/pwd)
-readonly _appVersion="2.1.2" # use semantic versioning
+readonly _appVersion="2.2.0" # use semantic versioning
 export DebugFlag=${DebugFlag:-FALSE}
 
 # dry run mode, either supposed to be empty or to be echo
@@ -98,10 +100,10 @@ function usage()
     err
     err SYNOPSIS
     err4 \# also create key pair
-    err4 "$_app" '-g [-D] [-n] [-c cn-value ] [-e ecc-cipher] [-o o-value] [-u ou-value] [-s country-value] [-(x|d|i) san-value] <base-file-name> ...'
+    err4 "$_app" '-g [-D] [-n] [-c cn-value ] [-e ecc-cipher] [-o o-value] [-u ou-value] [-s country-value] [-(x|d|i) san-value] [-m email] <base-file-name> ...'
     err
     err4 \# use existing keypair
-    err4 "$_app" '[-D] [-n] [-c cn-value ] [-o o-value] [-u ou-value] [-s country-value] [-(x|d|i) san-value] <base-file-name>|<pubkeyFile.pub>|<privateKeyFile.key> ...'
+    err4 "$_app" '[-D] [-n] [-c cn-value ] [-o o-value] [-u ou-value] [-s country-value] [-(x|d|i) san-value] [-m email] <base-file-name>|<pubkeyFile.pub>|<privateKeyFile.key> ...'
     err
     err4 \# key creation only
     err4 "$_app" '-k [-D] [-n] [-e ecc-cipher] <base-file-name> ...'
@@ -129,6 +131,7 @@ function usage()
     err4 '-u <<val>>  ::= set OU field in CSR'
     err4 '-s <<val>>  ::= set C field in CSR, default: CH'
     err4 '-x <<val>>  ::= create SAN field, like: -x "certificatePolicies = 1.2.3.4"'
+    err4 '-m <<val>>  ::= create SAN email field, like: -m "paul.panther@bla.com"'
     err4 '-d <<FQDN>> ::= set DNS subject alternate name'
     err4 '-i <<IP>    ::= set IP subject alternate name'
     err
@@ -142,7 +145,7 @@ function usage()
 # EXIT 1    usage
 # EXIT 2    version
 function parseCLI() {
-    while getopts "2DVc:d:e:ghi:klno:s:u:x:" options; do         # Loop: Get the next option;
+    while getopts "2DVc:d:e:ghi:klm:no:s:u:x:" options; do         # Loop: Get the next option;
         case "${options}" in                    # TIMES=${OPTARG}
             2)  debug RSA key material 2048bit
                 KEY_CREATION=TRUE
@@ -177,6 +180,9 @@ function parseCLI() {
                 ;;
             l)  err supported ECC ciphers: "prime256v1|secp384r1|secp521r1"
                 exit 1
+                ;;
+            m)  SAN="email:$OPTARG"
+                debug "setting email SAN filed to $SAN"
                 ;;
             n)  debug set dry-run mode
                 DRY='echo'
