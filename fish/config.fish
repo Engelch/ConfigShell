@@ -23,6 +23,7 @@ function setupAliases_Abbreviations
     alias a=alias
     alias cp='cp -i'
     alias rm='rm -i'
+    alias rm~='rmbak' # not realised as script because the script is deleted by rm~ :-)
     alias mv='mv -i'
     abbr -a -g  wh which
 
@@ -230,7 +231,7 @@ function setupExportVars
     set -g -x EDITOR vim       # bsroot has no notion about VISUAL
     set -g -x BLOCKSIZE 1K
     set -g -x PROFILES_CONFIG_DIR /opt/ConfigShell
-    set -g -x FISH_RC_VERSION "5.0.0-rc8"
+    set -g -x FISH_RC_VERSION "5.0.0-rc9"
     if test -n "$_current_FISH_RC_VERSION" -a "$FISH_RC_VERSION" != "$_current_FISH_RC_VERSION"
         echo New FISH_RC_VERSION "$FISH_RC_VERSION"
     end

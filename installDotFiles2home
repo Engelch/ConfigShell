@@ -137,12 +137,6 @@ function main() {
     parseCLI $* ; args=$parseCLI_result # args=$(parseCLI $*) creates a subshell and cannot set current shell debugFlag...
     debug args are $args
     cd  # jump to home directory, always install dot-files towards HOME directory
-    #oh-my-zsh
-    cd
-    # if  $(diff -i $_appDir/dot.zshrc $_appDir/backup.zshrc) ; then
-    #     echo restoring zshrc
-    #     cp -fv $_appDir/backup.zshrc $_appDir/dot.zshrc
-    # fi
     for file in $_absoluteAppDir/dot* ; do
         _nameWithoutDot=$(basename $file | sed 's/^dot//')
         [[ $_nameWithoutDot =~ .*~ ]] && continue

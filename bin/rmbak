@@ -1,9 +1,9 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 #
 
 
 find . -name \*~    -print -exec /bin/rm {} \; 
 find . -name \*.bak -print -exec /bin/rm {} \;
-[ "$(pwd)" = "/opt/ConfigShell/bin" ] &&  echo recreating rm~ && ln -s rmbak rm~ 
+# [ "$(pwd)" = "/opt/ConfigShell/bin" ] &&  echo recreating rm~ && ln -s rmbak rm~ # removed again by using a shell alias instead
 
 # eof

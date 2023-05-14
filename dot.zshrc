@@ -8,7 +8,7 @@
 
 # Path to your oh-my-zsh installation.
 export ZSH="$HOME/.oh-my-zsh"
-if [ ! -d "$ZSH/." -o ! -z $ownPrompt ] ; then 
+if [ ! -d "$ZSH/." -o ! -z $ownPrompt ] ; then
     unset ZSH
     echo non oh-my-zsh
     # unset fg
@@ -110,23 +110,6 @@ function main() {
 
     case $- in
         *i*) #  "This shell is interactive"
-            for files in $PROFILES_CONFIG_DIR/Shell/common.*.sh $PROFILES_CONFIG_DIR/Shell/zsh.*.sh; do
-                if [ -f $files ] ; then
-                    debug .zshrc sourcing $files
-                    source $files
-                    $(basename $files .sh).init
-                else
-                    echo WARNING: cannot find $files 1>&2
-                fi 
-            done 
-            # load os-specifics
-            if [ -f "$PROFILES_CONFIG_DIR/Zsh/os.$(uname).sh" ] ; then
-                debug8 OS is $(uname)
-                source "$PROFILES_CONFIG_DIR/Zsh/os.$(uname).sh"
-                os.$(uname).init
-            else
-                err4 No OS-specific path file "$PROFILES_CONFIG_DIR/Zsh/os.$(uname).sh" found
-            fi
             # prompts
             NEWLINE=$'\n'
             if [ ! -z $ownPrompt ] ; then
@@ -140,7 +123,7 @@ function main() {
             bindkey -e # emacs mode
             # bindkey '^[[1;5C' emacs-forward-word
             # bindkey '^[^[[D' emacs-backward-word
-            realUserForHadm
+            #realUserForHadm
             [ -z $NO_loadPost ]             && loadSource post
             ;;
         *) #echo "This is a script";;
