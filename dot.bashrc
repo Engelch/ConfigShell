@@ -230,7 +230,7 @@ function main() {
 
 debug "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '...............................................'
 main "$@"
-export BASH_RC_VERSION="5.0.7"
+export BASH_RC_VERSION="5.0.9"
 debug BASH_RC_VERSION is $BASH_RC_VERSION
 [ ! -z $BASH_MMONRC_VERSION ] && [ $BASH_MMONRC_VERSION != $BASH_RC_VERSION ] && echo New ConfigShell bash version $BASH_RC_VERSION. 1>&2
 BASH_MMONRC_VERSION=$BASH_RC_VERSION
