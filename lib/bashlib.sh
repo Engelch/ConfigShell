@@ -25,18 +25,15 @@
 #
 
 #########################################################################################
-# Skeleton functions, considered RO. v1.0.0
+# Skeleton functions, considered RO. v1.1.0
 
-# so helps to write a message in reverse mode
-function so()
-# always show such a message.  If known terminal, print the message
-# in reverse video mode. This is the other way, not using escape sequences
-{
-   [ "$1" != on ] && [ "$1" != off ] && 1>&2 echo "so: unsupported option $1" && return
-    if [ "$TERM" = "xterm" ] || [ "$TERM" = "vt100" ] || [ "$TERM" = "xterm-256color" ] || [ "$TERM" = "screen" ] ; then
-      [ "$1" = "on" ] && tput smso
-      [ "$1" = "off" ] && tput rmso
-    fi
+# reverse helps to write a message in reverse mode
+function reverse() {
+  if [ "$TERM" = "xterm" ] || [ "$TERM" = "vt100" ] || [ "$TERM" = "xterm-256color" ] || [ "$TERM" = "screen" ] ; then
+      tput smso ; echo "$@" ; tput rmso
+  else
+    echo "$@"
+  fi
 }
 
 # --- debug: Conditional debugging. All commands begin w/ debug.
@@ -59,14 +56,14 @@ function colBlink()     { printf "\e[5m"; return 0; }
 
 # function error()        { err 'ERROR:' $*; return 0; } # similar to err but with ERROR prefix and possibility to include
 # Write an error message to stderr. We cannot use err here as the spaces would be removed.
-function error()        { so on; echo 'ERROR:'"$*" 1>&2;            so off ; return 0; }
-function error4()       { so on; echo 'ERROR:    '"$*" 1>&2;        so off ; return 0; }
-function error8()       { so on; echo 'ERROR:        '"$*" 1>&2;    so off ; return 0; }
-function error12()      { so on; echo 'ERROR:            '"$*" 1>&2;so off ; return 0; }
+function error()        { reverse 'ERROR:'"$@" 1>&2;  return 0; }
+function error4()       { reverse 'ERROR:    '"$*" 1>&2;         return 0; }
+function error8()       { reverse 'ERROR:        '"$*" 1>&2;     return 0; }
+function error12()      { reverse 'ERROR:            '"$*" 1>&2; return 0; }
 
-function warning()      { so on; echo 'WARNING:'"$*" 1>&2;          so off; return 0; }
+function warning()      { reverse 'WARNING:'"$*" 1>&2;           return 0; }
 
-function errorExit()    { EXITCODE=$1 ; shift; error "$*" ; exit "$EXITCODE"; }
+function errorExit()    { EXITCODE="$1" ; shift; error "$*" ; exit "$EXITCODE"; }
 function exitIfErr()    { a="$1"; b="$2"; shift; shift; "$a" || errorExit "$b" "App returned $b $*"; }
 
 function err()          { echo "$*" 1>&2; }                 # just write to stderr

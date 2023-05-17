@@ -7,3 +7,5 @@ coverage.out
 *.backup
 *~
 *.bak
+
+.fake

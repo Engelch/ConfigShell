@@ -1,34 +1,14 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2086,SC2001 # using multi eval levels
 
 #########################################################################################
-# FUNCTIONS
-
-# --- debug: Conditional debugging. All commands begin w/ debug.
-# shellcheck disable=SC2155 disable=SC2046 disable=SC2001
-
-function debugSet()             { DebugFlag=TRUE; return 0; }
-function debugUnset()           { DebugFlag=; return 0; }
-function debugExecIfDebug()     { [ "$DebugFlag" = TRUE ] && $*; return 0; }
-function debug()                { [ "$DebugFlag" = TRUE ] && echo "DEBUG:$*" 1>&2 ; return 0; }
-function debug4()               { [ "$DebugFlag" = TRUE ] && echo "DEBUG:    $*" 1>&2 ; return 0; }
-function debug8()               { [ "$DebugFlag" = TRUE ] && echo "DEBUG:        $*" 1>&2 ; return 0; }
-function debug12()              { [ "$DebugFlag" = TRUE ] && echo "DEBUG:            $*" 1>&2 ; return 0; }
-
-function err() { 1>&2 echo "$@"; }
-function error()        { echo 'ERROR:'"$*" 1>&2;             return 0; }
-function error4()       { echo 'ERROR:    '"$*" 1>&2;         return 0; }
-
-function errorExit()                { EXITCODE=$1 ; shift; error "$*" ; exit "$EXITCODE"; }
-function exitIfBinariesNotFound()   { for file in "$@"; do [ $(command -v "${file}") ] || errorExit 253 binary not found: "$file"; done }
-
-
-# --- Temporary file/directory  creation
-# -- file creation -- TMP1=$(tempFile); TMP2=$(tempFile) ;;;; trap "rm -f $TMP1 $TMP2" EXIT
-# -- directory creation -- TMPDIR=$(tempDir) ;;;;;  trap "rm -fr $TMPDIR;" EXIT
-#
-function tempFile()                     { mktemp ${TMPDIR:-/tmp/}$_app.XXXXXXXX; }
-function tempDir()                      { mktemp -d "${TMPDIR:-/tmp/}$_app.YYYYYYYYY"; }
-# realpath as shell, argument either supplied as stdin or as $1
+# ConfigShell lib 1.1 (codebase 1.0.0)
+bashLib="/opt/ConfigShell/lib/bashlib.sh"
+[ ! -f "$bashLib" ] && 1>&2 echo "bash-library $bashLib not found" && exit 127
+# shellcheck source=/opt/ConfigShell/lib/bashlib.sh
+source "$bashLib"
+unset bashLib
+#########################################################################################
 
 # MAIN ====================================================================
 
@@ -76,19 +56,14 @@ function parseCLIOptions() {
 
 function main() {
     exitIfBinariesNotFound sed version.sh
-    set -e  # exit on first non-zero exist status
 
     declare -r App=$(basename "$0")
     declare -r AppDir=$(dirname "$0")
     declare -r AppLibDir=$(dirname "$AppDir")/lib
     declare -r AppVersion="2.0.0"
 
-        #### check if the command-name is structured in such a way that we can
+    #### check if the command-name is structured in such a way that we can
     #### determine the release-type and target OS and architecture by it.
-
-    declare -r numSeparatorsInCmd=2     # elements are separated by a dot; 2 => 3 elements
-    declare -r numSeparatorsDetected=$(echo $(basename "$0") | awk -F"." '{print NF-1}')
-    [ "$numSeparatorsDetected" -ne "$numSeparatorsInCmd" ] && errorExit 1 Wrong command name structure.
 
     # app-specific vars
     declare -r _binDir=${BINDIR:-./build}
@@ -98,19 +73,25 @@ function main() {
     # Avoidance of the introduction of a further field to the command name.
     declare -r _osArch=$(echo $_osDir | sed 's/.*_//' | sed 's/arm5$/arm/') # cb1 arm5
 
-    if [ $(echo $_osDir | sed 's/.*_//') = arm5  ] ; then
+    if [ "$(echo $_osDir | sed 's/.*_//')" = arm5  ] ; then
         declare -r _goarm='GOARM=5'
     fi
 
+    if [ "$1" = -V ] ; then echo "$AppVersion" 1>&2 ;  exit 1 ; fi
+
+    unset _upx
     declare -r _releaseType=$(basename $0 | cut -d . -f 2)
     case $_releaseType in
-        debug) declare -r _ldFlags=${LDFLAGS:-}
+        debug)
+            declare -r _ldFlags=${LDFLAGS:-}
             ;;
-        release) declare -r _ldFlags=${LDFLAGS:-"-ldflags -w -ldflags -s"}
+        release)
+            declare -r _ldFlags=${LDFLAGS:-"-ldflags -w -ldflags -s"}
             ;;
-        upx) declare -r _ldFlags=${LDFLAGS:-"-ldflags -w -ldflags -s"}
+        upx)
+            declare -r _ldFlags=${LDFLAGS:-"-ldflags -w -ldflags -s"}
             declare -r _upx=.upx
-            [ ! command -v upx  > /dev/null 2>&1 ] && errorExit 20 upx command not found.
+            command -v upx > /dev/null 2>&1 || errorExit 20 upx command not found.
             ;;
         *) errorExit 2 Unsupported release-type:$_releaseType
             ;;
@@ -120,11 +101,12 @@ function main() {
     declare -r _appName=$(pwd | xargs basename)     # app to be build
     declare -r _appVersion=$(version.sh)   # version of app to be build
 
+    [ -z "$_appVersion" ] && errorExit 10 Could not determine the version of the go application.
     debugUnset  # no inheritance from external debug variables
     unset _forceMode
 
     parseCLIOptions "$@"
-    shift $((OPTIND - 1))
+    shift "$((OPTIND - 1))"
 
     ### debug output
 
@@ -134,7 +116,7 @@ function main() {
     debug osarch         $_osArch
     debug releaseType    $_releaseType
     debug ldFlags        $_ldFlags
-    debug appdir         $_appDir
+    debug AppDir         $AppDir
     debug outputDir      $_outputDir
     debug appName        $_appName
     debug appVersion     $_appVersion
@@ -142,8 +124,8 @@ function main() {
     debug upx            $_upx
 
     # compiler aka host-architecture
-    declare -r _hostarch=$(uname -m | tr "A-Z" "a-z" | sed 's/x86_64/amd64/')
-    declare -r _hostostype=$(uname | tr "A-Z" "a-z")
+    declare -r _hostarch=$(uname -m | tr '[:upper:]' '[:lower:]' | sed 's/x86_64/amd64/')
+    declare -r _hostostype=$(uname | tr '[:upper:]' '[:lower:]')
     debug _hostarch     $_hostarch
     debug _hostostyp    $_hostostype
 
@@ -151,23 +133,25 @@ function main() {
     debugExecIfDebug read
 
     [ $_releaseType = upx ] && exitIfBinariesNotFound upx
+    debug passed upx check
 
     #### if required create the output directory and jump into it
-    [ ! -d ${_outputDir} ] && mkdir -p ${_outputDir}
+    if [ ! -d ${_outputDir} ] ; then debug creating output directory ;  mkdir -p ${_outputDir} ; fi
     # cd ${_outputDir}
-
+    debug passed optionally create output dir
     #### do not overwrite an existing version if not _forceMode is set
-    [[ -f ${_outputDir}/${_appName}-${_appVersion} && -z ${_forceMode} ]] && errorExit 10 Current version ${_appName}-${_appVersion} already exists.
+    [ -f ${_outputDir}/${_appName}-${_appVersion} ] && [ -z "${_forceMode}" ] && errorExit 10 Current version ${_appName}-${_appVersion} already exists.
+    debug passed overwrite check existing versions
 
-    echo env GOARCH=${_osArch} GOOS=${_osType} ${_goarm} go build ${_ldFlags} -o ${_outputDir}/${_appName}-${_appVersion}${_upx}
-    env GOARCH=${_osArch} GOOS=${_osType} ${_goarm} go build ${_ldFlags} -o ${_outputDir}/${_appName}-${_appVersion}${_upx}
+    echo env GOARCH="${_osArch}" GOOS="${_osType}" ${_goarm} go build ${_ldFlags} -o "${_outputDir}/${_appName}-${_appVersion}${_upx}"
+    env GOARCH="${_osArch}" GOOS="${_osType}" ${_goarm} go build ${_ldFlags} -o "${_outputDir}/${_appName}-${_appVersion}${_upx}"
     # ldflags -s is already stripping; double strip caused problems on Darwin-arm64
     # strip only if building for the same host as we are compiling on
     # [ $_hostarch = $_osArch -a $_osType = $_hostostype ] && \
     #   [ "$_releaseType" = release -o "$_releaseType" = upx ] && \
     #   echo stripping binary && strip ${_outputDir}/${_appName}-${_appVersion}${_upx}
-    [ ! -z ${_upx} ] && echo upx ${_outputDir}/${_appName}-${_appVersion}${_upx} && upx ${_outputDir}/${_appName}-${_appVersion}${_upx}
-    ln -fs ${_appName}-${_appVersion}${_upx} ${_outputDir}/${_appName}
+    [ -n "${_upx}" ] && echo upx "${_outputDir}/${_appName}-${_appVersion}${_upx}" && upx "${_outputDir}/${_appName}-${_appVersion}${_upx}"
+    ln -fs "${_appName}-${_appVersion}${_upx}" "${_outputDir}/${_appName}"
 }
 
 main "$*"
