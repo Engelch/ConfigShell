@@ -30,7 +30,7 @@ NAME
     $_app
 SYNOPSIS
     $_app [-D] [-v] [ <<dir>> ]
-    $_app [-V]
+    $_app -V
     $_app -h
 VERSION
     $_version
@@ -42,6 +42,7 @@ DESCRIPTION
 
     Without a directory specification, the search for files begins in the
     current directory. Otherwise, it begins in the specified directory.
+    The directory-name can contain spaces.
 
     To determine the version number:
     1. The scripts checks for a file version.txt. If this file exists,
@@ -85,11 +86,11 @@ function parseCLI() {
         case "${options}" in                    # TIMES=${OPTARG}
             D)  err Debug enabled ; debugSet
                 ;;
-            V) echo $_version
+            V)  echo $_version
                 exit 3
                 ;;
             v)  declare -g _showFileName=TRUE
-               debug _showFileName mode selected
+                debug _showFileName mode selected
                 ;;
             h)  usage ; exit 1
                 ;;
@@ -105,7 +106,7 @@ function main() {
     declare -r _app="$(basename "$0")"
     declare -r _appDir="$(dirname "$0")"
     declare -r _absoluteAppDir=$(cd "$_appDir" || exit 126; /bin/pwd)
-    declare -r _version="2.3.0"
+    declare -r _version="2.3.1"
 
     exitIfBinariesNotFound pwd tput basename dirname mktemp
 
@@ -114,8 +115,8 @@ function main() {
     debug args are "$*"
 
     if [ -n "$1" ] ; then
-        debug "switch to directory $1"
-        cd "$1" || errorExit 10 "directory $1 not found."
+        debug "switch to directory $*"
+        cd "$*" || errorExit 10 "directory $* not found."
     fi
 
     readonly versionFile="./version.txt"

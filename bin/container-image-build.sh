@@ -21,16 +21,18 @@
 # 3. it determines the name of the image to be created
 # 4. it checks if the container-file contains hints for AWS and in such a case performs login to AWS
 # 5. it checks if the container-file contains hints for go compilation and in such a case prepares
-#    the go files for container-staged compilation
+#    the go files for container-staged compilation.
+#    The files are copied to resolve s-link issues. If the build fails, the ContainerBuild/ subdirectory
+#    can be inspected. Each new call to container-image-build will remove an existing ContainerBuild/ directory.
 # 6. it determines the version to be created.
 # 7. it calls cotnainer-image-build to build the container image for the given architecture and version and date
 #
 # Requirements:
 #   container-image-build.sh
-#   podman [] docker#
+#   podman [] docker
 #
 
-declare -r _appVersion="1.2.0"
+declare -r _appVersion="1.3.0"
 
 #########################################################################################
 # ConfigShell lib 1.1 (codebase 1.0.0)
@@ -40,69 +42,12 @@ bashLib="/opt/ConfigShell/lib/bashlib.sh"
 source "$bashLib"
 unset bashLib
 #########################################################################################
-
-####################################################################################
-########### set the container command
-####################################################################################
-
-# setContainerCmd determines whether podman (preferred) or docker shall be used
-# An error is created if none of them could be found.
-# EXIT 10
-function setContainerCmd() {
-    which docker &>/dev/null && containerCmd=docker
-    which podman &>/dev/null && containerCmd=podman
-    [ -z "$containerCmd" ] && errorExit 10 container command could not be found
-    debug Container command is "$containerCmd"
-}
-
-# setContainerFile determines the Containerfile or Dockerfile to be used.
-# An error is created if none of them could be found.
-# EXIT 11
-function setContainerFile() {
-    for file in Containerfile Dockerfile ; do
-        [ -f "$file" ] && debug "Containerfile is $file" && containerFile="$file"
-        break
-    done
-    [ -z "$containerFile" ] && errorExit 11 Could not find a Containerfile
-}
-
-# setContainerName determines the name of the container image to be created.
-# An error is created if none of them could be found.
-# EXIT 12
-function setContainerName() {
-    if [ "$(/bin/ls | grep -c '^_name_.*' )" -eq 1 ] ; then
-        containerName=$(/bin/ls | grep '^_name_.*' | sed 's/.*_name_//')
-    else
-        containerName=$(dirname $PWD | xargs basename)
-    fi
-    [ -z "$containerName" ] && errorExit 12 Container name could not be determined
-    debug "containerName is $containerName"
-}
-
-# login2aws performs a login into AWS to make AWS ECR repositories available.
-# The function is called by loginAwsIfInContainerfile
-# EXIT 6    AWS_PROFILE not set
-# EXIT 7    aws.cfg not found
-# EXIT 8    AWS region not set
-# EXIT 9    AWS registry not set
-function login2aws() {
-    [ -z "${AWS_PROFILE}" ] && errorExit 6 "AWS_PROFILE environment variable is required, in order to login to the docker registry"
-    debug AWS_PROFILE set to "$AWS_PROFILE"
-
-    # vars expected in aws.cfg
-    REGION=
-    REGISTRY=
-    ! [ -f aws.cfg ] && errorExit 7 "AWS Configuration aws.cfg not found"
-    source "aws.cfg"
-
-    [ -z "$REGION" ] && errorExit 8 "AWS Region not set"
-    [ -z "$REGISTRY" ] && errorExit 9  "AWS Registry not set"
-
-    debug "Login to AWS..."
-    # login to AWS
-    debug "aws ecr get-login-password --region ${REGION} | $containerCmd login --username AWS --password-stdin $REGISTRY"
-    $DRY aws ecr get-login-password --region "${REGION}" | "$containerCmd" login --username AWS --password-stdin "$REGISTRY"
-}
+containerLib="/opt/ConfigShell/lib/container-image.lib.sh"
+[ ! -f "$containerLib" ] && 1>&2 echo "container-library $containerLib not found" && exit 126
+# shellcheck source=/opt/ConfigShell/lib/container-image.lib.sh
+source "$containerLib"
+unset containerLib
+#########################################################################################
 
 # loginAwsIfInContainerfile checks if amazonaws.com is found in the container-file.
 # If so, it tries to log in into AWS.
@@ -126,17 +71,21 @@ function createBuildPackages() {
 
     [ "$DebugFlag" = "TRUE" ] && $DRY rsync -av ../*.go ../go.mod ../go.sum ./ContainerBuild/src
     [ "$DebugFlag" != "TRUE" ] && $DRY rsync -a ../*.go ../go.mod ../go.sum ./ContainerBuild/src
-    [ "$(grep -Fc ./packages ContainerBuild/src/go.mod)" -lt 1 ] && return # not copying
-    grep -F ./packages ContainerBuild/src/go.mod | awk '{ print $NF }' | cut -d '/' -f 3 | while IFS= read -r pkg ; do
+
+    [ "$(grep -Fc \./packages ContainerBuild/src/go.mod)" -lt 1 ] && return # no references for local packages, not copying
+
+    # for all ./packages/xyz listed, copy them to ./ContainerBuild/packages
+    grep -F \./packages ContainerBuild/src/go.mod | awk '{ print $NF }' | cut -d '/' -f 3 | while IFS= read -r pkg ; do
         [ "$DebugFlag" = "TRUE" ] && $DRY rsync -av "../../packages/$pkg" ./ContainerBuild/packages
         [ "$DebugFlag" != "TRUE" ] && $DRY rsync -a "../../packages/$pkg" ./ContainerBuild/packages
+        ln -s ../packages ./ContainerBuild/src/packages
     done
 }
 
 # optionallyCreateGoSetup checks if to create ContainerBuild directory for go compilation
 function optionallyCreateGoSetup() {
-    [ -n "$goCompilation" ] && createBuildPackages && return
-    [ "$(grep -vE '^#' $containerFile | grep -Fc '.go')" -gt 0 ] && $DRY createBuildPackages
+    [ -n "$goCompilation" ] && createBuildPackages && return                                    # go-mode if specified on CLI
+    [ "$(grep -vE '^#' $containerFile | grep -Fc '.go')" -gt 0 ] && createBuildPackages    # go-mode if .go files in containerFile
 }
 
 #########################
@@ -145,9 +94,9 @@ function optionallyCreateGoSetup() {
 function usage() {
     1>&2 cat << HERE
 USAGE
-    container-build.sh [ -D ] [ -a ] [ -g ] [ -t targetPlatform ] [ -n ]
-    container-build.sh -h
-    container-build.sh -V
+    container-image-build.sh [ -D ] [ -a ] [ -g ] [ -t targetPlatform ] [ -n ]
+    container-image-build.sh -h
+    container-image-build.sh -V
 OPTIONS
     -D :: enable debug
     -V :: show version and exit 2
@@ -218,9 +167,7 @@ function main() {
     optionallyCreateGoSetup
     unset _version
     if [ -d ContainerBuild/src ] ; then
-        cd ContainerBuild/src
-        _version="$(version.sh)"
-        cd ../..
+        _version="$(version.sh ContainerBuild/src)"
     else
         _version="$(version.sh)"
     fi

@@ -10,94 +10,22 @@
 # container-image-aws-push.sh - push an image to AWS ECR
 #
 
-declare -r _appVersion="1.0.0"
+declare -r _appVersion="1.3.0"
 
 #########################################################################################
-# --- debug: Conditional debugging. All commands begin w/ debug.
-
-function debugSet()             { DebugFlag=TRUE; return 0; }
-function debugUnset()           { DebugFlag=; return 0; }
-function debug()                { [ "$DebugFlag" = "TRUE" ] && echo 'DEBUG:'"$*" 1>&2 ; return 0; }
-function debug4()               { [ "$DebugFlag" = "TRUE" ] && echo 'DEBUG:    ' "$*" 1>&2 ; return 0; }
-function debug8()               { [ "$DebugFlag" = "TRUE" ] && echo 'DEBUG:        ' "$*" 1>&2 ; return 0; }
-function debug12()              { [ "$DebugFlag" = "TRUE" ] && echo 'DEBUG:            ' "$*" 1>&2 ; return 0; }
-
-# stderr, exits -----------------------------------------------------
-# function error()        { err 'ERROR:' $*; return 0; } # similar to err but with ERROR prefix and possibility to include
-# Write an error message to stderr. We cannot use err here as the spaces would be removed.
-function error()        { echo 'ERROR:'"$*" 1>&2;             return 0; }
-function error4()       { echo 'ERROR:    '"$*" 1>&2;         return 0; }
-function error8()       { echo 'ERROR:        '"$*" 1>&2;     return 0; }
-function error12()      { echo 'ERROR:            '"$*" 1>&2; return 0; }
-
-function errorExit()    { EXITCODE="$1" ; shift; error "$*" ; exit "$EXITCODE"; }
-function exitIfErr()    { a="$1"; b="$2"; shift; shift; [ "$a" -ne 0 ] && errorExit "$b" App returned "$a $*"; }
-
-function err()          { echo "$*" 1>&2; }                 # just write to stderr
-function err4()         { echo '   ' "$*" 1>&2; }           # just write to stderr
-function err8()         { echo '       ' "$*" 1>&2; }       # just write to stderr
-function err12()        { echo '           ' "$*" 1>&2; }   # just write to stderr
-
-# Existance checks -------------------------------------------------------
-function exitIfBinariesNotFound()       { for file in "$@"; do command -v "$file" &>/dev/null || errorExit 253 binary not found: "$file"; done }
-function exitIfPlainFilesNotExisting()  { for file in "$@"; do [ ! -f "$file" ] && errorExit 254 'plain file not found:'"$file" 1>&2; done }
-function exitIfFilesNotExisting()       { for file in "$@"; do [ ! -e "$file" ] && errorExit 255 'file not found:'"$file" 1>&2; done }
-
-####################################################################################
-########### set the container command
-####################################################################################
-
-# setContainerCmd determines whether podman (preferred) or docker shall be used
-# An error is created if none of them could be found.
-# EXIT 10
-function setContainerCmd() {
-    which docker &>/dev/null && containerCmd=docker
-    which podman &>/dev/null && containerCmd=podman
-    [ -z "$containerCmd" ] && errorExit 10 container command could not be found
-    debug Container command is "$containerCmd"
-}
-
-# setContainerName determines the name of the container image to be created.
-# An error is created if none of them could be found.
-# EXIT 12
-function setContainerName() {
-    if [ "$(/bin/ls | grep -c '^_name_.*' )" -eq 1 ] ; then
-        containerName=$(/bin/ls | grep '^_name_.*' | sed 's/.*_name_//')
-    else
-        containerName=$(basename $PWD)
-        [ "$containerName" = src ] && containerName=$(dirname $PWD | xargs basename)
-    fi
-    [ -z "$containerName" ] && errorExit 12 Container name could not be determined
-    debug "containerName is $containerName"
-}
-
-# login2aws performs a login into AWS to make AWS ECR repositories available.
-# The function is called by loginAwsIfInContainerfile
-# EXIT 6    AWS_PROFILE not set
-# EXIT 7    aws.cfg not found
-# EXIT 8    AWS region not set
-# EXIT 9    AWS registry not set
-function login2aws() {
-    [ -z "${AWS_PROFILE}" ] && errorExit 6 "AWS_PROFILE environment variable is required, in order to login to the docker registry"
-    debug AWS_PROFILE set to "$AWS_PROFILE"
-
-    # vars expected in aws.cfg
-    #REGION=
-    REGISTRY=
-    ! [ -f aws.cfg ] && errorExit 7 "AWS Configuration aws.cfg not found"
-    source "aws.cfg"
-
-    [ -z "$REGION" ] && errorExit 8 "AWS Region not set"
-    [ -z "$REGISTRY" ] && errorExit 9  "AWS Registry not set"
-
-    debug "Login to AWS..."
-    # login to AWS
-    debug "aws ecr get-login-password --region ${REGION} | $containerCmd login --username AWS --password-stdin $REGISTRY"
-    $DRY aws ecr get-login-password --region "${REGION}" | "$containerCmd" login --username AWS --password-stdin "$REGISTRY"
-}
-
-#########################
-
+# ConfigShell lib 1.1 (codebase 1.0.0)
+bashLib="/opt/ConfigShell/lib/bashlib.sh"
+[ ! -f "$bashLib" ] && 1>&2 echo "bash-library $bashLib not found" && exit 127
+# shellcheck source=/opt/ConfigShell/lib/bashlib.sh
+source "$bashLib"
+unset bashLib
+#########################################################################################
+containerLib="/opt/ConfigShell/lib/container-image.lib.sh"
+[ ! -f "$containerLib" ] && 1>&2 echo "container-library $containerLib not found" && exit 126
+# shellcheck source=/opt/ConfigShell/lib/container-image.lib.sh
+source "$containerLib"
+unset containerLib
+#########################################################################################
 
 function usage() {
     1>&2 cat << HERE
@@ -105,6 +33,12 @@ USAGE
     container-image-aws-push.sh [-D] [-n] [<<image:version>>]
     container-image-aws-push.sh -h
     container-image-aws-push.sh -V
+DESCRIPTION
+    This command pushes a previously built and AWS tagged image
+    to an AWS ECR. If started with the -D option, the tagging
+    command will be shown before and an ENTER is required,
+    before it will executed. The -n option is an alternative
+    to that.
 OPTIONS
     -D :: enable debug
     -V :: show version and exit 2
@@ -151,7 +85,11 @@ function main() {
     setContainerCmd
     if [ -z "$1" ] ; then
         setContainerName
-        containerName="$containerName:$(version.sh)"
+        if [ -d ContainerBuild/src ] ; then
+            containerName="$containerName:$(version.sh ContainerBuild/src)"
+        else
+            containerName="$containerName:$(version.sh)"
+        fi
     else
         containerName="$1"
     fi
