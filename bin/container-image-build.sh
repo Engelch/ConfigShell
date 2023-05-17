@@ -30,38 +30,16 @@
 #   podman [] docker#
 #
 
-declare -r _appVersion="1.1.0"
+declare -r _appVersion="1.2.0"
 
 #########################################################################################
-# --- debug: Conditional debugging. All commands begin w/ debug.
-
-function debugSet()             { DebugFlag=TRUE; return 0; }
-function debugUnset()           { DebugFlag=; return 0; }
-function debug()                { [ "$DebugFlag" = "TRUE" ] && echo 'DEBUG:'"$*" 1>&2 ; return 0; }
-function debug4()               { [ "$DebugFlag" = "TRUE" ] && echo 'DEBUG:    ' "$*" 1>&2 ; return 0; }
-function debug8()               { [ "$DebugFlag" = "TRUE" ] && echo 'DEBUG:        ' "$*" 1>&2 ; return 0; }
-function debug12()              { [ "$DebugFlag" = "TRUE" ] && echo 'DEBUG:            ' "$*" 1>&2 ; return 0; }
-
-# stderr, exits -----------------------------------------------------
-# function error()        { err 'ERROR:' $*; return 0; } # similar to err but with ERROR prefix and possibility to include
-# Write an error message to stderr. We cannot use err here as the spaces would be removed.
-function error()        { echo 'ERROR:'"$*" 1>&2;             return 0; }
-function error4()       { echo 'ERROR:    '"$*" 1>&2;         return 0; }
-function error8()       { echo 'ERROR:        '"$*" 1>&2;     return 0; }
-function error12()      { echo 'ERROR:            '"$*" 1>&2; return 0; }
-
-function errorExit()    { EXITCODE="$1" ; shift; error "$*" ; exit "$EXITCODE"; }
-function exitIfErr()    { a="$1"; b="$2"; shift; shift; [ "$a" -ne 0 ] && errorExit "$b" App returned "$a $*"; }
-
-function err()          { echo "$*" 1>&2; }                 # just write to stderr
-function err4()         { echo '   ' "$*" 1>&2; }           # just write to stderr
-function err8()         { echo '       ' "$*" 1>&2; }       # just write to stderr
-function err12()        { echo '           ' "$*" 1>&2; }   # just write to stderr
-
-# Existance checks -------------------------------------------------------
-function exitIfBinariesNotFound()       { for file in "$@"; do command -v "$file" &>/dev/null || errorExit 253 binary not found: "$file"; done }
-function exitIfPlainFilesNotExisting()  { for file in "$@"; do [ ! -f "$file" ] && errorExit 254 'plain file not found:'"$file" 1>&2; done }
-function exitIfFilesNotExisting()       { for file in "$@"; do [ ! -e "$file" ] && errorExit 255 'file not found:'"$file" 1>&2; done }
+# ConfigShell lib 1.1 (codebase 1.0.0)
+bashLib="/opt/ConfigShell/lib/bashlib.sh"
+[ ! -f "$bashLib" ] && 1>&2 echo "bash-library $bashLib not found" && exit 127
+# shellcheck source=/opt/ConfigShell/lib/bashlib.sh
+source "$bashLib"
+unset bashLib
+#########################################################################################
 
 ####################################################################################
 ########### set the container command
@@ -95,8 +73,7 @@ function setContainerName() {
     if [ "$(/bin/ls | grep -c '^_name_.*' )" -eq 1 ] ; then
         containerName=$(/bin/ls | grep '^_name_.*' | sed 's/.*_name_//')
     else
-        containerName=$(basename $PWD)
-        [ "$containerName" = src ] && containerName=$(dirname $PWD | xargs basename)
+        containerName=$(dirname $PWD | xargs basename)
     fi
     [ -z "$containerName" ] && errorExit 12 Container name could not be determined
     debug "containerName is $containerName"
@@ -147,13 +124,13 @@ function createBuildPackages() {
     [ -d ./ContainerBuild ] && debug deleting old ContainerBuild && $DRY /bin/rm -fr ./ContainerBuild # delete dir if existing
     $DRY mkdir -p ./ContainerBuild/src ./ContainerBuild/packages # fresh dir
 
-    [ "$(grep -Fc ./packages go.mod)" -lt 1 ] && return # not copying
-    grep -F ./packages go.mod | awk '{ print $NF }' | while IFS= read -r pkg ; do
-        [ "$DebugFlag" = "TRUE" ] && $DRY rsync -av "$pkg" ./ContainerBuild/packages
-        [ "$DebugFlag" != "TRUE" ] && $DRY rsync -a "$pkg" ./ContainerBuild/packages
+    [ "$DebugFlag" = "TRUE" ] && $DRY rsync -av ../*.go ../go.mod ../go.sum ./ContainerBuild/src
+    [ "$DebugFlag" != "TRUE" ] && $DRY rsync -a ../*.go ../go.mod ../go.sum ./ContainerBuild/src
+    [ "$(grep -Fc ./packages ContainerBuild/src/go.mod)" -lt 1 ] && return # not copying
+    grep -F ./packages ContainerBuild/src/go.mod | awk '{ print $NF }' | cut -d '/' -f 3 | while IFS= read -r pkg ; do
+        [ "$DebugFlag" = "TRUE" ] && $DRY rsync -av "../../packages/$pkg" ./ContainerBuild/packages
+        [ "$DebugFlag" != "TRUE" ] && $DRY rsync -a "../../packages/$pkg" ./ContainerBuild/packages
     done
-    [ "$DebugFlag" = "TRUE" ] && $DRY rsync -av ./*.go go.mod go.sum ./ContainerBuild/src
-    [ "$DebugFlag" != "TRUE" ] && $DRY rsync -a ./*.go go.mod go.sum ./ContainerBuild/src
 }
 
 # optionallyCreateGoSetup checks if to create ContainerBuild directory for go compilation
@@ -239,14 +216,22 @@ function main() {
     setContainerName
     loginAwsIfInContainerfile
     optionallyCreateGoSetup
-    version="$(version.sh)"
-    [ -z "$version" ] && errorExit 20 "Could not detect version using version.sh"
+    unset _version
+    if [ -d ContainerBuild/src ] ; then
+        cd ContainerBuild/src
+        _version="$(version.sh)"
+        cd ../..
+    else
+        _version="$(version.sh)"
+    fi
+    [ -z "$_version" ] && errorExit 20 "Could not detect version using version.sh"
+    debug "Version is: $_version"
     date="$(date -u +%y%m%d_%H%M%S)"
     debug "Date tag set to $date"
-    debug Would execute: "$containerCmd" build $@ $extTargetEnv -t "$containerName":"$(version.sh)" -t "$containerName:latest" -t "$containerName:$date" .
+    debug Would execute: "$containerCmd" build $@ $extTargetEnv -t "$containerName":"$_version" -t "$containerName:latest" -t "$containerName:$date" .
 
     [ "$DebugFlag" = TRUE ] && echo press ENTER to execute && read -r
-    $DRY "$containerCmd" build $@ $extTargetEnv -t "$containerName":"$(version.sh)" -t "$containerName:latest" -t "$containerName:$date" .
+    $DRY "$containerCmd" build $@ $extTargetEnv -t "$containerName":"$_version" -t "$containerName:latest" -t "$containerName:$date" .
 }
 
 main "$@"
