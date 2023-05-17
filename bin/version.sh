@@ -29,7 +29,7 @@ function usage()
 NAME
     $_app
 SYNOPSIS
-    $_app [-D] [-v]
+    $_app [-D] [-v] [ <<dir>> ]
     $_app [-V]
     $_app -h
 VERSION
@@ -39,6 +39,9 @@ DESCRIPTION
     called by many other scripts to determine the current version of
     the source code. Some build scripts (e.g. for go) only allow to
     create a build if none exists for this version.
+
+    Without a directory specification, the search for files begins in the
+    current directory. Otherwise, it begins in the specified directory.
 
     To determine the version number:
     1. The scripts checks for a file version.txt. If this file exists,
@@ -102,13 +105,18 @@ function main() {
     declare -r _app="$(basename "$0")"
     declare -r _appDir="$(dirname "$0")"
     declare -r _absoluteAppDir=$(cd "$_appDir" || exit 126; /bin/pwd)
-    declare -r _version="2.2.4"
+    declare -r _version="2.3.0"
 
     exitIfBinariesNotFound pwd tput basename dirname mktemp
 
     parseCLI "$@"
     shift "$(( OPTIND - 1 ))"  # not working inside parseCLI
     debug args are "$*"
+
+    if [ -n "$1" ] ; then
+        debug "switch to directory $1"
+        cd "$1" || errorExit 10 "directory $1 not found."
+    fi
 
     readonly versionFile="./version.txt"
     readonly versionFilePattern="./versionFilePattern"
