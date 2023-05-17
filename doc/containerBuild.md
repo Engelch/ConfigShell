@@ -19,10 +19,13 @@
     - [Overview](#overview)
     - [Simple Example](#simple-example)
       - [Directory/Project Setup](#directoryproject-setup)
-      - [Go Intialisation](#go-intialisation)
+      - [Go Initialisation](#go-initialisation)
       - [First Compilation Test](#first-compilation-test)
       - [Requirements of Version Information](#requirements-of-version-information)
-      - [First Sucessful Compilation](#first-sucessful-compilation)
+      - [First Successful Compilation](#first-successful-compilation)
+      - [Creating a New Version](#creating-a-new-version)
+      - [Increasing Version Numbers](#increasing-version-numbers)
+      - [Summary](#summary)
 
 ## Introduction
 
@@ -72,7 +75,7 @@ example/                            # project directory
     │   ├── build/                  # used by gobuild.* scripts (ConfigShell)
     │   ├── main.go
     │   ├── main_test.go
-    │   ├── packages -> ../packages/ # import of packages
+    │   ├── packages -> ../packages/ # import of local packages
     │   ├── go.mod
     │   ├── go.sum
     │   └── vendor/
@@ -101,8 +104,8 @@ The compilation is done using the scripts of ConfigShell.  The scripts can be su
 1. Showing the current version number of the source code
 2. Increasing either major, minor, or patch number of the version
 3. creation of debug builds
-4. creation of release builds
-5. creation of release builds with UPX compression (does not seem to work for Apple M1/arm64)
+4. creation of release builds (without debug information)
+5. creation of release builds with additional [UPX](https://upx.github.io/) compression (does not seem to work for Apple M1/arm64)
 6. execution of latest debug build
 7. execution of latest release build
 
@@ -125,12 +128,12 @@ package main
 import "fmt"
 
 func main() {
-    fmt.Println("Hi folks. Version is" + _AppVersion)
+    fmt.Println("Hi folks. Version is")
 }
 HERE
 ```
 
-#### Go Intialisation
+#### Go Initialisation
 
 Specify a package name with it, here example.com:
 
@@ -182,7 +185,7 @@ ERROR:Could not determine the version of the go application.
 ```
 
 The version of the go programme cannot be determined. Let's try it
-manually with:
+manually with. `version.sh` is a script from ConfigShell:
 
 ```shell
 $ version.sh
@@ -216,7 +219,7 @@ $ version.sh
 0.0.1
 ```
 
-#### First Sucessful Compilation
+#### First Successful Compilation
 
 Let's restart the compilation:
 
@@ -268,6 +271,81 @@ Hi folks. Version is 0.0.1
 ```
 
 `goer` and `goeu` exist if you want to run the latest release or release-upx version.
+
+#### Creating a New Version
+
+Now, let's improve our file and hereby create a new version (main.go):
+
+```shell
+package main
+
+import "fmt"
+
+const _AppVersion = "0.0.1"
+
+func main() {
+   fmt.Println("HELLO!  Version is " + _AppVersion)
+}
+```
+
+Now, let's try to compile it:
+
+```shell
+$ godebug
+Calling /opt/ConfigShell/bin/gobuild.debug.darwin_arm64
+ERROR:Current version hw-0.0.1 already exists.
+```
+
+A new compilation does not overwrite an existing build by default. If you want to keep at this version number (usually, not a good idea, but situations exist...), you could issue:
+
+```shell
+godebug -f
+Calling /opt/ConfigShell/bin/gobuild.debug.darwin_arm64
+env GOARCH=arm64 GOOS=darwin go build -o ./build/debug/darwin_arm64/hw-0.0.1
+```
+
+The `-f` options allows for overwriting existing versions.
+
+#### Increasing Version Numbers
+
+One approach is to change the number in the source file. But, you always have to go to this line, it becomes tedious, there is a more elegant way. 3 scripts exist to help you:
+
+1. bpa (running `bumppatch ; version.sh`)
+2. bmi (running `bumpminor ; version.sh`)
+3. bma (running `bumpmajor ; version.sh`)
+
+They will update the file with the version number automatically for you. Let's decide,
+this is a minor change. So, let's execute:
+
+```shell
+$ bmi
+0.1.0
+$ cat main.go
+package main
+
+import "fmt"
+
+const _AppVersion = "0.1.0"
+
+func main() {
+	fmt.Println("HELLO!  Version is " + _AppVersion)
+}
+$ godebug
+Calling /opt/ConfigShell/bin/gobuild.debug.darwin_arm64
+env GOARCH=arm64 GOOS=darwin go build -o ./build/debug/darwin_arm64/hw-0.1.0
+```
+
+#### Summary
+
+Congratulations, you should have a grip now to our compilation model:
+
+1. Scripts support the compilation
+2. Script allow to differentiate between debug, release, and release+upx builds. All these builds go to different directories.
+3. The scripts allow for cross compilation.
+4. Builds by default do not overwrite each other.
+5. Semantic versioning is supported by `bpa/bmi/bma`
+
+
 
 
 
