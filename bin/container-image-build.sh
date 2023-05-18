@@ -4,7 +4,15 @@
 # shellcheck disable=SC2068
 # shellcheck disable=SC1091
 
-# Releases
+# Changelog
+# 1.3.1
+# - version# factored out to lib file
+# - error if not started in a dir called Container
+# - improved doc in script
+# 1.3.0
+# - container-image common code factored out to lib file
+# - improved doc in script
+# - all container-image versions use the same version number
 # 1.1.0
 # - calling containerCmd directly to build container images
 # - -t .... had to be changed to --arch when calling $containerCmd build ...
@@ -28,11 +36,8 @@
 # 7. it calls cotnainer-image-build to build the container image for the given architecture and version and date
 #
 # Requirements:
-#   container-image-build.sh
 #   podman [] docker
 #
-
-declare -r _appVersion="1.3.0"
 
 #########################################################################################
 # ConfigShell lib 1.1 (codebase 1.0.0)
@@ -146,16 +151,23 @@ function parseCLI() {
                 ;;
         esac
     done
-    [ -z "$extTargetEnv" ] && extTargetEnv="$defaultTargetEnv"
+    [ -z "$extTargetEnv" ] && extTargetEnv="$defaultTargetEnv"  # set amd64 if no architecture was set
+}
+
+function exitIfNotInContainer() {
+    local dirLeave=$(basename "$(pwd)")
+    [ "$dirLeave" != 'Container' ] && errorExit 22 container-image-build.sh is supposed to be started from a directory named Container.
 }
 
 # EXIT 20
 function main() {
-    exitIfBinariesNotFound pwd basename dirname version.sh container-image-build.sh
+    exitIfBinariesNotFound pwd basename dirname version.sh
     declare -g app="$(basename $0)"
-    declare -g containerCmd=
-    declare -g containerFile=
-    declare -g containerName=
+    declare -g containerCmd=''
+    declare -g containerFile=''
+    declare -g containerName=''
+
+    exitIfNotInContainer
 
     parseCLI "$@"
     shift $(( OPTIND - 1 ))  # not working inside parseCLI

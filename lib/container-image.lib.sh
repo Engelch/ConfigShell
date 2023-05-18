@@ -1,7 +1,9 @@
+declare -r _appVersion="1.3.1"
 
 ####################################################################################
 ########### set the container command
 ####################################################################################
+
 
 # setContainerCmd determines whether podman (preferred) or docker shall be used
 # An error is created if none of them could be found.

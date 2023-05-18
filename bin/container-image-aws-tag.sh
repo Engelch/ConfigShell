@@ -10,8 +10,6 @@
 # container-image-aws-tag.sh - tag an image for AWS ECR
 #
 
-declare -r _appVersion="1.3.0"
-
 #########################################################################################
 # ConfigShell lib 1.1 (codebase 1.0.0)
 bashLib="/opt/ConfigShell/lib/bashlib.sh"
