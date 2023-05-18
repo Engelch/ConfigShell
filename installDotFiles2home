@@ -144,7 +144,7 @@ function main() {
     done
     fixGnupg
     installFish
-    warningIfBinariesNotFound ruby gnutls-cli openssl
+    warningIfBinariesNotFound ruby gnutls-cli openssl marp
 }
 
 main $*

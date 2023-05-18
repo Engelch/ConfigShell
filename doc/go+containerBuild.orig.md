@@ -1,3 +1,10 @@
+---
+mainfont: DejaVuSerif.ttf
+sansfont: DejaVuSans.ttf
+monofont: DejaVuSansMono.ttf
+mathfont: texgyredejavu-math.otf
+---
+
 # Go Compilation and Container Builds
 
 ## Info
@@ -26,6 +33,8 @@
       - [Creating a New Version](#creating-a-new-version)
       - [Increasing Version Numbers](#increasing-version-numbers)
       - [Summary](#summary)
+  - [Versioning of Applications and Services](#versioning-of-applications-and-services)
+    - [synchroniseVersions of a Collection of Microservices](#synchroniseversions-of-a-collection-of-microservices)
 
 ## Introduction
 
@@ -345,8 +354,26 @@ Congratulations, you should have a grip now to our compilation model:
 4. Builds by default do not overwrite each other.
 5. Semantic versioning is supported by `bpa/bmi/bma`
 
+## Versioning of Applications and Services
 
+Changed software implementation must get a new, in their series unique version number, when they are deployed. This condition can be extended as a recommendation to do the same for already medium changes when recompiling software. This is supported by the above mentioned `godebug` and `gorelease` commands.
 
+### synchroniseVersions of a Collection of Microservices
+
+If you have a couple of microservices that bring up a service together, it is highly recommended to deploy only microservices with the same version number. This expresses that the microservices are supposed to run together and saves a lot of time for tedious research if the software versions are compatible with each other.
+
+Configshell offers support to synchronise the versions of multiple solutions by the script `synchroniseVersions`. The algorithm of this script can be described by:
+
+1. The command requires a file `synchroniseVersions.cfg` in the current directory. The file specifies directories
+with contain applications. For each application, this app shows the current version.
+2. Then it asks for a new version to be input by the user. This new version number is set to all the applications specified.
+3. Alternatively to enter a new version number in step 2, the execution of the script can be stopped (`^c`).
+
+In the case that you have multiple sets of microservices (e.g. A and B) and all A services have one version and all B services have one but possibly different version from A services, the script supports the specification of configuration files like `A.cfg` and `B.cfg`. You can call the script like:
+
+```shell
+synchroniseVersions -c <<cfgFile>>
+```
 
 
 

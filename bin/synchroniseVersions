@@ -25,50 +25,12 @@
 #
 
 #########################################################################################
-# VARIABLES, CONSTANTS
-
-#########################################################################################
-
-# --- debug: Conditional debugging. All commands begin w/ debug.
-
-function debugSet()             { DebugFlag=TRUE; return 0; }
-function debugUnset()           { DebugFlag=; return 0; }
-function debugExecIfDebug()     { [ "$DebugFlag" = TRUE ] && "$*"; return 0; }
-function debug()                { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:'"$*" 1>&2 ; return 0; }
-function debug4()               { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:    ' "$*" 1>&2 ; return 0; }
-function debug8()               { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:        ' "$*" 1>&2 ; return 0; }
-function debug12()              { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:            ' "$*" 1>&2 ; return 0; }
-
-# --- Exits
-
-# function error()        { err 'ERROR:' $*; return 0; } # similar to err but with ERROR prefix and possibility to include
-# Write an error message to stderr. We cannot use err here as the spaces would be removed.
-function error()        { echo 'ERROR:'"$*" 1>&2;             return 0; }
-function error4()       { echo 'ERROR:    '"$*" 1>&2;         return 0; }
-function error8()       { echo 'ERROR:        '"$*" 1>&2;     return 0; }
-function error12()      { echo 'ERROR:            '"$*" 1>&2; return 0; }
-
-function errorExit()    { EXITCODE="$1" ; shift; error "$*" ; exit "$EXITCODE"; }
-function exitIfErr()    { a="$1"; b="$2"; shift; shift; [ "$a" -ne 0 ] && errorExit "$b" App returned "$a" "$*"; }
-
-function err()          { echo "$*" 1>&2; }                 # just write to stderr
-function err4()         { echo '   ' "$*" 1>&2; }           # just write to stderr
-function err8()         { echo '       ' "$*" 1>&2; }       # just write to stderr
-function err12()        { echo '           ' "$*" 1>&2; }   # just write to stderr
-
-# --- Existance checks
-function exitIfBinariesNotFound()       { for file in "$@"; do command -v "$file" &>/dev/null|| errorExit 253 binary not found: "$file" ; done }
-function exitIfPlainFilesNotExisting()  { for file in "$@"; do [ ! -f "$file" ] && errorExit 254 'plain file not found:'"$file" 1>&2; done }
-function exitIfFilesNotExisting()       { for file in "$@"; do [ ! -e "$file" ] && errorExit 255 'file not found:'"$file" 1>&2; done }
-function exitIfDirsNotExisting()        { for dir in "$@"; do [ ! -d "$dir" ] && errorExit 252 "$APP:ERROR:directory not found:$dir"; done }
-
-# --- Temporary file/directory  creation
-# -- file creation -- TMP1=$(tempFile); TMP2=$(tempFile) ;;;; trap "rm -f $TMP1 $TMP2" EXIT
-# -- directory creation -- TMPDIR=$(tempDir) ;;;;;  trap "rm -fr $TMPDIR;" EXIT
-#
-function tempFile()                     { mktemp "${TMPDIR:-/tmp/}$_app.XXXXXXXX"; }
-function tempDir()                      { mktemp -d "${TMPDIR:-/tmp/}$_app.YYYYYYYYY"; }
-# realpath as shell, argument either supplied as stdin or as $1
+# ConfigShell lib 1.1 (codebase 1.0.0)
+bashLib="/opt/ConfigShell/lib/bashlib.sh"
+[ ! -f "$bashLib" ] && 1>&2 echo "bash-library $bashLib not found" && exit 127
+# shellcheck source=/opt/ConfigShell/lib/bashlib.sh
+source "$bashLib"
+unset bashLib
 
 # application-specific functions  ===============================================================================
 
