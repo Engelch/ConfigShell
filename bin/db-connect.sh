@@ -4,33 +4,14 @@
 #
 # author: Christian ENGEL mailto:engel-ch@outlook.com
 
-function debugSet()             { DebugFlag=TRUE; return 0; }
-function debugUnset()           { DebugFlag=; return 0; }
-function debugExecIfDebug()     { [ "$DebugFlag" = TRUE ] && "$*"; return 0; }
-function debug()                { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:'"$*" 1>&2 ; return 0; }
-function debug4()               { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:    ' "$*" 1>&2 ; return 0; }
-function debug8()               { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:        ' "$*" 1>&2 ; return 0; }
-function debug12()              { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:            ' "$*" 1>&2 ; return 0; }
-
-# --- Exits
-
-# function error()        { err 'ERROR:' $*; return 0; } # similar to err but with ERROR prefix and possibility to include
-# Write an error message to stderr. We cannot use err here as the spaces would be removed.
-function error()        { echo 'ERROR:'"$*" 1>&2;             return 0; }
-function error4()       { echo 'ERROR:    '"$*" 1>&2;         return 0; }
-function error8()       { echo 'ERROR:        '"$*" 1>&2;     return 0; }
-function error12()      { echo 'ERROR:            '"$*" 1>&2; return 0; }
-
-function errorExit()    { EXITCODE="$1" ; shift; error "$*" ; exit "$EXITCODE"; }
-function exitIfErr()    { a="$1"; b="$2"; shift; shift; [ "$a" -ne 0 ] && errorExit "$b" App returned "$a" "$*"; }
-
-function err()          { echo "$*" 1>&2; }                 # just write to stderr
-function err4()         { echo '   ' "$*" 1>&2; }           # just write to stderr
-function err8()         { echo '       ' "$*" 1>&2; }       # just write to stderr
-function err12()        { echo '           ' "$*" 1>&2; }   # just write to stderr
-
-# --- Existance checks
-function exitIfBinariesNotFound() { for file in "$@"; do [ $(command -v "$file") ] || errorExit 253 binary not found: "$file" ; done }
+#########################################################################################
+# ConfigShell lib 1.1 (codebase 1.0.0)
+bashLib="/opt/ConfigShell/lib/bashlib.sh"
+[ ! -f "$bashLib" ] && 1>&2 echo "bash-library $bashLib not found" && exit 127
+# shellcheck source=/opt/ConfigShell/lib/bashlib.sh
+source "$bashLib"
+unset bashLib
+#########################################################################################
 
 # --- Default Script Functions
 function usage()
@@ -42,6 +23,7 @@ function usage()
     err SYNOPSIS
     err4 "$App" '[-D] [-f <<config-file>>] <<use-case>> [ sql cmd ]'
     err4 "$App-<<use-case>>" '[-D] [-f <<config-file>>] [ sql cmd ]'
+    err4 'cat <<file.sql>> | db-connect.sh <<use-case>>'
     err4 "$App" '-h'
     err
     err VERSION
@@ -238,7 +220,7 @@ function main() {
     declare -r App=$(basename "${0}")
     #declare -r AppDir=$(dirname "$0")
     # declare -r _AbsoluteAppDir=$(cd "$_appDir" || exit 99 ; /bin/pwd)
-    declare -r AppVersion="1.1.0"      # use semantic versioning
+    declare -r AppVersion="1.1.1"      # use semantic versioning
     dry=
     parseCLI "$@"
     shift "$(( OPTIND - 1 ))"  # not working inside parseCLI
