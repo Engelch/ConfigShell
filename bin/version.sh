@@ -20,7 +20,6 @@ bashLib="/opt/ConfigShell/lib/bashlib.sh"
 # shellcheck source=/opt/ConfigShell/lib/bashlib.sh
 source "$bashLib"
 unset bashLib
-
 ##########################
 
 function usage()

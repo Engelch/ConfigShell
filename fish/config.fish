@@ -231,11 +231,11 @@ function setupExportVars
     set -g -x EDITOR vim       # bsroot has no notion about VISUAL
     set -g -x BLOCKSIZE 1K
     set -g -x PROFILES_CONFIG_DIR /opt/ConfigShell
-    set -g -x FISH_RC_VERSION "5.0.0-rc9"
-    if test -n "$_current_FISH_RC_VERSION" -a "$FISH_RC_VERSION" != "$_current_FISH_RC_VERSION"
-        echo New FISH_RC_VERSION "$FISH_RC_VERSION"
+    set -g -x CONFIGSHELL_RC_VERSION (cd /opt/ConfigShell/fish ; version.sh)
+    if test -n "$_current_CONFIGSHELL_RC_VERSION" -a "$CONFIGSHELL_RC_VERSION" != "$_current_CONFIGSHELL_RC_VERSION"
+        echo New CONFIGSHELL_RC_VERSION "$CONFIGSHELL_RC_VERSION"
     end
-    set -g _current_FISH_RC_VERSION "$FISH_RC_VERSION"
+    set -g _current_CONFIGSHELL_RC_VERSION "$CONFIGSHELL_RC_VERSION"
 end
 
 if status is-interactive # main code
