@@ -25,6 +25,7 @@ function usage()
     err4 "$App-<<use-case>>" '[-D] [-f <<config-file>>] [ sql cmd ]'
     err4 'cat <<file.sql>> | db-connect.sh <<use-case>>'
     err4 "$App" '-h'
+    err4 "$App" '-V'
     err
     err VERSION
     err4 "$AppVersion"
@@ -42,16 +43,29 @@ function usage()
     err
     err OPTIONS
     err4 '-D                    ::= enable debug output'
+    err4 '-V                    ::= show version number and exit 11'
     err4 '-h                    ::= show usage message and exit with exit code 1'
     err4 '-f <<cfgFile>>        ::= load the configuration froma cfg file'
     err4 todo -f not yet implemented
 }
 
-# todo -f
+# parseCLI parse the cli options.
+# EXIT 1    usage
+# EXIT 10   explicitly set credentials file not found or not readable
+# EXIT 11   version
 function parseCLI() {
-    while getopts "Dnh" options; do         # Loop: Get the next option;
+    declare -g credentialsFile=''
+    while getopts "DVf:nh" options; do         # Loop: Get the next option;
         case "${options}" in                    # TIMES=${OPTARG}
             D)  debugSet ; debug debug enabled
+                ;;
+            V)  1>&2 echo '1.2.0'
+                exit 11
+                ;;
+            f)  # set config file instead of db-connect.pw[s]
+                debug "credentials file explicitly set to ${OPTARG}"
+                credentialsFile=${OPTARG}
+                [ ! -r "$credentialsFile" ] && errorExit 10 "cannot read or find credentials-file $credentialsFile"
                 ;;
             h)  usage ; exit 1
                 ;;
@@ -184,7 +198,11 @@ function checkEnoughSettings() {
 # EXIT 20
 #   21
 function evalCredentialsFile() {
-    if [ -f db-connect.pw ] ; then
+    debug "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '...............................................'
+    if [ -n "$credentialsFile" ] ; then
+        debug "Using explicitly set credentials-file $credentialsFile"
+        checkEnoughSettings "$1"  "$credentialsFile"
+    elif [ -f db-connect.pw ] ; then
         debug db-connect.pw found
         checkEnoughSettings "$1" db-connect.pw
     elif [ -f db-connect.pws ] ; then
@@ -197,6 +215,7 @@ function evalCredentialsFile() {
     else
         errorExit 20 No credentials file found
     fi
+    debug "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'
 }
 
 # callDB calls the actual DB
