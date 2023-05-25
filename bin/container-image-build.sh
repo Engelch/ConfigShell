@@ -71,25 +71,29 @@ function loginAwsIfInContainerfile() {
 # a more global pkg for this project. This script copies the packages into the directory
 # ContainerBuild
 function createBuildPackages() {
+    echo in createBuildPackages
     [ -d ./ContainerBuild ] && debug deleting old ContainerBuild && $DRY /bin/rm -fr ./ContainerBuild # delete dir if existing
-    $DRY mkdir -p ./ContainerBuild/src ./ContainerBuild/packages # fresh dir
+    $DRY mkdir -p ./ContainerBuild/ # fresh dir
 
-    [ "$DebugFlag" = "TRUE" ] && $DRY rsync -av ../*.go ../go.mod ../go.sum ./ContainerBuild/src
-    [ "$DebugFlag" != "TRUE" ] && $DRY rsync -a ../*.go ../go.mod ../go.sum ./ContainerBuild/src
+    [ "$DebugFlag" = "TRUE" ] && $DRY rsync -avL ../*.go ../go.mod ../go.sum ../packages ./ContainerBuild/
+    [ "$DebugFlag" != "TRUE" ] && $DRY rsync -aL ../*.go ../go.mod ../go.sum ../packages ./ContainerBuild/
 
-    [ "$(grep -Fc \./packages ContainerBuild/src/go.mod)" -lt 1 ] && return # no references for local packages, not copying
+    # [ "$(grep -Fc \./packages ContainerBuild/src/go.mod)" -lt 1 ] && return # no references for local packages, not copying
 
-    # for all ./packages/xyz listed, copy them to ./ContainerBuild/packages
-    grep -F \./packages ContainerBuild/src/go.mod | awk '{ print $NF }' | cut -d '/' -f 3 | while IFS= read -r pkg ; do
-        [ "$DebugFlag" = "TRUE" ] && $DRY rsync -av "../../packages/$pkg" ./ContainerBuild/packages
-        [ "$DebugFlag" != "TRUE" ] && $DRY rsync -a "../../packages/$pkg" ./ContainerBuild/packages
-        ln -s ../packages ./ContainerBuild/src/packages
-    done
+    # # for all ./packages/xyz listed, copy them to ./ContainerBuild/packages
+    # grep -F \./packages ContainerBuild/src/go.mod | awk '{ print $NF }' | cut -d '/' -f 3 | while IFS= read -r pkg ; do
+    #     [ "$DebugFlag" = "TRUE" ] && $DRY rsync -av "../../packages/$pkg" ./ContainerBuild/packages
+    #     [ "$DebugFlag" != "TRUE" ] && $DRY rsync -a "../../packages/$pkg" ./ContainerBuild/packages
+    #     ln -s ../packages ./ContainerBuild/src/packages
+    # done
+    pushd ContainerBuild || errorExit 30 'Oops, ContainerBuild not found.'
+    tar cvf ../ContainerBuild.tar .
+    popd
 }
 
 # optionallyCreateGoSetup checks if to create ContainerBuild directory for go compilation
 function optionallyCreateGoSetup() {
-    [ -n "$goCompilation" ] && createBuildPackages && return                                    # go-mode if specified on CLI
+    [ -n "$goCompilation" ] && debug calling createBuildPackages && createBuildPackages && return                                    # go-mode if specified on CLI
     [ "$(grep -vE '^#' $containerFile | grep -Fc '.go')" -gt 0 ] && createBuildPackages    # go-mode if .go files in containerFile
 }
 
@@ -178,8 +182,8 @@ function main() {
     loginAwsIfInContainerfile
     optionallyCreateGoSetup
     unset _version
-    if [ -d ContainerBuild/src ] ; then
-        _version="$(version.sh ContainerBuild/src)"
+    if [ -d ContainerBuild ] ; then
+        _version="$(version.sh ContainerBuild)"
     else
         _version="$(version.sh)"
     fi

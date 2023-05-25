@@ -83,8 +83,8 @@ function main() {
     setContainerCmd
     if [ -z "$1" ] ; then
         setContainerName
-        if [ -d ContainerBuild/src ] ; then
-            containerName="$containerName:$(version.sh ContainerBuild/src)"
+        if [ -d ContainerBuild ] ; then
+            containerName="$containerName:$(version.sh ContainerBuild)"
         else
             containerName="$containerName:$(version.sh)"
         fi

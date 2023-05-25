@@ -49,6 +49,17 @@ function setupAliases_Abbreviations
     alias disp0='export DISPLAY=:0'
     alias disp1='export DISPLAY=:1'
 
+    alias cd=cdx
+    function cdx
+        echo exec "$argv"
+        if test "$argv" = '-'
+            builtin cd "$OLD_PWD"
+        else
+            set -g OLD_PWD $PWD
+            builtin cd "$argv"
+        end
+    end
+    # ; and if test -f 00DIR.txt ; cat 00DIR.txt ; end; if test -f 00DIR.fish ; fish 00DIR.fish ;end ; if test -f 00DIR.fishrc ; source 00DIR.fishrc ;end;'
     abbr -a -g e "grep -E"
     abbr -a -g ei 'grep -Ei'
     abbr -a -g eir 'grep -EiR'
