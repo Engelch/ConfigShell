@@ -26,7 +26,7 @@
 readonly _app=$(basename "$0")
 readonly _appDir=$(dirname "$0")
 readonly _absoluteAppDir=$(cd "$_appDir" || errorExit 1 cannot determine absolute path of app_dir; /bin/pwd)
-readonly _appVersion="2.2.0" # use semantic versioning
+readonly _appVersion="2.2.1" # use semantic versioning
 export DebugFlag=${DebugFlag:-FALSE}
 
 # dry run mode, either supposed to be empty or to be echo
@@ -281,7 +281,7 @@ function createCsr() {
     _ext=''
     [ -n "$ext" ] && debug ext file set && _ext="-addext \"${ext}\"" && debug _ext:"$_ext"
 
-    csrAlreadyExisting "$base" && errorExit 11 key-material not existing for "$base"
+    csrAlreadyExisting "$base" && errorExit 11 CSR already existing "$base"
     debug createCsr passed csr not existing, creating csr
     debug       openssl req -key -new "$base.key" -subj "\"$attr\"" "$_san" "$_ext" -out "$base.csr"
     eval "$DRY" openssl req -new -key "$base.key" -subj "\"$attr\"" "$_san" "$_ext" -out "$base.csr"
