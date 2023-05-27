@@ -8,7 +8,7 @@
 # binary: j2
 # Alternative: brew install jinja2-cli
 
-export year="$(date +%y)"
+export yearShort="$(date +%y)"
 export monthNumber="$(date +%m)"
 
-j2 -e yearShort -e monthNumber Containerfile.j2 > Containerfile
+j2 -e '' Containerfile.j2 > Containerfile
