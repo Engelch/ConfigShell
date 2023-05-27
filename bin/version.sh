@@ -105,7 +105,7 @@ function main() {
     declare -r _app="$(basename "$0")"
     declare -r _appDir="$(dirname "$0")"
     declare -r _absoluteAppDir=$(cd "$_appDir" || exit 126; /bin/pwd)
-    declare -r _version="2.3.1"
+    declare -r _version="2.3.2"
 
     exitIfBinariesNotFound pwd tput basename dirname mktemp
 
@@ -158,7 +158,7 @@ function main() {
             [ -z "$matchfile" ] && 1>&2 echo Could not determine version file. Variable files returned "$matchfile". && exit 1
             [ "$_showFileName" = TRUE ] && echo -n "$matchfile:"
             grep -EiH --colour=never 'app.?version[[:space:]]*=' "$matchfile" | grep -E --colour=never '[0-9]+\.[0-9]+\.[0-9]+' | tail -n1 | sed 's/.*[ =]\"//g' | sed 's/\".*$//'
-        done < <(find . -name \*.go -maxdepth 1 -exec grep -Eiq 'app.?version[[:space:]]*=' {} \; -print0)
+        done < <(find . -maxdepth 1 -name \*.go -exec grep -Eiq 'app.?version[[:space:]]*=' {} \; -print0)
         [ -z "$fileFound" ] && 1>&2 echo 'ERROR:Version information could not be determined.' && exit 10
         exit 0
     fi
