@@ -51,15 +51,41 @@ function setupAliases_Abbreviations
 
     alias cd=cdx
     function cdx
-        echo exec "$argv"
+        set -g TMP_PWD "$PWD"
         if test "$argv" = '-'
-            builtin cd "$OLD_PWD"
+            builtin cd "$OLD_PWD" ; and executeDirEnv
+        else if test -z "$argv"
+            if test -n "$HOME"
+                builtin cd "$HOME" ; and executeDirEnv
+            else
+                echo 'OOPS, cannot execute empty cd without $HOME set' >/dev/stderr
+            end
         else
-            set -g OLD_PWD $PWD
-            builtin cd "$argv"
+            builtin cd "$argv" ; and executeDirEnv
         end
     end
-    # ; and if test -f 00DIR.txt ; cat 00DIR.txt ; end; if test -f 00DIR.fish ; fish 00DIR.fish ;end ; if test -f 00DIR.fishrc ; source 00DIR.fishrc ;end;'
+
+    # executeDirEnv is a helper function for the improved cd, which is implemented
+    # by the function cdx. If the change of a directory was successful, executeDirEnv
+    # will be executed.
+    # ALGORITHM
+    #   As the cd was successful, store the last CWD directory in OLD_PWD.
+    #   If a file 00DIR.txt exists, show it to stdout (terminal).
+    #   If a file 00DDIR.fish exists, execute it in a sub-shell.
+    #   If a file 00DIR.fishrc exists, execute/source it in the current shell.
+    function executeDirEnv
+        set -g OLD_PWD "$TMP_PWD"
+        if test -f 00DIR.txt
+            cat 00DIR.txt
+        end
+        if test -f 00DIR.fish
+            fish 00DIR.fish
+        end
+        if test -f 00DIR.fishrc
+            source 00DIR.fishrc
+        end
+    end
+
     abbr -a -g e "grep -E"
     abbr -a -g ei 'grep -Ei'
     abbr -a -g eir 'grep -EiR'
