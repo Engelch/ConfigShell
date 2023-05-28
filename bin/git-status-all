@@ -33,5 +33,5 @@ export -f checkGitDir       # export function to sub-processes
 [ "$1" = "-h" ] || [ "$1" = "--help" ] && usage && exit 2
 
 
-[ -n "$1" ] && find "$@" -name .git -type d -execdir bash -c 'checkGitDir' \;
-[ -z "$1" ] && find . /opt/ConfigShell/ -name .git -type d -execdir bash -c 'checkGitDir' \;
+[ -n "$1" ] && find "$@" -name .git -execdir bash -c 'checkGitDir' \;
+[ -z "$1" ] && find . /opt/ConfigShell/ -name .git -execdir bash -c 'checkGitDir' \;
