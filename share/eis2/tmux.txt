@@ -7,8 +7,9 @@
   F12 r                   to reload the configuration file
   F12-c                   as create window before but requires a name for the window
   F1..F9                  to switch windows
+  F12 + F9                rotate-window
   F12                     same as C-b (prefix)
-  F12 + F12               rotate windows
+  F12 + F12               cursor to next pane
   F11                     resize pane by 1 line
   F12 + F11               resize pane by -1 line
   F10                     copy-mode (vi)
