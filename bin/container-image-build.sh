@@ -3,8 +3,13 @@
 # shellcheck disable=SC2086
 # shellcheck disable=SC2068
 # shellcheck disable=SC1091
+# shellcheck disable=SC2154 # as variables are assigned in the library file
 
 # Changelog
+# 1.5
+# - additional automatic detection of golang mode for compilation by searching the Containerfile for `golang:true`
+# 1.4
+# - golang mode: move to create tar-balls for the Containerfile as this fixes problems with s-links
 # 1.3.1
 # - version# factored out to lib file
 # - error if not started in a dir called Container
@@ -88,13 +93,17 @@ function createBuildPackages() {
     # done
     pushd ContainerBuild || errorExit 30 'Oops, ContainerBuild not found.'
     tar cvf ../ContainerBuild.tar .
-    popd
+    popd || errorExit 31 'createBuildPackages:Could not return to previous directory'
 }
 
 # optionallyCreateGoSetup checks if to create ContainerBuild directory for go compilation
 function optionallyCreateGoSetup() {
-    [ -n "$goCompilation" ] && debug calling createBuildPackages && createBuildPackages && return                                    # go-mode if specified on CLI
-    [ "$(grep -vE '^#' $containerFile | grep -Fc '.go')" -gt 0 ] && createBuildPackages    # go-mode if .go files in containerFile
+    # go-mode if specified on CLI
+    [ -n "$goCompilation" ] && debug 'go-compilation selected from CLI' && createBuildPackages && return
+    # go-mode if .go files in containerFile
+    [ "$(grep -vE '^#' $containerFile | grep -Fc '.go')" -gt 0 ] && debug 'go compilation found' && createBuildPackages && return
+    # enable go-mode if a comment,... in the Containerfile contains golang:true
+    [ "$(grep -c 'golang:true' Containerfile)" -gt 0 ] && debug 'goland:true found ⇒ golang compilation' && createBuildPackages
 }
 
 #########################
@@ -133,7 +142,7 @@ function parseCLI() {
             D)  err Debug enabled
                 debugSet
                 ;;
-            V)  err $_appVersion
+            V)  err "$_appVersion"
                 exit 3
                 ;;
             a)  awsSupport="TRUE"
@@ -171,10 +180,10 @@ function main() {
     declare -g containerFile=''
     declare -g containerName=''
 
-    exitIfNotInContainer
-
     parseCLI "$@"
     shift $(( OPTIND - 1 ))  # not working inside parseCLI
+
+    exitIfNotInContainer
 
     setContainerCmd
     setContainerFile

@@ -1,4 +1,4 @@
-declare -r _appVersion="1.4.2"
+declare -r _appVersion="1.5.0"
 
 ####################################################################################
 ########### set the container command
