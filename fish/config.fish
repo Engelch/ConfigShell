@@ -105,8 +105,8 @@ function setupAliases_Abbreviations
     abbr -a -g hs 'history search --reverse --contains' # new command from fish. If it is good, it shall replace/become hf
     abbr -a -g proc 'ps -ef | grep -Ei'
 
-    abbr -a -g rl 'source ~/.config/fish/config.fish'
-    abbr -a -g rlDebug 'debugSet ; source ~/.config/fish/config.fish ; debugUnset'
+    abbr -a -g rl 'source /opt/ConfigShell/fish/config.fish'
+    abbr -a -g rlDebug 'debugSet ; source /opt/ConfigShell/fish/config.fish ; debugUnset'
     alias rlFull=rlDebug
 
     set -g -x KUBECTL kubectl
@@ -268,7 +268,7 @@ function setupExportVars
     set -g -x EDITOR vim       # bsroot has no notion about VISUAL
     set -g -x BLOCKSIZE 1K
     set -g -x PROFILES_CONFIG_DIR /opt/ConfigShell
-    set -g -x CONFIGSHELL_RC_VERSION (cd /opt/ConfigShell/fish ; version.sh)
+    set -g -x CONFIGSHELL_RC_VERSION (fish -c 'cd /opt/ConfigShell/fish ; /opt/ConfigShell/bin/version.sh')
     if test -n "$_current_CONFIGSHELL_RC_VERSION" -a "$CONFIGSHELL_RC_VERSION" != "$_current_CONFIGSHELL_RC_VERSION"
         echo New CONFIGSHELL_RC_VERSION "$CONFIGSHELL_RC_VERSION"
     end
