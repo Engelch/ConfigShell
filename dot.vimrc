@@ -1,4 +1,8 @@
-
+" vi -R <<file>>  open the file in RO-mode
+"
+" gwip      format current paragraph
+" gwG       format document from current line to EOF
+"           use set textwidth=80, defaulting to 78
 
 " Load all plugins now.
 " Plugins need to be added to runtimepath before helptags can be generated.
@@ -15,7 +19,41 @@ set nofoldenable
 " ==========================================================
 filetype plugin indent on
 
-set autowrite
+set autowriteall " Like 'autowrite', but also used for commands ":edit", ":enew", ":quit",
+  " ":qall", ":exit", ":xit", ":recover" and closing the Vim window.
+  " Setting this option also implies that Vim behaves like 'autowrite' has
+  " been set.
+
+" Backup stuff
+set backupdir=~/.vim/backup
+set directory=~/.vim/swap
+set undodir=~/.vim/undo
+set undofile
+set undolevels=1000
+set undoreload=10000
+" Set the commands to save in history default number is 20.
+set history=1000
+
+" https://www.freecodecamp.org/news/vimrc-configuration-guide-customize-your-vim-editor/
+
+" Enable auto completion menu after pressing TAB.
+set wildmenu
+
+" Make wildmenu behave like similar to Bash completion.
+set wildmode=list:longest
+
+" There are certain files that we would never want to edit with Vim.
+" Wildmenu will ignore files with these extensions.
+set wildignore=*.docx,*.jpg,*.png,*.gif,*.pdf,*.pyc,*.exe,*.flv,*.img,*.xlsx
+
+" Clear status line when vimrc is reloaded.
+set statusline=
+
+" Status line left side.
+set statusline+=\ %F\ %M\ %Y\ \%R\ col:%c\ %p%%
+
+" Show the status on the second to last line.
+set laststatus=2
 
 " Go syntax highlighting
 let g:go_highlight_fields = 1
@@ -38,6 +76,13 @@ let g:completor_filetype_map.go = {'ft': 'lsp', 'cmd': 'gopls -remote=auto'}"
 " ========================================================== end
 syntax on
 filetype on
+
+" Highlight cursor line underneath the cursor horizontally.
+set cursorline
+
+" Highlight cursor line underneath the cursor vertically.
+set cursorcolumn
+
 :set ignorecase
 :set smartcase
 :set incsearch
