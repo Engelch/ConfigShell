@@ -1,5 +1,12 @@
 " vi -R <<file>>  open the file in RO-mode
 "
+" par as formatting tool
+"  brew/par  install par
+"  :set formatprg=par\ -w78
+"
+"  Commands below also work w/out par. By executing the above
+"  formatprg, they work w/ par
+"
 " gwip      format current paragraph
 " gwG       format document from current line to EOF
 "           use set textwidth=80, defaulting to 78
