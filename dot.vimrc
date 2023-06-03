@@ -11,17 +11,41 @@
 " gwG       format document from current line to EOF
 "           use set textwidth=80, defaulting to 78
 
-" Load all plugins now.
-" Plugins need to be added to runtimepath before helptags can be generated.
-packloadall
 " Load all of the helptags now, after plugins have been loaded.
 " All messages and errors will be ignored.
 silent! helptags ALL
 let g:ale_completion_enabled = 1
 
+" PLUGINS ---------------------------------------------------------------- {{{
+" load the mgr by:
+"     curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+" or (PowerShell)
+"     iwr -useb https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim | ni $HOME/vimfiles/autoload/plug.vim -Force
+
+" call plug#begin('~/.vim/plugged')
+"  Plug 'dense-analysis/ale'
+"  Plug 'preservim/nerdtree'
+
+" call plug#end()
+
+" }}}
+
+" MAPPINGS --------------------------------------------------------------- {{{
+
+" move between windows, default ^w h/j/k/l   or   ^w left-arrow/...
+nnoremap <C-H> <C-W>h
+nnoremap <C-J> <C-W>j
+nnoremap <C-K> <C-W>k
+nnoremap <C-L> <C-W>l
+
+" use control left/... to move between tabs
+nnoremap <C-Left> :tabprevious<CR>
+nnoremap <C-Right> :tabnext<CR>
+
 " ====================================================
 scriptencoding utf-8
 set nofoldenable
+set nocompatible
 
 " ==========================================================
 filetype plugin indent on
