@@ -1,5 +1,20 @@
+" = READ ONLY MODE ======================================================= 
 " vi -R <<file>>  open the file in RO-mode
+
+" = SHOW/REMOVE TABS ======================================================= 
+" /\t  to show tabs
+" :retab to replace tabs with spaces
+" test line with tabs 	bla
+" :set list to show EOL and Tabs as ^I, :set nolist to remove this mode again
 "
+" = previous delete/yank  ======================================================= 
+" :reg to show the previous deletes (vim clipboards) = :registers
+" To add the 2nd register again below the current line:  "2p
+"
+" There is a YankRing plugin if you are also interested in previous yanks
+" (copy clipboard).
+"
+" = PARAGRAPH FORMATTING ======================================================= 
 " par as formatting tool
 "  brew/par  install par
 "  :set formatprg=par\ -w78
@@ -11,26 +26,45 @@
 " gwG       format document from current line to EOF
 "           use set textwidth=80, defaulting to 78
 
-" Load all of the helptags now, after plugins have been loaded.
-" All messages and errors will be ignored.
-silent! helptags ALL
-let g:ale_completion_enabled = 1
+" = RELOAD VIMRC WITHOUT STOPPING VI ======================================================= 
+" reload .vimrc if file is in the active buffer:  :so %
+" % represents the active buffer
+" :ls list buffer
+" :b1..n change to buffer n
 
 " PLUGINS ---------------------------------------------------------------- {{{
 " load the mgr by:
 "     curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 " or (PowerShell)
 "     iwr -useb https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim | ni $HOME/vimfiles/autoload/plug.vim -Force
+" After downloading the plugin manager and enabling plugins below, you can
+" load the plugins using:
+"     :PlugInstall 
 
 " call plug#begin('~/.vim/plugged')
-"  Plug 'dense-analysis/ale'
-"  Plug 'preservim/nerdtree'
+"  Plug 'dense-analysis/ale'     " linters for many programming languages
+"  Plug 'preservim/nerdtree'     " directory tree manager
 
 " call plug#end()
 
 " }}}
 
 " MAPPINGS --------------------------------------------------------------- {{{
+" 3 different ways to change keyboard mappings
+"     nnoremap – Allows you to map keys in normal mode.
+"     inoremap – Allows you to map keys in insert mode.
+"     vnoremap – Allows you to map keys in visual mode.
+"
+" Mapleader will allow you set a key unused by Vim as the <leader> key.
+" The leader key, in conjunction with another key, will allow you to create new shortcuts.
+" 
+" The backslash key is the default leader key but some people change it to a comma ",".
+" let mapleader = ","
+
+" With the leader key mapped to backslash, I can use it like this:
+
+" Turn off search highlighting by pressing \\.
+nnoremap <leader>\ :nohlsearch<CR>
 
 " move between windows, default ^w h/j/k/l   or   ^w left-arrow/...
 nnoremap <C-H> <C-W>h
@@ -46,6 +80,12 @@ nnoremap <C-Right> :tabnext<CR>
 scriptencoding utf-8
 set nofoldenable
 set nocompatible
+
+" = ALE plugin specifics ======================================================= 
+" Load all of the helptags now, after plugins have been loaded.
+" All messages and errors will be ignored.
+silent! helptags ALL
+let g:ale_completion_enabled = 1
 
 " ==========================================================
 filetype plugin indent on
@@ -81,8 +121,8 @@ set wildignore=*.docx,*.jpg,*.png,*.gif,*.pdf,*.pyc,*.exe,*.flv,*.img,*.xlsx
 set statusline=
 
 " Status line left side.
-set statusline+=\ %F\ %M\ %Y\ \%R\ col:%c\ %p%%
-
+set statusline+=\ %M\ %F\ %M\ %Y\ \%R\ col:%c\ ASCII_Unic/hex:%b/0x%B\ %p%%
+"⌘
 " Show the status on the second to last line.
 set laststatus=2
 
@@ -128,7 +168,7 @@ autocmd FileType yaml setlocal ts=2 sts=2 sw=2 expandtab
 
 :set backup       " makes tilde file backups"
 :set mouse=a      " allow mouse to change cursor position"
-:set showmatch	   " briefly jump to matching brackets"
+:set showmatch    " briefly jump to matching brackets"
 
 :set number
 :set expandtab
