@@ -145,6 +145,7 @@ function main() {
     fixGnupg
     installFish
     warningIfBinariesNotFound ruby gnutls-cli openssl marp
+    mkdir -p ~/.vim/backup ~/.vim/swap ~/.vim/undo
 }
 
 main $*

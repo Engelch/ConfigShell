@@ -105,7 +105,7 @@ function main() {
     declare -r _app="$(basename "$0")"
     declare -r _appDir="$(dirname "$0")"
     declare -r _absoluteAppDir=$(cd "$_appDir" || exit 126; /bin/pwd)
-    declare -r _version="2.3.2"
+    declare -r _version="2.3.3"
 
     exitIfBinariesNotFound pwd tput basename dirname mktemp
 
@@ -130,14 +130,17 @@ function main() {
     elif [ -f "$versionFilePattern" ] ; then
         # _versionFilePattern can either contain specific filenames to search for version information or a pattern
         _versionFilePattern=$(grep -v '^$' < "$versionFilePattern" | grep -Ev '^[[:space:]]*#' | sed 's/[[:space:]]*#.*$//')
-        [ "$(echo "$_versionFilePattern" | wc -w )" -ne 2 ] && 1>&2 echo 'Versionpattern file should be of the format <filename> <pattern for selecting the line in the file>'
+        _numPattern="$(echo "$_versionFilePattern" | wc -w )" 
+        [ "$_numPattern" -ne 2 ] && 1>&2 echo 'Versionpattern file should be of the format <filename> <pattern> for selecting the line in the file, but found words:' "$_numPattern" && exit 15
         _file=$(echo "$_versionFilePattern" | awk '{ print $1 }')
-        _pattern=$(echo "$_versionFilePattern" | awk '{ print $2 }')
         debug file pattern is "$_file"
+        _pattern=$(echo "$_versionFilePattern" | awk '{ print $2 }')
         debug pattern is "$_pattern"
+        [ -z "$_pattern" ] && 1>&2 echo Pattern is not set && exit 16
         declare -g fileFound=''
         while read -r -d '' match; do
             output=$(grep -iE --colour=never "$_pattern" "$match" /dev/null | grep -v '^$' | grep -vE '^[[:space:]]*#')
+            debug "output is $output"
             [ "$fileFound" = TRUE ] && 1>&2 echo "ERROR:multiple files match for version information" && exit 13
             fileFound=TRUE
             [ -n "$output" ] && if [ "$_showFileName" = TRUE ] ; then
