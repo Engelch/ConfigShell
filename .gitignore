@@ -1,4 +1,4 @@
 *.key
 *.crt
 *~
-/lib/tests/version.sh/versionPatternC-Programme/main
+/lib/tests/version.sh/**/main

@@ -23,55 +23,26 @@
 # FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
+# CHANGELOG
+# 0.1.0
+# - first version
+# ! problems with directories which are also reachable via a symbolic link.
+# 1.0.0
+# - integrate bash library
+# - implement dry-run mode with option -n
 
 #########################################################################################
 # VARIABLES, CONSTANTS
 
 
-
 #########################################################################################
-
-# --- debug: Conditional debugging. All commands begin w/ debug.
-
-function debugSet()             { DebugFlag=TRUE; return 0; }
-function debugUnset()           { DebugFlag=; return 0; }
-function debugExecIfDebug()     { [ "$DebugFlag" = TRUE ] && "$*"; return 0; }
-function debug()                { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:'"$*" 1>&2 ; return 0; }
-function debug4()               { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:    ' "$*" 1>&2 ; return 0; }
-function debug8()               { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:        ' "$*" 1>&2 ; return 0; }
-function debug12()              { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:            ' "$*" 1>&2 ; return 0; }
-
-# --- Exits
-
-# function error()        { err 'ERROR:' $*; return 0; } # similar to err but with ERROR prefix and possibility to include
-# Write an error message to stderr. We cannot use err here as the spaces would be removed.
-function error()        { echo 'ERROR:'"$*" 1>&2;             return 0; }
-function error4()       { echo 'ERROR:    '"$*" 1>&2;         return 0; }
-function error8()       { echo 'ERROR:        '"$*" 1>&2;     return 0; }
-function error12()      { echo 'ERROR:            '"$*" 1>&2; return 0; }
-
-function errorExit()    { EXITCODE="$1" ; shift; error "$*" ; exit "$EXITCODE"; }
-function exitIfErr()    { a="$1"; b="$2"; shift; shift; [ "$a" -ne 0 ] && errorExit "$b" App returned "$a" "$*"; }
-
-function err()          { echo "$*" 1>&2; }                 # just write to stderr
-function err4()         { echo '   ' "$*" 1>&2; }           # just write to stderr
-function err8()         { echo '       ' "$*" 1>&2; }       # just write to stderr
-function err12()        { echo '           ' "$*" 1>&2; }   # just write to stderr
-
-# --- Existance checks
-function exitIfBinariesNotFound()       { for file in "$@"; do command -v "$file" >/dev/null || errorExit 253 binary not found: "$file" ; done }
-function exitIfPlainFilesNotExisting()  { for file in "$@"; do [ ! -f "$file" ] && errorExit 254 'plain file not found:'"$file" 1>&2; done }
-function exitIfFilesNotExisting()       { for file in "$@"; do [ ! -e "$file" ] && errorExit 255 'file not found:'"$file" 1>&2; done }
-function exitIfDirsNotExisting()        { for dir in "$@"; do [ ! -d "$dir" ] && errorExit 252 "$APP:ERROR:directory not found:$dir"; done }
-
-# --- Temporary file/directory  creation
-# -- file creation -- TMP1=$(tempFile); TMP2=$(tempFile) ;;;; trap "rm -f $TMP1 $TMP2" EXIT
-# -- directory creation -- TMPDIR=$(tempDir) ;;;;;  trap "rm -fr $TMPDIR;" EXIT
-#
-function tempFile()                     { mktemp "${TMPDIR:-/tmp/}$app.XXXXXXXX"; }
-function tempDir()                      { mktemp -d "${TMPDIR:-/tmp/}$app.YYYYYYYYY"; }
-# realpath as shell, argument either supplied as stdin or as $1
-
+# ConfigShell lib 1.1 (codebase 1.0.0)
+bashLib="/opt/ConfigShell/lib/bashlib.sh"
+[ ! -f "$bashLib" ] && 1>&2 echo "bash-library $bashLib not found" && exit 127
+# shellcheck source=/opt/ConfigShell/lib/bashlib.sh
+source "$bashLib"
+unset bashLib
+#########################################################################################
 # application-specific functions  ===============================================================================
 
 function exitIfNotInGitRepo() {
@@ -86,28 +57,33 @@ function usage()
     err4 "$app"
     err
     err SYNOPSIS
-    err4 "$app" '[-D] [-r] [pattern...]'
+    err4 "$app" '[-D] [-r] [-n] [pattern...]'
     err4 "$app" '-h'
     err
     err VERSION
     err4 "$appVersion"
     err
     err DESCRIPTION
-    err4 add the patterns to the .gitignore file in the git root directory
+    err4 add the patterns to the .gitignore file in the git root directory. The path is
+    err4 automatically calculated.
     err
     err OPTIONS
     err4 '-D      ::= enable debug output'
     err4 '-h      ::= show usage message and exit with exit code 1'
+    err4 '-n      ::= dry mode, show what would be executed'
     err4 '-r      ::= raw patterns, do not convert them to absolute filenames from git root onl'
 }
 
 # EXIT 1    usage
 function parseCLI() {
-    while getopts "Dhr" options; do         # Loop: Get the next option;
+    while getopts "Dhnr" options; do         # Loop: Get the next option;
         case "${options}" in                    # TIMES=${OPTARG}
             D)  err Debug enabled ; debugSet
                 ;;
             h)  usage ; exit 1
+                ;;
+             n) DRY='echo'
+                debug dry mode selected
                 ;;
             r) rawFilename=TRUE
                 ;;
@@ -120,20 +96,19 @@ function parseCLI() {
 }
 
 function main() {
-    exitIfBinariesNotFound pwd basename dirname mktemp
+    exitIfBinariesNotFound pwd basename dirname mktemp realpath
 
     declare -g -r app=$(basename "$0")
     declare -g -r appDir=$(dirname "$0")
-    declare -g -r absoluteAppDir=$(cd "$appDir" || exit 99 ; /bin/pwd)
-    declare -g -r appVersion="0.1.0"      # use semantic versioning
+    declare -g -r appVersion="1.0.0"      # use semantic versioning
     declare -g    DebugFlag="${DebugFlag:-FALSE}"
+    declare -g    DRY='' # dry run mode
 
     parseCLI "$@"
     shift "$(( OPTIND - 1 ))"  # not working inside parseCLI
 
     debug "app $app"
     debug "appDir $appDir"
-    debug "absoluteAppDir $absoluteAppDir"
     debug "appVersion $appVersion"
     debug "DebugFlag $DebugFlag"
 
@@ -141,21 +116,31 @@ function main() {
     declare -r Gitroot="$(git rev-parse --show-toplevel)"
     debug "Gitroot is $Gitroot"
 
-    for pattern in $@ ; do
+    for pattern in "$@" ; do
         if [ ! "$rawFilename" == TRUE ] ; then
             if [ -d "$pattern" ] ; then
+                debug dir mode
                 dir="$pattern"
                 file=""
             else
-                dir="$(dirname $pattern)"
-                file="$(basename $pattern)"
+               debug file mode
+                dir="$(dirname "$pattern")"
+                file="$(basename "$pattern")"
             fi
-            absoluteDir=$(cd "$dir" || exit 98 ; /bin/pwd)
-            dirFromGitRoot=$(echo "$absoluteDir" | sed -e "s,^$Gitroot,,")
-            debug normalised dir is "$dirFromGitRoot/$file"
+            debug "dir is                 : $dir"
+            debug "file is                : $file"
+            absoluteDir=$(realpath "$dir" || errorExit  98 "realpath not working")
+            debug "absoluteDir no s-links : $absoluteDir"
+            dirFromGitRoot="$(echo "$absoluteDir" | sed -e "s,^$Gitroot,,")"
+            debug "dirFromGitRoot is      : $dirFromGitRoot"
+            debug "normalised full path is: $dirFromGitRoot/$file"
         fi
-        debug adding "$dirFromGitRoot/$file" to "$Gitroot/.gitignore"
-        echo "$dirFromGitRoot/$file" >> "$Gitroot/.gitignore"
+        if [ -z "$DRY" ] ; then 
+           debug adding "$dirFromGitRoot/$file" to "$Gitroot/.gitignore"
+           echo "$dirFromGitRoot/$file" >> "$Gitroot/.gitignore"
+        else
+            echo WOULD ADD "$dirFromGitRoot/$file" to "$Gitroot/.gitignore"
+        fi
     done
 }
 
