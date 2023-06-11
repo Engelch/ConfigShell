@@ -13,25 +13,25 @@ function setupOSX() {
       which $_newApp | egrep '^/opt/homebrew|/usr/local' > /dev/null || warning $_newApp does not seem to be from homebrew.
    done
 
-   # useful only for Mac OS Silicon M1,
+   # behaviour change of a *standard* command is a bad idea. Removed and now same behaviour as with fish
    # still working but useless for the other platforms
-   debug8 special docker command !!!!!!!!!!!
-   docker() {
-      if [[ `uname -m` == "arm64" ]] && [[ "$1" == "run" || "$1" == "build" ]]; then
-         /usr/local/bin/docker "$1" --platform linux/amd64 "${@:2}"
-      else
-         /usr/local/bin/docker "$@"
-      fi
-   }
+   #   debug8 special docker command !!!!!!!!!!!
+   #   docker2() {
+   #      if [[ `uname -m` == "arm64" ]] && [[ "$1" == "run" || "$1" == "build" ]]; then
+   #         /usr/local/bin/docker "$1" --platform linux/amd64 "${@:2}"
+   #      else
+   #         /usr/local/bin/docker "$@"
+   #      fi
+   #   }
 
-   debug8 special podman command !!!!!!!!!!!
-   podman() {
-      if [[ `uname -m` == "arm64" ]] && [[ "$1" == "run" || "$1" == "build" ]]; then
-         /opt/homebrew/bin/podman "$1" --platform linux/amd64 "${@:2}"
-      else
-         /opt/homebrew/bin/podman "$@"
-      fi
-   }
+   #   debug8 special podman command !!!!!!!!!!!
+   #   podman2() {
+   #      if [[ `uname -m` == "arm64" ]] && [[ "$1" == "run" || "$1" == "build" ]]; then
+   #         /opt/homebrew/bin/podman "$1" --platform linux/amd64 "${@:2}"
+   #      else
+   #         /opt/homebrew/bin/podman "$@"
+   #      fi
+   #   }
 
    # start Xcode
    debug8 xc for Xcode
@@ -57,32 +57,33 @@ function setupOSX() {
    debug8 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'
 }
 
-function setupOSX_PostgreSQL() {
-   #POSTGRESQL specific
-   debug8 setupOSX_PostgreSQL '(non-docker installation)'.........
-   if [ -d /Applications/Postgres.app/Contents ] ; then
-      export PGDIR="$HOME/Library/Application Support/Postgres/" # PGDIR: directory of PGSQL configuration
-      if [ `ls "$PGDIR" 2>/dev/null | tail -1 | wc -l` -gt 0 ] ; then
-         debug12 PostgreSQL installation found
-         PGVERSION=`ls "$PGDIR" | tail -1`
-         export PGDATA="$PGDIR"$PGVERSION # PGDATA: directory of PGSQL data files
-         if [ ! -d "$PGDATA" ] ; then
-                  echo $PGDATA is not a directory. Unsetting it. 1>&2
-                  unset PGDATA
-         else
-                  PGNUMBER=`echo "$PGVERSION" | sed 's/.*-//'`
-                  PATH=$PATH:/Applications/Postgres.app/Contents/Versions/"$PGNUMBER"/bin
-         fi
-      else
-         echo PGDIR seems to be empty or not existing 1>&2
-         echo Hint: this message often disappears after the installation AND the 1st start of Postgres 1>&2
-      fi
-   fi
-}
+# OSX code disabled as done using containers these days
+#  function setupOSX_PostgreSQL() {
+#     #POSTGRESQL specific
+#     debug8 setupOSX_PostgreSQL '(non-docker installation)'.........
+#     if [ -d /Applications/Postgres.app/Contents ] ; then
+#        export PGDIR="$HOME/Library/Application Support/Postgres/" # PGDIR: directory of PGSQL configuration
+#        if [ `ls "$PGDIR" 2>/dev/null | tail -1 | wc -l` -gt 0 ] ; then
+#           debug12 PostgreSQL installation found
+#           PGVERSION=`ls "$PGDIR" | tail -1`
+#           export PGDATA="$PGDIR"$PGVERSION # PGDATA: directory of PGSQL data files
+#           if [ ! -d "$PGDATA" ] ; then
+#                    echo $PGDATA is not a directory. Unsetting it. 1>&2
+#                    unset PGDATA
+#           else
+#                    PGNUMBER=`echo "$PGVERSION" | sed 's/.*-//'`
+#                    PATH=$PATH:/Applications/Postgres.app/Contents/Versions/"$PGNUMBER"/bin
+#           fi
+#        else
+#           echo PGDIR seems to be empty or not existing 1>&2
+#           echo Hint: this message often disappears after the installation AND the 1st start of Postgres 1>&2
+#        fi
+#     fi
+#  }
 
 debug8 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '...............................................'
 setupOSX
-setupOSX_PostgreSQL
+#  setupOSX_PostgreSQL
 debug8 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'
 
 # EOF

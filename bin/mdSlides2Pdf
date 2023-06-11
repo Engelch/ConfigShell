@@ -1,5 +1,16 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2155 disable=SC2046 disable=SC2001 disable=SC2086
+#
+# https://github.com/marp-team/marp-cli
+#
+#     Marp CLI is working only with actively supported Node.js versions,
+#     so Node.js v16 and later is required
+#
+#     Docker image marpteam/marp-cli https://hub.docker.com/r/marpteam/marp-cli/
+#
+#     We also provide standalone binaries for Linux, macOS, and Windows.
+#     These have bundled Marp CLI with Node.js binary, so no need to install 
+#     Node.js separately.
 
 #########################################################################################
 # ConfigShell lib 1.1 (codebase 1.0.0)
