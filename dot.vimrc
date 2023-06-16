@@ -28,7 +28,16 @@
 
 " = RELOAD VIMRC WITHOUT STOPPING VI ======================================================= 
 " reload .vimrc if file is in the active buffer:  :so %
-" % represents the active buffer
+" 
+" iw, aw :- inside/around word
+" is, as :- inside/around sentence
+" ip, ap :- inside/around paragraph
+" i",i',a",a' :- e.g. ci" will delete everything inside double-quotes
+" i[,i(,i{,a(,a[,a{
+" it,at  :- tags
+"
+" % represents the active buffer, can also be used to replace 1,$
+"
 " :ls list buffer
 " :b1..n change to buffer n
 
@@ -90,7 +99,7 @@ let g:ale_completion_enabled = 1
 " ==========================================================
 filetype plugin indent on
 
-set autowriteall " Like 'autowrite', but also used for commands ":edit", ":enew", ":quit",
+"set autowriteall " Like 'autowrite', but also used for commands ":edit", ":enew", ":quit",
   " ":qall", ":exit", ":xit", ":recover" and closing the Vim window.
   " Setting this option also implies that Vim behaves like 'autowrite' has
   " been set.
