@@ -161,7 +161,7 @@ filetype on
 set cursorline
 
 " Highlight cursor line underneath the cursor vertically.
-set cursorcolumn
+" set cursorcolumn
 
 :set ignorecase
 :set smartcase
@@ -181,7 +181,7 @@ autocmd FileType yaml setlocal ts=2 sts=2 sw=2 expandtab
 
 :set number
 :set expandtab
-:set noswapfile   " disable the swap file as required for some docker directories
+" :set noswapfile   " disable the swap file as required for some docker directories
 
 " *               - search for word currently under cursor"
 " g*              - search for partial word under cursor "
