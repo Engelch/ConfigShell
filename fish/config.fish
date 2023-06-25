@@ -81,8 +81,13 @@ function setupAliases_Abbreviations
         if test -f 00DIR.fish
             fish 00DIR.fish
         end
+        if test -f 00DIR.sh
+            bash 00DIR.sh
+        end
         if test -f 00DIR.fishrc
             source 00DIR.fishrc
+        else if test -f 00DIR.rc
+            echo "Here is your fish shell, I cannot execute 00DIR.rc"
         end
     end
 
