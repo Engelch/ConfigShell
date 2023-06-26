@@ -104,6 +104,7 @@ function envVars() {
     export VISUAL=vim
     export EDITOR="$VISUAL"       # bsroot has no notion about VISUAL
     export BLOCKSIZE=1K
+    export COLUMNS   # required for diff2
 
     export KUBECTL=kubectl
     if which docker 2&>/dev/null ; then
