@@ -116,7 +116,7 @@ function envVars() {
         debug8 CONTAINER $CONTAINER
         alias docker=podman
     fi
-    for file in /etc/bash_completion /usr/local/etc/bash_completion /opt/homebrew/etc/bash_completion  ; do
+    for file in /etc/bash_completion /usr/local/etc/bash_completion /opt/homebrew/etc/bash_completion /usr/share/bash-completion/bash_completion ; do
       [ -f "$file" ] && debug found bash_completion "$file", sourcing... && source "$file"
     done
 
