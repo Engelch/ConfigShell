@@ -39,22 +39,23 @@ function usage()
 NAME
     $_app
 SYNOPSIS
-    $_app [-D] [dir...]
+    $_app [-D] [-v] [file...]
     $_app [-V]
     $_app -h
 VERSION
     $_appVersion
 DESCRIPTION
-    ...
+    Output the number of lines of code in bash scripts.
 OPTIONS
     -D      ::= enable debug output
-    -V      ::= output the version number to stderr and exit with 0
-    -h      ::= show usage message to stderr and exit with 0
+    -V      ::= output the version number and exit code 0
+    -h      ::= show usage message and exit with exit code 1
+    -v      ::= also show the filename(s)
 HERE
 }
 
 function parseCLI() {
-    while getopts "DVh" options; do         # Loop: Get the next option;
+    while getopts "DVhv" options; do         # Loop: Get the next option;
         case "${options}" in                    # TIMES=${OPTARG}
             D)  1>&2 echo Debug enabled ; DebugFlag="TRUE"
                 ;;
@@ -63,8 +64,8 @@ function parseCLI() {
                 ;;
             h)  usage ; exit 0
                 ;;
-            # v)  verbose=TRUE
-            #     ;;
+            v)  verbose=TRUE
+                ;;
             *)
                 1>&2 echo "Help with $_app -h"
                 exit 1  # Exit abnormally.
@@ -80,7 +81,7 @@ function main() {
     declare -r _absoluteAppDir=$(cd "$_appDir" || exit 99 ; /bin/pwd)
     declare -r _appVersion="0.0.1"      # use semantic versioning
     export DebugFlag=${DebugFlag:-FALSE}
-    # verbose=
+    verbose=
 
     parseCLI "$@"               # cannot use fn-s from loadLibs
     shift "$(( OPTIND - 1 ))"   # not working inside parseCLI
@@ -89,7 +90,10 @@ function main() {
     exitIfBinariesNotFound mktemp
 
     debug args are "$*"
-
+    for file in "$@" ; do
+        [ -n "$verbose" ] && echo -n "$file:"
+        grep -vE '^[[:space:]]*#' "$file" | grep -cv '^$'
+    done
 }
 
 main "$@"
