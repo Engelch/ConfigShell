@@ -38,8 +38,8 @@ function parseCLI() {
 }
 
 function main() {
-    _os=$(uname | tr "A-Z" "a-z")
-    _arch=$(uname -m | tr "A-Z" "a-z")
+    _os=${GOOS:-$(uname | tr "A-Z" "a-z")}
+    _arch=${GOARCH:-$(uname -m | tr "A-Z" "a-z")}
     [ "$_arch" = x86_64 ] && _arch=amd64
     debugVal=
     fOption=
@@ -58,6 +58,10 @@ function main() {
     debug OS is "$_os"
     debug Architecture is "$_arch"
     debug Environment is "$_env"
+    if ! [[ "$PATH" =~ '/opt/ConfigShell/bin' ]] ; then
+        PATH="$PATH:/opt/ConfigShell/bin"
+        debug add ConfigShell/bin to PATH
+    fi
     echo Calling "${_appDir}/gobuild.${_env}.${_os}_${_arch}" $debugVal $fOption $@
     ${_appDir}/gobuild.${_env}.${_os}_${_arch} $debugVal $fOption $@
 }

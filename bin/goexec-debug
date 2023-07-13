@@ -71,7 +71,7 @@ gore|goexec-release|goer) execHelp release "$*"
     ;;
 goue|goexec-upx|goeu) execHelp upx "$*"
     ;;
-*) echo 1>&2 Unkonw command
+*) echo 1>&2 Unknown command
     exit 1
     ;;
 esac

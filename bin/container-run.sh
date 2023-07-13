@@ -23,6 +23,12 @@
 # FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
+# Changelog
+# 0.2:
+# - allowing -e key-value to support environment variables to be set inside/for the container
+# - debug mode now shows the command that would be executed and waits for ENTER to continue
+# 0.1:
+# - initial version
 
 function loadLibs() {
     #########################################################################################
@@ -45,7 +51,7 @@ function usage()
 NAME
     $_app
 SYNOPSIS
-    $_app [-D] container [ <<command to be run inside of the container>> ]
+    $_app [-D] [-e key=value] ... container [ <<command to be run inside of the container>> ]
     $_app -V
     $_app -h
 VERSION
@@ -84,12 +90,14 @@ HERE
 }
 
 function parseCLI() {
-    while getopts "DVh" options; do         # Loop: Get the next option;
+    while getopts "DVe:h" options; do         # Loop: Get the next option;
         case "${options}" in                    # TIMES=${OPTARG}
             D)  1>&2 echo Debug enabled ; DebugFlag="TRUE"
                 ;;
             V)  1>&2 echo $_appVersion
                 exit 0
+                ;;
+            e)  environmentOptions="$environmentOptions -e ${OPTARG}"
                 ;;
             h)  usage ; exit 0
                 ;;
@@ -106,8 +114,9 @@ function main() {
     declare -r _app=$(basename "${0}")
     declare -r _appDir=$(dirname "$0")
     declare -r _absoluteAppDir=$(cd "$_appDir" || exit 124 ; /bin/pwd)
-    declare -r _appVersion="0.1.0"      # use semantic versioning
+    declare -r _appVersion="0.2.0"      # use semantic versioning
     export DebugFlag=${DebugFlag:-FALSE}
+    environmentOptions=
 
     parseCLI "$@"
     shift "$(( OPTIND - 1 ))"  # not working inside parseCLI
@@ -115,11 +124,23 @@ function main() {
     loadLibs
     exitIfBinariesNotFound mktemp realpath
     setContainerCmd
+    debug "environment options are: $environmentOptions"
+    debug "container-command is $containerCmd"
 
     debug args are "$@"
     [ -z "$1" ] && errorExit 11 No container to be run was specified.
     currentDir="$(realpath "$(pwd)")"
-    "$containerCmd" run -it --rm --workdir /y/"$currentDir" -v "/:/y"  "$@"
+    unset mountConfigShell
+    if [ -e "/opt/ConfigShell" ] ; then 
+        debug ConfigShell detected
+        configShellDir="$(realpath /opt/ConfigShell)"
+        mountConfigShell="-v $configShellDir:/opt/ConfigShell"
+    else
+        debug ConfigShell NOT detected, but container-run.sh is part of ConfigShell, strange
+    fi
+    debug Executing, after pressing ENTER: "$containerCmd" run -it --rm $environmentOptions --workdir /y/"$currentDir" -v "/:/y" $mountConfigShell "$@"
+    debugExecIfDebug read
+    "$containerCmd" run -it --rm $environmentOptions --workdir /y"$currentDir" -v "/:/y" $mountConfigShell "$@"
 }
 
 main "$@"

@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2086,SC2001 # using multi eval levels
+#########################################################################################
+# CHANGELOG
+# 2.2.z:
+# - add /opt/ConfigShell/bin into PATH if not yet included and if existing
 
 #########################################################################################
 # ConfigShell lib 1.1 (codebase 1.0.0)
@@ -61,12 +65,16 @@ function parseCLIOptions() {
 }
 
 function main() {
+    if ! [[ "$PATH" =~ '/opt/ConfigShell/bin' ]] ; then
+        PATH="$PATH:/opt/ConfigShell/bin"
+        debug add ConfigShell/bin to PATH
+    fi
     exitIfBinariesNotFound sed version.sh
 
     declare -r App=$(basename "$0")
     declare -r AppDir=$(dirname "$0")
     #declare -r AppLibDir=$(dirname "$AppDir")/lib
-    declare -r AppVersion="2.1.0"
+    declare -r AppVersion="2.2.0"
     declare -r GoCmd="${GoCommand:-go}"
     _forceMode=
 
