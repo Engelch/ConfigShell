@@ -13,16 +13,23 @@ unset bashLib
 # MAIN ====================================================================
 
 function usage() {
-    echo 1>&2 <<EOF
-Command gobuild
-
+     1>&2 cat <<EOF
 SYNOPSYS
     gobuild-<<type>> [OPTIONS]
+DESCRIPTION
+    Compile a golang application for the specific architecture. Either the architecture and OS
+    is determined automatically (by calling godebug or gorelease or goupx) or it is explicitly
+    set by specifying is as the command such as gobuild.debug.linux_arm64.
 
+    Normally, by default, a local go installation is expected which is executed just by
+    calling go. The can be overwritten by specifying the environment variable GoCommand.
 OPTIONS
--D  ::= enable debug
--V  ::= show Version numer
--f  :== force mode, compile/build even if a binary for the current version already exists
+    -D  ::= enable debug
+    -V  ::= show Version numer
+    -f  ::= force mode, compile/build even if a binary for the current version already exists
+EXIT CODES
+    0   ::= result of returned execution, or from returning the version number, or the help text
+    1   ::= unsupported option 
 EOF
 }
 
@@ -34,22 +41,21 @@ set -e      # exit if error
 # EXIT 2 wrong option
 # EXIT 3 version
 function parseCLIOptions() {
-    while getopts "DVfh" o; do
-        case "${o}" in
-        D)  debugSet
-            debug debug enabled
-            ;;
-        V)  err $appVersion
-            exit 3
-            ;;
-        f)  _forceMode=TRUE
-            ;;
-        h)  usage
-            exit 1
-            ;;
-        *)  err Help with "$App" -h
-            exit 2
-            ;;
+    while getopts "DVfh" options; do         # Loop: Get the next option;
+        case "${options}" in                    # TIMES=${OPTARG}
+            D)  1>&2 echo Debug enabled ; DebugFlag="TRUE"
+                ;;
+            V)  1>&2 echo $_appVersion
+                exit 0
+                ;;
+            h)  usage ; exit 0
+                ;;
+            f)  1>&2 echo "forced mode, overwriting existing binary"
+                _forceMode=TRUE
+                ;;
+            *)  1>&2 echo "Help with $App -h"
+                exit 1
+                ;;
         esac
     done
 }
@@ -59,8 +65,10 @@ function main() {
 
     declare -r App=$(basename "$0")
     declare -r AppDir=$(dirname "$0")
-    declare -r AppLibDir=$(dirname "$AppDir")/lib
-    declare -r AppVersion="2.0.0"
+    #declare -r AppLibDir=$(dirname "$AppDir")/lib
+    declare -r AppVersion="2.1.0"
+    declare -r GoCmd="${GoCommand:-go}"
+    _forceMode=
 
     #### check if the command-name is structured in such a way that we can
     #### determine the release-type and target OS and architecture by it.
@@ -77,7 +85,7 @@ function main() {
         declare -r _goarm='GOARM=5'
     fi
 
-    if [ "$1" = -V ] ; then echo "$AppVersion" 1>&2 ;  exit 1 ; fi
+    parseCLIOptions $@  # no parentheses required
 
     unset _upx
     declare -r _releaseType=$(basename $0 | cut -d . -f 2)
@@ -102,11 +110,6 @@ function main() {
     declare -r _appVersion=$(version.sh)   # version of app to be build
 
     [ -z "$_appVersion" ] && errorExit 10 Could not determine the version of the go application.
-    debugUnset  # no inheritance from external debug variables
-    unset _forceMode
-
-    parseCLIOptions "$@"
-    shift "$((OPTIND - 1))"
 
     ### debug output
 
@@ -143,8 +146,8 @@ function main() {
     [ -f ${_outputDir}/${_appName}-${_appVersion} ] && [ -z "${_forceMode}" ] && errorExit 10 Current version ${_appName}-${_appVersion} already exists.
     debug passed overwrite check existing versions
 
-    echo env GOARCH="${_osArch}" GOOS="${_osType}" ${_goarm} go build ${_ldFlags} -o "${_outputDir}/${_appName}-${_appVersion}${_upx}"
-    env GOARCH="${_osArch}" GOOS="${_osType}" ${_goarm} go build ${_ldFlags} -o "${_outputDir}/${_appName}-${_appVersion}${_upx}"
+    echo Executing GOARCH="${_osArch}" GOOS="${_osType}" ${_goarm} "$GoCmd" build ${_ldFlags} -o "${_outputDir}/${_appName}-${_appVersion}${_upx}"
+    eval GOARCH="${_osArch}" GOOS="${_osType}" ${_goarm} "$GoCmd" build ${_ldFlags} -o "${_outputDir}/${_appName}-${_appVersion}${_upx}"
     # ldflags -s is already stripping; double strip caused problems on Darwin-arm64
     # strip only if building for the same host as we are compiling on
     # [ $_hostarch = $_osArch -a $_osType = $_hostostype ] && \

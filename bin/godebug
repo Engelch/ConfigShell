@@ -3,67 +3,65 @@
 #########################################################################################
 # FUNCTIONS
 
-# --- debug: Conditional debugging. All commands begin w/ debug.
+function loadLibs() {
+    #########################################################################################
+    # ConfigShell lib 1.1 (codebase 1.0.0)
+    bashLib="/opt/ConfigShell/lib/bashlib.sh"
+    [ ! -f "$bashLib" ] && 1>&2 echo "bash-library $bashLib not found" && exit 127
+    # shellcheck source=/opt/ConfigShell/lib/bashlib.sh
+    source "$bashLib"
+}
 
-function debugSet()             { DebugFlag=TRUE; return 0; }
-function debugUnset()           { DebugFlag=; return 0; }
-function debugExecIfDebug()     { [ "$DebugFlag" = TRUE ] && $*; return 0; }
-function debug()                { [ "$DebugFlag" = TRUE ] && err 'DEBUG:' $* 1>&2 ; return 0; }
+function parseCLI() {
+    while getopts "DVfh" options; do         # Loop: Get the next option;
+        case "${options}" in                    # TIMES=${OPTARG}
+            D)  1>&2 echo Debug enabled ; DebugFlag="TRUE"
+                debugVal='-D'
+                ;;
+            V)  gobuild.debug.linux_amd64 -V
+                exit 0
+                ;;
+            h)  gobuild.debug.linux_amd64 -h
+                exit 0
+                ;;
+            f)  # pass -f option for gobuild scripts
+                fOption='-f' 
+                ;;
+            # v)  verbose=TRUE
+            #     ;;
+            *)
+                1>&2 echo "Help with $_app -h"
+                exit 1  # Exit abnormally.
+                ;;
+        esac
+    done
+}
 
-function verbose()              { [ "$VerboseFlag" = TRUE ] && echo -n $* ; return 0; }
-function verbosenl()            { [ "$VerboseFlag" = TRUE ] && echo $* ; return 0; }
-function verboseSet()           { VerboseFlag=TRUE; return 0; }
+function main() {
+    _os=$(uname | tr "A-Z" "a-z")
+    _arch=$(uname -m | tr "A-Z" "a-z")
+    [ "$_arch" = x86_64 ] && _arch=amd64
+    debugVal=
+    fOption=
+    declare -r _appDir=$(dirname $0)
+    declare -r _app=$(basename $0)
+    declare -r _env=$(echo $_app | sed 's/^go//' | sed 's/\.upx//')
+    
+    parseCLI "$@"               # cannot use fn-s from loadLibs
+    shift "$(( OPTIND - 1 ))"   # not working inside parseCLI
+    loadLibs
+    exitIfBinariesNotFound mktemp
+    
+    ! [ -f go.mod ] && echo 1>&2 "go.mod not found. Wrong directory?" && exit 10
 
-# --- Colour lines. It requires either linux echo or zsh built-in echo
+    debug AppDir is "$_appDir"
+    debug OS is "$_os"
+    debug Architecture is "$_arch"
+    debug Environment is "$_env"
+    echo Calling "${_appDir}/gobuild.${_env}.${_os}_${_arch}" $debugVal $fOption $@
+    ${_appDir}/gobuild.${_env}.${_os}_${_arch} $debugVal $fOption $@
+}
 
-function colBold()      { printf '\e[1m'; return 0; }
-function colNormal()    { printf "\e[0m"; return 0; }
-function colBlink()     { printf "\e[5m"; return 0; }
-
-# --- Exits
-
-# always show such a message.  If known terminal, print the message
-# in reverse video mode. This is the other way, not using escape sequences
-function soErr() { err $*; }
-
-function error()        { soErr 'ERROR:' $*; return 0; } # similar to err but with ERROR prefix and reverse colour (curses).
-function errorExit()    { EXITCODE=$1 ; shift; error $* 1>&2; exit $EXITCODE; }
-function exitIfErr()    { a="$1"; b="$2"; shift; shift; [ "$a" -ne 0 ] && errorExit $b App returned $b $*; }
-function err()          { echo $* 1>&2; } # just write to stderr
-function err4()          { echo '   ' $* 1>&2; } # just write to stderr
-function err8()          { echo '       ' $* 1>&2; } # just write to stderr
-
-# --- Existance checks
-function exitIfBinariesNotFound()       { for file in $@; do [ $(command -v "$file") ] || errorExit 253 binary not found: $file; done }
-function exitIfPlainFilesNotExisting()  { for file in $*; do [ ! -f $file ] && errorExit 254 'plain file not found:'$file 1>&2; done }
-function exitIfFilesNotExisting()       { for file in $*; do [ ! -e $file ] && errorExit 255 'file not found:'$file 1>&2; done }
-function exitIfDirsNotExisting()        { for dir in $*; do [ ! -d $dir ] && errorExit 252 "$APP:ERROR:directory not found:"$dir; done }
-
-# --- Temporary file/directory  creation
-# -- file creation -- TMP1=$(tempFile); TMP2=$(tempFile) ;;;; trap "rm -f $TMP1 $TMP2" EXIT
-# -- directory creation -- TMPDIR=$(tempDir) ;;;;;  trap "rm -fr $TMPDIR;" EXIT
-#
-function tempFile()                     { mktemp ${TMPDIR:-/tmp/}$_app.XXXXXXXX; }
-function tempDir()                      { mktemp -d "${TMPDIR:-/tmp/}$_app.YYYYYYYYY"; }
-# realpath as shell, argument either supplied as stdin or as $1
-
-# MAIN ====================================================================
-
-set -e      # exit if error
-
-! [ -f go.mod ] && echo 1>&2 "go.mod not found. Wrong directory?" && exit 1
-
-_os=$(uname | tr "A-Z" "a-z")
-_arch=$(uname -m | tr "A-Z" "a-z")
-[ "$_arch" = x86_64 ] && _arch=amd64
-declare -r _appDir=$(dirname $0)
-declare -r _app=$(basename $0)
-declare -r _env=$(echo $_app | sed 's/^go//' | sed 's/\.upx//')
-
-debug AppDir is $_appDir
-debug OS is $_os
-debug Architecture is $_arch
-echo Calling ${_appDir}/gobuild.${_env}.${_os}_${_arch}
-${_appDir}/gobuild.${_env}.${_os}_${_arch} $@
+main "$@" 
 
 # EOF

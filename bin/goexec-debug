@@ -65,11 +65,11 @@ function execHelp() {
 declare -r App=$(basename "$0")
 
 case "$App" in
-gode|goexec-debug) execHelp debug "$*"
+gode|goexec-debug|goed) execHelp debug "$*"
     ;;
-gore|goexec-release) execHelp release "$*"
+gore|goexec-release|goer) execHelp release "$*"
     ;;
-goue|goexec-upx) execHelp upx "$*"
+goue|goexec-upx|goeu) execHelp upx "$*"
     ;;
 *) echo 1>&2 Unkonw command
     exit 1
