@@ -201,21 +201,41 @@ end
      end
  end
 
-function fish_prompt
-    set -l res $status
-    if test "$res" -eq 0
-        set resString (set_color white)"$res"
+ function removePromptIfFlagfileExisting
+    if test -f "$HOME/.config/fish/default_prompt"
+        debug "default prompt mode"
+        set -g theme_display_k8s_context yes
+        set -g theme_display_k8s_namespace yes
+        set -g theme_display_user ssh
+        set -g theme_show_exit_status yes
+        set -g theme_newline_cursor yes
+        set -g theme_display_git yes
+        set -g theme_display_git_dirty yes
+        set -g theme_display_git_untracked yes
+        set -g theme_display_docker_machine yes
+        set -g theme_display_ruby yes
+        function fish_right_prompt; 
+            git_prompt_status
+        end
     else
-        set resString (set_color -o red)"$res"(set_color white)
+        function fish_prompt    
+            set -l res $status
+            if test "$res" -eq 0
+                set resString (set_color white)"$res"
+            else
+                set resString (set_color -o red)"$res"(set_color white)
+            end
+            printf '[%s]%s · %s%s@%s%s · %s%s%s · %s%s%s · %s%s%s · %s%s%s\n>' \
+                $resString (set_color blue) \
+                (set_color white) $USER $hostname (set_color blue) \
+                (set_color green) AWS:$AWS_PROFILE (set_color blue) \
+                (set_color magenta) (watson status) (set_color blue) \
+                (set_color red) (git_prompt_status) (set_color blue) \
+                (set_color yellow) (pwd | sed -E "s,$HOME,~,") (set_color white)
+        end
     end
-    printf '[%s]%s · %s%s@%s%s · %s%s%s · %s%s%s · %s%s%s · %s%s%s\n>' \
-        $resString (set_color blue) \
-        (set_color white) $USER $hostname (set_color blue) \
-        (set_color green) AWS:$AWS_PROFILE (set_color blue) \
-        (set_color magenta) (watson status) (set_color blue) \
-        (set_color red) (git_prompt_status) (set_color blue) \
-        (set_color yellow) (pwd | sed -E "s,$HOME,~,") (set_color white)
 end
+
 
 function setupCompletion
     debug in setupCompletion
@@ -239,18 +259,17 @@ function setupSsh
 
     ssh-add -l 2>/dev/null 1>&2 ; set -l res $status
     switch $res
-    case 0
-        debug "  ssh agent found, keys loaded (status 0)"
-        return
-    case 1
-        debug "  ssh-agent loaded, but no identities loaded (status 1)"
-        ssh-add
-    case 2
-        debug "  ssh-agent could not be contacted, starting (status 2)"
-        start_ssh_agent $ssh_auth_sock_file
-    case '*'
-        debug "  ssh-agent unknown return status ($res)"
-        err "setupSsh unknown answer from ssh-add $res"
+        case 0
+            debug '  ssh agent found, keys loaded (status 0)'
+        case 1
+            debug '  ssh-agent loaded, but no identities loaded (status 1)'
+            ssh-add
+        case 2
+            debug '  ssh-agent could not be contacted, starting (status 2)'
+            start_ssh_agent $ssh_auth_sock_file
+        case '*'
+            debug "  ssh-agent unknown return status ($res)"
+            err "setupSsh unknown answer from ssh-add $res"
     end
 end
 
@@ -293,7 +312,7 @@ function setupExportVars
 end
 
 if status is-interactive # main code
-    debug main - is-interactive case
+    debug "main - is-interactive case"
     optSourceFile ~/.config/fish/pre.fish
 
     for file in $HOME/.config/fish/conf.d/*.sh $HOME/.bashrc.d/*.sh
@@ -302,11 +321,12 @@ if status is-interactive # main code
     end
     setupExportVars
     command -v watson &>/dev/null ; or alias watson 'echo >/dev/null' # required for setupPath
-    set -g fish_greeting 'Welcome to the ConfigShell fish setup'
+    set -g fish_greeting "Welcome to ConfigShell's fish setup"
     setupPath
     setupAliases_Abbreviations
     setupCompletion
     setupSsh
+    removePromptIfFlagfileExisting
 
     optSourceFile ~/.config/fish/post.fish
     hadmRealUser
