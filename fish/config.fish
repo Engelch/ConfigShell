@@ -198,6 +198,8 @@ end
          set -l _gitBranch (git status -s -b | head -1 | sed 's/^##.//')
          set -l _gitStatus (git status -s -b | tail -n +2 | sed 's/^\(..\).*/\1/' | sort | uniq | tr "\n" " " | sed -e 's/ //g' -e 's/??/?/' -e 's/^[ ]*//')
          echo $_gitStatus $_gitBranch
+     else
+        echo not in git
      end
  end
 
@@ -214,7 +216,7 @@ end
         set -g theme_display_git_untracked yes
         set -g theme_display_docker_machine yes
         set -g theme_display_ruby yes
-        function fish_right_prompt; 
+        function fish_right_prompt
             git_prompt_status
         end
     else
