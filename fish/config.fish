@@ -155,10 +155,21 @@ function build_path_by_config_files
             debug "  NOT existing Pathfile $pathfile"
         end
     end
+    if test -f "$HOME/.rbenv/version"
+        debug rbenv version file found
+        set ruby_version (cat "$HOME/.rbenv/version" | head -n 1)
+        debug "  ruby_version is $ruby_version"
+        if test -d "$HOME/.rbenv/versions/$ruby_version/bin"
+            fish_add_path -p "$HOME/.rbenv/versions/$ruby_version/bin"
+            debug "  adding path for ruby version $ruby_version"
+        else
+            echo "  .rbenv/version file found with version $ruby_version, but appropriate directory with installation not found." &> /dev/stderr
+        end
+    end
 end
 
 function setupPath
-    debug in setupPath
+    debug "in setupPath"
     set -g -x UID (id -u)
     if test "$UID" -eq 0
         debug "  UID is 0, root path setup"

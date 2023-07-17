@@ -84,6 +84,17 @@ function setupPath() {
     fi
     # add directories if existing for all platforms
     setupPathsFromFiles
+    if [ -f  "$HOME/.rbenv/version" ] ; then
+      debug "rbenv version file found"
+      ruby_version=$(cat "$HOME/.rbenv/version" | head -n 1)
+      debug "  ruby_version is $ruby_version"
+      if [ -d "$HOME/.rbenv/versions/$ruby_version/bin" ] ; then
+         PATH="$HOME/.rbenv/versions/$ruby_version/bin:$PATH"
+         debug "  adding path for ruby version $ruby_version"
+      else
+         echo "  .rbenv/version file found with version $ruby_version, but appropriate directory with installation not found." &> /dev/stderr
+      fi
+   fi 
     debug8 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'
 }
 
