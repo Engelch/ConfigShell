@@ -2,5 +2,6 @@
 /usr/local/texlive/2025/bin/universal-darwin/
 /usr/local/texlive/2024/bin/universal-darwin/
 /usr/local/texlive/2023/bin/universal-darwin/ 
+$HOME/Library/Application Support/JetBrains/Toolbox/scripts
 
 # eof
