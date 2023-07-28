@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+set -v
+[ -f "$HOME/.config/fish/default_prompt" ]  && /bin/rm -fr "$HOME/.config/fish/default_prompt" 
+curl https://raw.githubusercontent.com/oh-my-fish/oh-my-fish/master/bin/install | fish
+omf install bobthefish
+omf install bang-bang
+touch "$HOME/.config/fish/default_prompt"

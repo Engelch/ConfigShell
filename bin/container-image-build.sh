@@ -200,10 +200,10 @@ function main() {
     debug "Version is: $_version"
     date="$(date -u +%y%m%d_%H%M%S)"
     debug "Date tag set to $date"
-    debug Would execute: "$containerCmd" build $@ $extTargetEnv -t "$containerName":"$_version" -t "$containerName:latest" -t "$containerName:$date" .
+    debug Would execute: "$containerCmd" build $@ $extTargetEnv --progress plain -t "$containerName":"$_version" -t "$containerName:latest" -t "$containerName:$date" .
 
     [ "$DebugFlag" = TRUE ] && echo press ENTER to execute && read -r
-    $DRY "$containerCmd" build $@ $extTargetEnv -t "$containerName":"$_version" -t "$containerName:latest" -t "$containerName:$date" .
+    $DRY "$containerCmd" build $@ $extTargetEnv --progress plain -t "$containerName":"$_version" -t "$containerName:latest" -t "$containerName:$date" .
 }
 
 main "$@"
