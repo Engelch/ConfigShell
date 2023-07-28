@@ -1,12 +1,18 @@
 #!/usr/bin/env bash
 # vim: set expandtab: ts=3: sw=3
+# shellcheck disable=SC2155 disable=SC2088
 #
 # TITLE:
 #
 # DESCRIPTION:
 #
 # CHANGELOG:
-# - 0.0.1:
+# 1.0.0
+# - added local copy of gitignore file
+# - shellcheck and move many elements to bash.mini.skeleton version
+# 0.0.1
+# - initial version
+# - s-link all /opt/ConfigShell/dot.* files to ~ 
 #
 # COPYRIGHT © 2021 Christian Engel (mailto:engel-ch@outlook.com)
 # Skeleton:
@@ -28,14 +34,6 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #########################################################################################
-# VARIABLES
-
-readonly _app=$(basename $0)
-readonly _appDir=$(dirname $0)
-readonly _absoluteAppDir=$(cd $_appDir; /bin/pwd)
-readonly _appVersion="0.0.1" # use semantic versioning
-export DebugFlag=${DebugFlag:-FALSE}
-export VerboseFlag=${VerboseFlasg:-FALSE}
 
 #########################################################################################
 # ConfigShell lib 1.1 (codebase 1.0.0)
@@ -50,44 +48,41 @@ unset bashLib
 
 function usage()
 {
-    err $_app
     err SYNOPSIS:
-    err4 $_app '[-d|--debug] [-v|--verbose] [-f|--force] file...'
-    err4 $_app '[-h|--help]'
-    err DESCRIPTION: TODO
+    err4 "$_app" '[-D] [-V]'
+    err4 "$_app" '[-h]'
+    err DESCRIPTION
+    err4 Install the dot-files of ConfigShell to the current user
+    err OPTIONS
+    err4 -D := enable debug
+    err4 -V := show the version number
+    err4 -h := show this help
 }
 
 function parseCLI() {
-    local _endLoop=
-    local -i counter=0
-    # have to call it 2x to get output and exit code. Else 'cmd -x' different to 'cmd -dx'
-    getopt -o dvf -l debug,verbose,force -- $* &> /dev/null ; res=$?
-    [ $res -ne 0 ] && usage && exit 1
-    local cliLine=$(getopt -o dvf -l debug,verbose,force -- $*)
-    for option in $cliLine; do
-        counter=$(( $counter + 1 ))
-        case "$option" in
-        -d|--debug) debugSet; verboseSet; debug Debug and verbosity enabled.
-                    debug cliLine $cliLine
-                    ;;
-        -v|--verbose) verboseSet; debug Verbose mode enabled.;;
-        -f|--force) forcedMode=YES; debug Forced mode enabled.;;
-        --) debug End of options reached. ; break 2 ;;
-        *) errorExit 1 This should never happen. Option is $option.
+    while getopts "DVh" options; do         # Loop: Get the next option;
+        case "${options}" in                    # TIMES=${OPTARG}
+            D)  1>&2 echo Debug enabled ; DebugFlag="TRUE"
+                ;;
+            V)  1>&2 echo $_appVersion
+                exit 0
+                ;;
+            h)  usage ; exit 0
+                ;;
+            # v)  verbose=TRUE
+            #     ;;
+            *)
+                1>&2 echo "Help with $_app -h"
+                exit 1  # Exit abnormally.
+                ;;
         esac
     done
-    debug counter $counter
-    # remove $counter first words from cliLine
-    cliLine=$(echo $cliLine | cut -f$(( $counter + 1))- -d ' ')
-    debug new cliLine $cliLine
-    cliLine=$(echo $cliLine | sed "s/\'//g" )
-    debug new cliLine quotes removed $cliLine
-    parseCLI_result=$cliLine
 }
 
 function fixGnupg() {
+    echo 's-link ~/.gnupg to ~/.ssh/gnupg'
     # .gnupg is kept under ~/.ssh/gnupg so that backups are easier as one tarball
-    if [ \( ! -L ~/.gnupg \) -a  -d ~/.gnupg ] ; then
+    if [ \( ! -L ~/.gnupg \) ] && [ -d ~/.gnupg ] ; then
         if [ -d ~/.ssh ] ; then
             if [ -d ~/.ssh/gnupg ] ; then
                 errorExit 20 '~/.gnupg and ~/.ssh/gnupg are both existing directories. Please fix manually.'
@@ -106,6 +101,7 @@ function fixGnupg() {
         else
             mkdir -p ~/.ssh/gnupg ; chmod 700 ~/.ssh
         fi
+        echo -n '  '
         ln -fvs ~/.ssh/gnupg ~/.gnupg
     fi
 }
@@ -119,36 +115,54 @@ function fixGnupg() {
 # }
 
 function installFish() {
+    echo fish configuration file setup
     declare -r fishCfgDir=~/.config/fish
     mkdir -p "$fishCfgDir" 2>/dev/null
-    test -d  "$fishCfgDir" || errorExit 10 fish config directory "$fishCfgDir" could not be created
-    test -d $_absoluteAppDir/fish || errorExit 11 fish config directory not found in ConfigShell
-    cd "$fishCfgDir"
+    test -d  "$fishCfgDir" || errorExit 20 fish config directory "$fishCfgDir" could not be created
+    test -d "$_absoluteAppDir/fish" || errorExit 21 fish config directory not found in ConfigShell
+    cd "$fishCfgDir" || errorExit 22 "could not change to fish directory $fishCfgDir"
     for file in * ; do
-        test -d "$file" && ! test -h "$file" && ! [[ "$file" =~ .*orig$ ]] && mv -v "$file" "$file.orig"
+        test -d "$file" && ! test -h "$file" && ! [[ "$file" =~ .*orig$ ]] && echo -n '  '  && mv -v "$file" "$file.$(date +%F_%T)"
     done
-    ln -sfv $_absoluteAppDir/fish/* .
+    for file in "$_absoluteAppDir/fish/"* ; do
+        echo -n '  '
+        ln -sfv "$file" .
+    done
 }
 
 function warningIfBinariesNotFound()       { for file in "$@"; do command -v "$file" &>/dev/null || 1>&2 echo "WARNING:binary not found:$file"; done }
 
 function main() {
+    readonly _app="$(basename "$0")"
+    readonly _appDir="$(dirname "$0")"
+    readonly _absoluteAppDir="$(cd "$_appDir" || errorExit 1 cannot change to directory of binary; /bin/pwd)"
+    readonly _appVersion="1.0.0" # use semantic versioning
+    export DebugFlag=${DebugFlag:-FALSE}
     exitIfBinariesNotFound pwd tput basename dirname mktemp
-    parseCLI $* ; args=$parseCLI_result # args=$(parseCLI $*) creates a subshell and cannot set current shell debugFlag...
-    debug args are $args
-    cd  # jump to home directory, always install dot-files towards HOME directory
-    for file in $_absoluteAppDir/dot* ; do
-        _nameWithoutDot=$(basename $file | sed 's/^dot//')
+    parseCLI "$@" ; # args=$parseCLI_result # args=$(parseCLI $*) creates a subshell and cannot set current shell debugFlag...
+    cd || errorExit 10 to find home directory # jump to home directory, always install dot-files towards HOME directory
+    echo 's-link /opt/ConfigShell/dot.* files'
+    for file in "$_absoluteAppDir"/dot* ; do
+        _nameWithoutDot="$(basename "$file" | sed 's/^dot//')"
         [[ $_nameWithoutDot =~ .*~ ]] && continue
-        ln -sfv $file $_nameWithoutDot
+        echo -n '  '
+        ln -sfv "$file" "$_nameWithoutDot"
     done
     fixGnupg
     installFish
     warningIfBinariesNotFound ruby gnutls-cli openssl marp
-    echo creating vim directories ' ~/.vim/backup ~/.vim/swap ~/.vim/undo ~/.vim/autoload ~/.vim/plugged'
+
+    echo "git: creating private ~/.gitignore"
+    [ -f ~/.gitignore ] && echo "  git: Found existing ~/.gitignore, moving it"  && mv "$HOME/.gitignore" "$HOME/.gitignore.$(date +%F_%T)"
+    [ -f /opt/ConfigShell/gitignore ] && cp /opt/ConfigShell/gitignore "$HOME/.gitignore"
+    [ -f /opt/ConfigShell/gitignore ] || echo "  ERROR:/opt/ConfigShell/gitignore not found" > /dev/stderr
+    echo "  git: defining global excludesfile"
+    git config --global core.excludesfile "$HOME/.gitignore"
+
+    echo Creating vim directories ' ~/.vim/backup ~/.vim/swap ~/.vim/undo ~/.vim/autoload ~/.vim/plugged'
     mkdir -p ~/.vim/backup ~/.vim/swap ~/.vim/undo ~/.vim/autoload ~/.vim/plugged
 }
 
-main $*
+main "$@"
 
 # EOF
