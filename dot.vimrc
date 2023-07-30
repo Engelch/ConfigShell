@@ -90,6 +90,9 @@ scriptencoding utf-8
 set nofoldenable
 set nocompatible
 
+" show spaces as ., enabled with :set list, disabled w/ :set nolist
+set lcs+=space:· 
+
 " = ALE plugin specifics ======================================================= 
 " Load all of the helptags now, after plugins have been loaded.
 " All messages and errors will be ignored.
