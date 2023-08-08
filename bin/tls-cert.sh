@@ -2,6 +2,8 @@
 # shellcheck disable=SC2155 disable=SC2046 disable=SC2001
 
 # Changelog
+# 2.4:
+# - calls tls-csr.sh for *.csr files
 # 2.3.:
 #  - move to ConfigShell/lib
 # 2.2.:
@@ -212,7 +214,7 @@ function parseCLIOptions() {
          D) debugSet; debug debug enabled
             ;;
          V) # version #
-            echo 1>&2 "2.2.0"
+            echo 1>&2 "2.4.0"
             exit 3
             ;;
          c) # show leaf CN field
@@ -307,10 +309,16 @@ function main() {
          done
          ;;
    *)    # default, show cert info
-         debug default mode, show cert
+         debug default mode, show cert or csr
          for file in $arg ; do   # no double-quotes around $arg!
             debug working on file "$file"
-            "$AppLibDir"/tls-cert-file "$file"
+            if [[ "$file" == *.csr ]] ; then
+               debug CSR mode
+               tls-csr.sh "$file"
+            else
+               debug certificate mode
+               "$AppLibDir"/tls-cert-file "$file"
+            fi
          done
          ;;
    esac
