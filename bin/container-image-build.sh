@@ -132,7 +132,7 @@ HERE
 # EXIT 2    version
 # EXIT 3    unknown option
 function parseCLI() {
-    declare -r defaultTargetEnv="--arch=amd64"
+    declare -r defaultTargetEnv="--platform=linux/amd64"
     declare -g extTargetEnv=
     declare -g awsSupport=
     declare -g goCompilation=
@@ -200,10 +200,10 @@ function main() {
     debug "Version is: $_version"
     date="$(date -u +%y%m%d_%H%M%S)"
     debug "Date tag set to $date"
-    debug Would execute: "$containerCmd" build $@ $extTargetEnv --progress plain -t "$containerName":"$_version" -t "$containerName:latest" -t "$containerName:$date" .
+    debug Would execute: "$containerCmd" buildx build  $@ $extTargetEnv --progress plain -t "$containerName":"$_version" -t "$containerName:latest" -t "$containerName:$date" .
 
     [ "$DebugFlag" = TRUE ] && echo press ENTER to execute && read -r
-    $DRY "$containerCmd" build $@ $extTargetEnv --progress plain -t "$containerName":"$_version" -t "$containerName:latest" -t "$containerName:$date" .
+    $DRY "$containerCmd" buildx build $@ $extTargetEnv --progress plain -t "$containerName":"$_version" -t "$containerName:latest" -t "$containerName:$date" .
 }
 
 main "$@"

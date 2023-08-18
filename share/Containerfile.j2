@@ -1,0 +1,15 @@
+# golang:true
+
+FROM golang:1.21-bookworm AS builder
+
+
+ADD ContainerBuild.tar /build/actual_app
+WORKDIR /build/actual_app
+
+RUN go build -o {{ APP }} . && strip {{ APP }}
+
+FROM debian:bookworm AS prodimg
+COPY --from=builder /build/actual_app/{{ APP }} /
+RUN chmod +x /{{ APP }}
+ENTRYPOINT ["/bin/bash", "-c"]
+CMD ["/{{ APP }}"]
