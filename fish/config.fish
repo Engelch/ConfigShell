@@ -38,10 +38,10 @@ function setupAliases_Abbreviations
     alias .3='cd ../../..'
     alias .4='cd ../../../..'
     alias .5='cd ../../../../..'
-    alias brmd='[ -f .DS_Store ] &&  /bin/rm -f .DS_Store ; set -l a $PWD ; cd .. ; rmdir "$a"; set -e a'
+    alias brmd='[ -f .DS_Store ] ;and  /bin/rm -f .DS_Store ; set -l a $PWD ; cd .. ; rmdir "$a"; set -e a'
     alias mcd=mkcd
     function mkcd
-        mkdir -p $argv[1] && cd $argv[1]
+        mkdir -p $argv[1] ; and cd $argv[1]
     end
     alias po=popd
     alias pu='pushd .'
@@ -257,7 +257,7 @@ end
 
 function setupSsh
     debug in setupSsh
-    [ -n "$SSH_AUTH_SOCK" ] && [ -n "$SSH_TTY" ] && return
+    [ -n "$SSH_AUTH_SOCK" ] ;and [ -n "$SSH_TTY" ] ; and return
 
     ssh-add -l 2>/dev/null 1>&2 ; set -l res $status
     switch $res

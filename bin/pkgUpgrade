@@ -3,18 +3,25 @@
 # shellcheck disable=SC2155
 # no errors
 #
+# CHANGELOG
+# 0.4
+# - ITE reintroduced again to get nicer code
+# - checking for kernel versions if Linux should be rebooted
+#
 # update OS supporting
 # - Darwin alias OSX
 # - Debian/Ubuntu
-# - Fedora
+# - Fedora/RHEL
 
-function err()          { echo "$@" 1>&2; return 0; }
-function warning()      { err "WARNING:$*" ; return 0; }
-function errorExit()    { EXITCODE=$1 ; shift; error "$@" ; exit "${EXITCODE}"; }
+function err()          { echo "$*" 1>&2; return 0; }
+function warning()      { err "WARNING:$*" ; return 0; }                                  # depends on err
+function errorExit()    { EXITCODE=$1 ; shift; err "ERROR:$*" ; exit "${EXITCODE}"; }    # depends on err
 
-declare -r version=0.3.0
+declare -r version=0.4.0
 _uname=$(uname)
-if [[ ${_uname} == Darwin ]] ; then
+declare -r touchFile="$HOME/.pkgU" 
+
+function osxUpgrade() {
    echo homebrew....................................................................  1>&2
    brew update && brew upgrade && brew upgrade --cask --greedy && \
       brew autoremove && \
@@ -34,23 +41,70 @@ if [[ ${_uname} == Darwin ]] ; then
    echo macTeX.................................................................... 1>&2
    if command -v tlmgr > /dev/null 2>&1 ; then tlmgr --self --all update
    else warning mactex does not seem to be installed ;fi
-   touch ~/.pkgUpgrade
-elif [[ ${_uname} == Linux ]] ; then
-      found=0
-      [ -e /etc/debian_version ] && found=1 && sudo apt-get update && \
-         sudo DEBIAN_FRONTEND=noninteractive apt-get dist-upgrade && sudo apt-get autoremove
-      command -v dnf &>/dev/null && found=1 && sudo dnf -y upgrade && sudo dnf -y clean packages
-      command -v dnf &>/dev/null || command -v yum &>/dev/null && \
-         found=1 && sudo yum -y update && sudo yum -y clean packages
-      [ $found -eq 0 ] && error pkgU not supported for this OS && return 1
-      touch ~/.pkgU
-      [ -f /run/reboot-required ] && echo "reboot is REQUIRED!" && exit 0
+}
+
+function debianUpgrade() {
+   sudo apt-get update && \
+      sudo DEBIAN_FRONTEND=noninteractive apt-get dist-upgrade && \
+      sudo apt-get autoremove
+   if [ -f /run/reboot-required ] ; then 
+      echo "reboot is REQUIRED!"
+   else
       echo NO reboot required.
-      exit 0
-else
-   err unsupported OS
-   err This is "$0" version "$version"
-   exit 1
+   fi
+}
+
+function checkIfActualKernelAndLibc() {
+   installedKernelVersion=$(rpm -q kernel | tail -n1 | sed -e 's/kernel-//' -e 's/-.*//')
+   runningKernelVersion=$(uname -r | sed -e 's/kernel-//' -e 's/-.*//') # substituting kernel not required, but no harm
+   if [ "$installedKernelVersion" = "$runningKernelVersion" ] ; then
+      echo kernel NO reboot required.
+   else
+      echo "kernel reboot is REQUIRED!"
+   fi
+   [ -e /var/log/boot.log ] && [ -e /lib64/libc.so ] && \
+      if [ /lib64/libc.so -nt /var/log/boot.log ] ; then 
+         echo "lib64/libc reboot is REQUIRED!"
+      else
+         echo "lib64/libc NO reboot required."
+      fi
+   [ -e /var/log/boot.log ] && [ -e /lib/libc.so ] && \
+      if [ /lib/libc.so -nt /var/log/boot.log ] ; then 
+         echo "lib/libc reboot is REQUIRED!"
+      else
+         echo "lib/libc NO reboot required."
+      fi
+}
+
+function dnfUpgrade() {
+   sudo dnf -y upgrade && sudo dnf -y clean packages
+}
+
+function yumUpgrade() {
+   sudo yum -y update && sudo yum -y clean packages
+}
+
+if [ "$1" = '-V' ] ; then
+   echo $version
+   exit 0
 fi
+if [[ ${_uname} == Darwin ]] ; then
+   osxUpgrade
+elif [[ ${_uname} == Linux ]] ; then
+      if [ -e /etc/debian_version ] ; then
+         debianUpgrade
+      elif command -v dnf &>/dev/null ; then
+         dnfUpgrade
+         checkIfActualKernelAndLibc
+      elif command -v yum &>/dev/null ; then
+         yumUpgrade
+         checkIfActualKernelAndLibc
+      else
+         errorExit 1 unsupported Linux
+      fi 
+else
+   errorExit 1 unsupported OS
+fi
+touch "$touchFile"
 
 # EOF
