@@ -23,6 +23,8 @@ r: 			build-relaese
 release:	build-release
 rd: 		run-debug
 rr: 		run-release
+cs:			container-setup
+cb:			container-build
 
 # Build
 build-debug:
@@ -52,15 +54,17 @@ bumpmajor:
 container-setup:
 	@ if ! test -e /opt/ConfigShell ; then  1>&2 echo ConfigShell not found ; exit 1 ; fi
 	@ if ! test -d Container ; then mkdir Container ; echo creating Container/ ; fi
+	# copy the Containerfile.j2 only, if none is existing and no Containerfile is existing
 	@ if [ ! -f Container/Containerfile -a  ! -f Container/Containerfile.j2 ] ; then cp /opt/ConfigShell/share/Containerfile.j2 Container/ ; echo copying Containerfile.j2 ; fi
-	@ if [ ! -f Container/00-container-containerfile-creator.sh -a ! -f Container/Containerfile ] ; then ln -fvs /opt/ConfigShell/bin/container-file-creator.sh Container/00-container-containerfile-creator.sh ; fi
+	# copy the conversion file from Containerfile.j2 to Containerfile only, if the script is not yet existing and no Containerfile{,.j2} is existing
+	@ if [ ! -f Container/00-container-containerfile-creator.sh -a ! -f Container/Containerfile -a -f Container/Containerfile.j2 ] ; then ln -fvs /opt/ConfigShell/bin/container-file-creator.sh Container/00-container-containerfile-creator.sh ; fi
 	@ if [ ! -f Container/10-container-image-build.sh ] ; then ln -fvs /opt/ConfigShell/bin/container-image-build.sh Container/10-container-image-build.sh ; fi
 	@ echo container-setup finished, please check Containerfile for required changes,...
 	
 container-build: container-setup
     # if Containerfile is not to be overwritten, it can be sufficient to remove the s-link 00-container-containerfile-creator.sh
 	@ cd Container ; if [ -f 00-container-containerfile-creator.sh ] ; then ./00-container-containerfile-creator.sh ; echo created Containerfile ; fi
-	@ cd Container ; ./10-container-image-build.sh ; echo container image built
+	@ cd Container ; ./10-container-image-build.sh ; echo "📦 container image built"
 
 # Test
 test:
