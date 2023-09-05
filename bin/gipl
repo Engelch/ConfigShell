@@ -9,7 +9,7 @@
 # - adding --tags to git pull to reduce this command to one git call
 # - adding version info option -V
 
-[ "$1" = '-V' ] && echo 2.0.0 & exit 0
+[ "$1" = '-V' ] && echo 2.0.0 && exit 0
 
 git pull --all --tags --autostash $*
 # git fetch --tags $*
