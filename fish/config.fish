@@ -31,6 +31,7 @@ function setupAliases_Abbreviations
     set -g -x LS_COLOUR '--color'
     alias ls    "/bin/ls    -hCF       \$LS_COLOUR"
     alias ls-bw "set -g -x LS_COLOUR '--color=none'"
+    functions -e la # delete default definition as fish/3.6.1/share/fish/functions/la.fish
 
     abbr -a -g cd.. 'cd ..'
     alias ..='cd ..'
