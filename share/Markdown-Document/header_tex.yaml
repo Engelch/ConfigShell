@@ -1,6 +1,6 @@
 ---
 title: PPKI-CA-REPO SD
-author: '\protect\parbox{\textwidth}{\protect\centering Christian Engel\\ Schindler Management AG\\ SIS GDO CIAS}'
+author: '\protect\parbox{\textwidth}{\protect\centering Christian Engel\\ ABC Ltd}'
 numbersections: true
 date: \today{}
 header-includes: |
@@ -29,9 +29,6 @@ header-includes: |
       linkcolor=black,
       urlcolor=black
   }
-output:
-  rmarkdown::pdf_document:
-      keep_tex: yes
 ...
 \lstset{
     basicstyle=\ttfamily,
