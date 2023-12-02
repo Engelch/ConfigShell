@@ -1,0 +1,137 @@
+#!/usr/bin/env bash
+# vim: set expandtab: ts=3: sw=3
+# shellcheck disable=SC2155
+#
+# TITLE: $_app
+#
+# DESCRIPTION: <see usage function below>
+#
+# LICENSE: MIT © 2023 developed by engel-ch@outlook.com
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy of this
+# software and associated documentation files (the "Software"), to deal in the Software
+# without restriction, including without limitation the rights to use, copy, modify, merge,
+# publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons
+# to whom the Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all copies
+# or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+# INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+# PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+# FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+
+function loadLibs() {
+    #########################################################################################
+    # ConfigShell lib 1.1 (codebase 1.0.0)
+    bashLib="/opt/ConfigShell/lib/bashlib.sh"
+    [ ! -f "$bashLib" ] && 1>&2 echo "bash-library $bashLib not found" && exit 127
+    # shellcheck source=/opt/ConfigShell/lib/bashlib.sh
+    source "$bashLib"
+}
+
+function usage()
+{
+    1>&2 cat <<HERE
+NAME
+    $_app
+
+SYNOPSIS
+    $_app [-D] [dir...]
+    $_app [-V]
+    $_app -h
+
+VERSION
+    $_appVersion
+
+DESCRIPTION
+    Convert a markdown file to PDF using pandoc. This version works more stable when using
+    classical LaTeX instead of xelatex. The starting position is: The markdown file can be 
+    formatted by itself and is 'good looking'. No LaTeX commands are included. But:
+    Elements of the source markdown file before the comment 
+
+        [//]: # (delete before 4 LaTeX)
+
+    will be deleted when processing using pandoc. Additionally, if a file header_tex.yaml 
+    exists, this file is prepended to the stripped markdown file. Furthermore, a file named
+    footer_tex.tex is appended for pandoc processing if it exists. 
+    Usually, the header file contains a LaTeX title and a table of contents declaration which
+    will end up in better looking LaTeX/PDF version. The names of the header and footer files
+    can be changed for CLI options.
+
+    Further options can be passed to the pandoc command using the environment
+    variable PANDOC_OPTIONS. This environment variable is not double-quoted, so it can contain
+    multiple options.
+OPTIONS
+    -H <<file>> ::= optional headerfile with YAML, LaTeX commands,
+                    default: header_tex.yaml
+    -F <<file>> ::= append the markdown file with the following LaTeX file if the file exists.
+                    default: footer_tex.tex
+    -D          ::= enable debug output
+    -V          ::= output the version number to stderr and exit with 0
+    -h          ::= show usage message to stderr and exit with 0
+HERE
+}
+
+function parseCLI() {
+    while getopts "DVhH:F:" options; do         # Loop: Get the next option;
+        case "${options}" in                    # TIMES=${OPTARG}
+            D)  1>&2 echo Debug enabled ; DebugFlag="TRUE"
+                ;;
+            V)  1>&2 echo $_appVersion
+                exit 0
+                ;;
+            h)  usage ; exit 0
+                ;;
+            H)  headerFile=${OPTARG}
+                ;;
+            F)  footerFile=${OPTARG}
+                ;;
+            # v)  verbose=TRUE
+            #     ;;
+            *)
+                1>&2 echo "Help with $_app -h"
+                exit 1  # Exit abnormally.
+                ;;
+        esac
+    done
+}
+
+function main() {
+    declare -r _app=$(basename "${0}")
+    declare -r _appDir=$(dirname "$0")
+    declare -r _absoluteAppDir=$(cd "$_appDir" || exit 99 ; /bin/pwd)
+    declare -r _appVersion="0.9.1"      # use semantic versioning
+    headerFile="/opt/ConfigShell/share/Markdown-Document/header_tex.yaml"
+    footerFile="footer_tex.tex"
+    export DebugFlag=${DebugFlag:-FALSE}
+
+    parseCLI "$@"               # cannot use fn-s from loadLibs
+    shift "$(( OPTIND - 1 ))"   # not working inside parseCLI
+
+    loadLibs
+    exitIfBinariesNotFound mktemp awk pandoc    # exit if required apps not found
+
+    # simplification for completions: also allow to specify the input file as
+    # inputFilename. instead of inputFilename.md. In both cases, the input
+    # filename will we inputFilename.md
+    inputFile="$(dirname "$1")/$(basename "$1" md)"md
+    exitIfPlainFilesNotExisting "$inputFile"
+    HEADER_TEXT=
+    FOOTER_TEXT=
+    [ -f "$headerFile" ] && HEADER_TEXT="$headerFile"
+    [ -f "$footerFile" ] && FOOTER_TEXT="$footerFile"
+    outputFile="$(basename "$inputFile" .md).pdf"
+
+    TMP1=$(tempFile) ; trap "rm -f $TMP1" EXIT
+    awk '/delete before 4 LaTeX/ { found = 1; next } found { print }' < "$inputFile" > "$TMP1" 
+
+    cat $HEADER_TEXT "$TMP1" $FOOTER_TEXT | pandoc $PANDOC_OPTIONS -f markdown -t pdf -o "$outputFile" 
+}
+
+main "$@"
+
+# EOF
