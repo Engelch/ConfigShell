@@ -1,0 +1,57 @@
+---
+title: PPKI-CA-REPO SD
+author: '\protect\parbox{\textwidth}{\protect\centering Christian Engel\\ Schindler Management AG\\ SIS GDO CIAS}'
+numbersections: true
+date: \today{}
+header-includes: |
+  \usepackage[a4paper, total={6.5in, 10in}]{geometry}
+  \usepackage[UKenglish]{babel}
+  \usepackage[UKenglish]{isodate}
+  \usepackage[utf8]{inputenc}
+  \DeclareUnicodeCharacter{2933}{$\leadsto$}
+  \DeclareUnicodeCharacter{21D2}{$\Rightarrow$}
+  \usepackage{enumitem}
+  \setlistdepth{20}
+  \renewlist{itemize}{itemize}{20}
+  \renewlist{enumerate}{enumerate}{20}
+  \setlist[itemize]{label=$\cdot$}
+  \setlist[itemize,1]{label=\textbullet}
+  \setlist[itemize,2]{label=--}
+  \setlist[itemize,3]{label=*}
+  \usepackage{xcolor}
+  \usepackage{listings}
+  \usepackage[]{csquotes}
+  \usepackage{hyperref}
+  \hypersetup{
+      colorlinks,
+      citecolor=black,
+      filecolor=blue,
+      linkcolor=black,
+      urlcolor=black
+  }
+output:
+  rmarkdown::pdf_document:
+      keep_tex: yes
+...
+\lstset{
+    basicstyle=\ttfamily,
+    numbers=left,
+    numberstyle=\footnotesize,
+    stepnumber=2,
+    numbersep=5pt,
+    backgroundcolor=\color{black!10},
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2,
+    captionpos=b,
+    breaklines=true,
+    breakatwhitespace=true,
+    breakautoindent=true,
+    linewidth=\textwidth
+}
+
+\maketitle{}
+\tableofcontents{}
+
+[//]: # (\newpage{})
