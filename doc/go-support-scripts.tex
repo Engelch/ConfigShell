@@ -3,6 +3,7 @@
 \usepackage[a4paper, total={6.5in, 10in}]{geometry}
 \usepackage[utf8]{inputenc}
 \usepackage[english]{babel}
+\usepackage[]{longtable}
 \usepackage[
 backend=biber,
 style=alphabetic,
@@ -53,5 +54,23 @@ The scripts are all part of the \texttt{ConfigShell/bin} directory. They can be 
     \item cleanup scripts
 \end{enumerate}
 
+The commands are grouped like:
+
+\fbox{%
+    \begin{minipage}[h]{.9\textwidth}
+        \begin{center}
+            \begin{tabular}{l|l|l|l}
+            \textbf{bumpversion} \& & \textbf{build}& \textbf{execute} & \textbf{other} \\
+            \textbf{debug-build} && \textbf{last binary}& \\
+            \hline
+            go-major, goma & godebug & goexec-debug, goed & go-status, gost \\
+            go-minor, gomi &&& godistclean \\
+            go-patch, gopa &&&\\
+            & gorelease & goexec-release, goer& \\
+            & goupx & goexec-upx, goeu & 
+            \end{tabular}
+        \end{center}
+    \end{minipage}
+}
 
 \end{document}
