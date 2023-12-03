@@ -60,7 +60,7 @@ DESCRIPTION
     footer_tex.tex is appended for pandoc processing if it exists. 
     Usually, the header file contains a LaTeX title and a table of contents declaration which
     will end up in better looking LaTeX/PDF version. The names of the header and footer files
-    can be changed for CLI options.
+    can be changed for CLI options. A local headerfile overwrites a default headerfile.
 
     Further options can be passed to the pandoc command using the environment
     variable PANDOC_OPTIONS. This environment variable is not double-quoted, so it can contain
@@ -104,7 +104,7 @@ function main() {
     declare -r _app=$(basename "${0}")
     declare -r _appDir=$(dirname "$0")
     declare -r _absoluteAppDir=$(cd "$_appDir" || exit 99 ; /bin/pwd)
-    declare -r _appVersion="0.9.1"      # use semantic versioning
+    declare -r _appVersion="0.11.0"      # use semantic versioning
     headerFile="/opt/ConfigShell/share/Markdown-Document/header_tex.yaml"
     footerFile="footer_tex.tex"
     export DebugFlag=${DebugFlag:-FALSE}
@@ -120,15 +120,26 @@ function main() {
     # filename will we inputFilename.md
     inputFile="$(dirname "$1")/$(basename "$1" md)"md
     exitIfPlainFilesNotExisting "$inputFile"
+    debug inputFile: "$inputFile"
     HEADER_TEXT=
     FOOTER_TEXT=
     [ -f "$headerFile" ] && HEADER_TEXT="$headerFile"
+    # local headerFile overwriting global one from ConfigShell
+    [ -f "$(basename "$headerFile")" ] && HEADER_TEXT="$(basename "$headerFile")" 
     [ -f "$footerFile" ] && FOOTER_TEXT="$footerFile"
     outputFile="$(basename "$inputFile" .md).pdf"
 
     TMP1=$(tempFile) ; trap "rm -f $TMP1" EXIT
-    awk '/delete before 4 LaTeX/ { found = 1; next } found { print }' < "$inputFile" > "$TMP1" 
+    if [ $(grep -c 'delete before 4 LaTeX' "$inputFile") -gt 0 ] ; then
+        debug stripping Markdown file for LaTeX Header
+        awk '/delete before 4 LaTeX/ { found = 1; next } found { print }' < "$inputFile" > "$TMP1" 
+    else
+        cp "$inputFile" "$TMP1"
+        debug no LaTeX comment found. Keeping original markdown file.
+    fi
 
+    debug saving file input as temp.md.
+    [ "$DebugFlag" = TRUE ] && cat $HEADER_TEXT "$TMP1" $FOOTER_TEXT >| temp.md
     cat $HEADER_TEXT "$TMP1" $FOOTER_TEXT | pandoc $PANDOC_OPTIONS -f markdown -t pdf -o "$outputFile" 
 }
 

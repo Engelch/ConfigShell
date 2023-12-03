@@ -1,0 +1,57 @@
+\documentclass[a4paper]{article}
+\usepackage{url}
+\usepackage[a4paper, total={6.5in, 10in}]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage[
+backend=biber,
+style=alphabetic,
+]{biblatex}
+\usepackage[]{csquotes}
+\usepackage[]{ukdate}
+\date{\today{} --- Version \versionNr{}}
+
+\addbibresource{latexSkeleton.bib}
+\setlength\parindent{0pt}
+\addtolength{\parskip}{5pt}
+
+\begin{document}
+\newcommand{\versionNr}{0.0.1}
+
+
+\title{go Support Scripts}
+\author{Christian ENGEL}
+\maketitle
+
+
+\tableofcontents
+
+\section{About}
+
+The use of go (alias golang) is a pretty succesful one.  The language has been used successfully to development
+REST-API services and front-ends. The advantages of this language and in particular the implementation are:
+
+\begin{itemize}
+    \item no virtual CLR or JRE runtime, so comparably small and fast
+    \item every installation contains all components for cross-compilation
+    \item sucessfully compiled the same application for ARM5, ARM7, ARM64, and AMD64 environments
+    \item libraries looks like designed from programming professionals, not lecturers
+    \item good, helpful community existing
+\end{itemize}
+
+\section{Directory Design}
+
+\section{Helper Scripts}
+
+The scripts are all part of the \texttt{ConfigShell/bin} directory. They can be classified like:
+
+\begin{enumerate}
+    \item compilation scripts
+    \item version-number increase and compilation scripts
+    \item execution scripts to execute the last compiled binary
+    \item status check scripts
+    \item cleanup scripts
+\end{enumerate}
+
+
+\end{document}
