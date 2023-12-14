@@ -174,6 +174,19 @@ function hadmRealUserDetermination() {
    debug8 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'
 }
 
+# load different completions for bash
+function loadCompletions() {
+   $(which aws_completer &>/dev/null) && debug4 aws completion helper found && complete -C "$(which aws_completer)" aws
+   declare -r completionDir=$(which bash | sed -e 's,/bin.*,,')/etc/bash_completion.d/
+   echo completionDir $completionDir
+   #debugSet
+   [ -d "$completionDir" ] && for file in "$completionDir/"* ; do 
+     [ -r "$file" ] && debug8 sourcing "$file" && . "$file"
+     [ ! -r "$file" ] && debug8 cannot source "$file" 
+   done
+   #debugUnset
+}
+
 ############################################################################
 # main
 ############################################################################
@@ -188,11 +201,11 @@ function main() {
          # shellcheck source=/dev/null
          [ -z "$BASH_ENV" ] && [ -r ~/.bash_profile ] && source ~/.bash_profile && return
          loadSource pre
+         loadCompletions
          export USER=${USER:-root} # fix for docker
          export SHELL=${SHELL:-$(ps a | grep $$ | sed -n "/^ *$$/p" | awk '{ print $NF }')} # fix for docker
          setHistFileUserShell                      # history file permission, ownership, settings
          setPrompt
-         $(which aws_completer &>/dev/null) && debug4 aws completion helper found && complete -C "$(which aws_completer)" aws
          setAliases
          hadmRealUserDetermination
 
