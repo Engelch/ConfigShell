@@ -1,7 +1,18 @@
 #!/usr/bin/env bash
+# CHANGELOG
+#   - V2.x.y:
+#       - adding support for --xlsh long options 
 
 [ -z "$KUBECTL" ] && echo >&2 "KUBECTL environment variable is not set, exiting" && exit 1
 
+VERSION="2.0.0"
+[ "$1" = '-V' ] && echo $VERSION && exit 1
+
+ARG=
 for x in "$@"; do
-    $KUBECTL apply -f "$x"
+    if [[ "$x" =~ ^--.* ]] ; then
+        ARG="$ARG $x"
+    else
+        $KUBECTL apply $ARG -f "$x"
+    fi
 done
