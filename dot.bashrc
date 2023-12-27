@@ -180,13 +180,38 @@ function hadmRealUserDetermination() {
    debug8 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'
 }
 
+# have routine used by many completions
+# This function checks whether we have a given program on the system.
+# No need for bulky functions in memory if we don't.
+#
+function have()
+{
+    unset -v have
+    # Completions for system administrator commands are installed as well in
+    # case completion is attempted via `sudo command ...'.
+    PATH=$PATH:/sbin:/usr/sbin:/usr/local/sbin type $1 &>/dev/null &&
+    have="yes"
+}
+
 # load different completions for bash
 function loadCompletions() {
+   # Set a couple of useful vars
+   #
+   export UNAME=$( uname -s )
+   # strip OS type and version under Cygwin (e.g. CYGWIN_NT-5.1 => Cygwin)
+   UNAME=${UNAME/CYGWIN_*/Cygwin}
+
+   export USERLAND
+   case ${UNAME} in
+      Linux|GNU|GNU/*) USERLAND=GNU ;;
+      *) USERLAND=${UNAME} ;;
+   esac
    $(which aws_completer &>/dev/null) && debug4 aws completion helper found && complete -C "$(which aws_completer)" aws
    declare -r completionDir=$(which bash | sed -e 's,/bin.*,,')/etc/bash_completion.d/
-   echo completionDir $completionDir
+   debug8 loading completions from completionDir $completionDir
    #debugSet
-   [ -d "$completionDir" ] && for file in "$completionDir/"* ; do 
+   [ -d "$completionDir" ] && for file in "$completionDir/"* ; do
+     [ -d "$file" ] && debug8 directory, skipping && continue
      [ -r "$file" ] && debug8 sourcing "$file" && . "$file"
      [ ! -r "$file" ] && debug8 cannot source "$file" 
    done

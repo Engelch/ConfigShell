@@ -70,8 +70,6 @@ function setupPathsFromFiles() {
     debug12 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'
 }
 
-
-
 # setupPath sets the path
 function setupPath() {
     debug8 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '...............................................'
@@ -127,10 +125,6 @@ function envVars() {
         debug8 CONTAINER $CONTAINER
         alias docker=podman
     fi
-    for file in /etc/bash_completion /usr/local/etc/bash_completion /opt/homebrew/etc/bash_completion /usr/share/bash-completion/bash_completion ; do
-      [ -f "$file" ] && debug found bash_completion "$file", sourcing... && source "$file"
-    done
-
     export BASH_SILENCE_DEPRECATION_WARNING=1   # OSX suppress bash warning
     export LS_COLOUR='-G'
     export LSCOLORS=Exfxcxdxbxegedabagacad # change directory colour 1st letter; see man ls(1)
@@ -159,9 +153,9 @@ function main() {
     debug4 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'
 }
 
+# debugSet
 debug "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '...............................................'
 main "$@"
 debug "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'
-
 
 # EOF
