@@ -133,14 +133,12 @@ function installFish() {
 function warningIfBinariesNotFound()       { for file in "$@"; do command -v "$file" &>/dev/null || 1>&2 echo "WARNING:binary not found:$file"; done }
 
 function autoUpdateConfigShell() {
-    read -e -p 'Install auto-upgrade ConfigShell [Yn]?' -i Y answer
-    if [ ${answer^^} = 'Y' ] ; then
+    read -e -r -p 'Install auto-upgrade ConfigShell [Yn]?' -i Y answer
+    if [ "${answer^^}" = 'Y' ] ; then
         mkdir ~/.bashrc.d 2>/dev/null 
-        cd ~/.bashrc.d
-        ln -svf /opt/ConfigShell/bin/upgradeConfigShell.sh .
-        cd -
+        ln -svf /opt/ConfigShell/bin/upgradeConfigShell.sh ~/.bashrc.d
     else
-        echo Not installing upgradeConfigShell.sh as answer is $answer
+        echo Not installing upgradeConfigShell.sh as answer is "$answer"
     fi 
     unset answer
 }
