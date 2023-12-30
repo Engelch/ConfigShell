@@ -400,8 +400,7 @@ function initMode() {
     cd "$gitroot" || return
     [ ! -f "$geePwFile" ] && errorExit 30 "Password file $geePwFile not found"
     [ ! -r "$geePwFile" ] && errorExit 31 "Password file $geePwFile not readable"
-    # [ -f .gitignore ] && grep -q -E '.gee$' .gitignore && errorExit 32 ".gee files seem to be in .gitignore, please check"
-    # [ -f .git/hooks/pre-commit ] && errorExit 33 "pre-commit already existing."
+    # TODO  check if the installed pre-commit is newer than the one which would be installed now. Prio B as this use case is usually unlikely.
     createPreCommit
     res=$?
     [ "$res" -eq 0 ] && touch "$gitroot/.git/gee" && return 0 # make it detectable that gee is applied
