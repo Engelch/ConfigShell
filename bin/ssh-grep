@@ -4,7 +4,7 @@
 readonly _app=$(basename "$0")
 readonly _appDir=$(dirname "$0")
 readonly _absoluteAppDir=$(cd "$_appDir" || errorExit 1 cannot determine absolute path of app_dir; /bin/pwd)
-readonly _appVersion="1.1.0" # use semantic versioning
+readonly _appVersion="2.0.0" # use semantic versioning
 export DebugFlag=${DebugFlag:-FALSE}
 
 #########################################################################################
@@ -51,7 +51,7 @@ function tempDir()                      { mktemp -d "${TMPDIR:-/tmp/}$_app.YYYYY
 
 #########################################################################################
 
-SSF_SURROUNDING_LINES=1
+SSF_SURROUNDING_LINES=0
 
 function usage()
 {
@@ -61,18 +61,20 @@ function usage()
     err SYNOPSIS
     err4 "$_app" '[-D] [ -A num ] <<pattern>>'
     err4 "$_app" '-h'
+    err4 "$_app" '-V'
     err
     err VERSION
     err4 "$_appVersion"
     err
     err OPTIONS
-    err4 '-A      ::= specificy number of surrounding lines around match, default is 1'
+    err4 '-A      ::= specificy number of surrounding lines around match, default is 0'
     err4 '-D      ::= enable debug output'
     err4 '-h      ::= show usage message and exit with exit code 1'
+    err4 '-V      ::= show version'
 }
 
 function parseCLI() {
-    while getopts "A:Dh" options; do         # Loop: Get the next option;
+    while getopts "A:DhV" options; do         # Loop: Get the next option;
         case "${options}" in                    # TIMES=${OPTARG}
             A)  debug change matching lines to "$OPTARG"
                 SSF_SURROUNDING_LINES="${OPTARG}"
@@ -80,6 +82,8 @@ function parseCLI() {
             D)  err Debug enabled ; debugSet
                 ;;
             h)  usage ; exit 1
+                ;;
+            V)  err "$_appVersion" ; exit 0
                 ;;
             *)
                 err Help with "$_app" -h
@@ -90,12 +94,13 @@ function parseCLI() {
 }
 
 function main() {
-    exitIfBinariesNotFound pwd basename dirname mktemp ssh-keygen
+    exitIfBinariesNotFound pwd basename dirname mktemp grep xargs sed find paste fgrep
     parseCLI "$@"
     shift $(( OPTIND - 1 ))  # not working inside parseCLI
     debug args are "$*"
     for pattern in "$@" ; do
-         find ~/.ssh/ -name Config.d -type d -print  | paste -s - | xargs fgrep -ri Host | eval grep -E -i --colour -A "$SSF_SURROUNDING_LINES" "$pattern" # keep colour
+        find -L  ~/.ssh/  -name \*.config -type f | grep -v \.old | xargs grep -ri 'host ' | sed -e 's,.*\.ssh//,,' | grep -E -A "$SSF_SURROUNDING_LINES" --color "$pattern" # keep colour
+         # find ~/.ssh/ -name Config.d -print  | paste -s - | xargs fgrep -ri Host | eval grep -E -i --colour -A "$SSF_SURROUNDING_LINES" "$pattern" # keep colour
          # | grep --colour=always -Ev '^[[:space:]]*#'
     done
 }
