@@ -1,6 +1,6 @@
 ---
 title: XXX
-author: '\protect\parbox{\textwidth}{\protect\centering Christian Engel\\ ABC Ltd}'
+author: '\protect\parbox{\textwidth}{\protect\centering Christian Engel\\ ~}'
 numbersections: true
 date: \today{}
 header-includes: |
