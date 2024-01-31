@@ -137,6 +137,10 @@ function doLaTeXProcessing() {
     sed -e 's/^#### /### /' "$3" > "$2"
     # move subsubsubsubsections to subsubsubsections
     sed -e 's/^##### /#### /' "$2" > "$3"
+    # move TeX formatting - does not work on OSX
+    sed -e 's/\bTeX\b/\\TeX\{\}/g' "$3" > "$2"
+    # move LaTeX formatting
+    sed -e 's/LaTeX/\\LaTeX\{\}/g' "$2" > "$3"
     debug "title: $title"
     debug "repaired file: $3"
     # echo "$3" "$title"
@@ -148,7 +152,7 @@ function main() {
     declare -r _app=$(basename "${0}")
     declare -r _appDir=$(dirname "$0")
     declare -r _absoluteAppDir=$(cd "$_appDir" || exit 99 ; /bin/pwd)
-    declare -r _appVersion="1.0.0"      # use semantic versioning
+    declare -r _appVersion="1.1.0"      # use semantic versioning
     headerFile="/opt/ConfigShell/share/Markdown-Document/header_tex.yaml"
     footerFile="footer_tex.tex"
     export DebugFlag=${DebugFlag:-FALSE}
