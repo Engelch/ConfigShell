@@ -26,10 +26,10 @@ header-includes: |
   \usepackage{hyperref}
   \hypersetup{
       colorlinks,
-      citecolor=black,
+      citecolor=green,
       filecolor=blue,
-      linkcolor=black,
-      urlcolor=black
+      linkcolor=blue,
+      urlcolor=red
   }
 ...
 \lstset{
