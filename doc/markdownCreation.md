@@ -16,6 +16,7 @@
     - [Definition of default paper-sizes](#definition-of-default-paper-sizes)
     - [Automatic add of documentation at the end](#automatic-add-of-documentation-at-the-end)
   - [`md2pdf` options](#md2pdf-options)
+  - [Calling `md2pdf` with individual options](#calling-md2pdf-with-individual-options)
 
 [//]: # (delete before 4 LaTeX)
 
@@ -206,3 +207,22 @@ OPTIONS
                     will be moved one level up.
     -h          ::= show usage message to stderr and exit with 0
 ```
+
+## Calling `md2pdf` with individual options
+
+If you want to call `md2pdf` with some specific options for a project, it is recommended to provide a creation script 
+for the project like:
+
+```bash
+ #!/usr/bin/env bash
+ #
+ # Script is based on ConfigShell
+ #   md2pdf ≥ V1.0.0
+ #
+ 
+ export PANDOC_OPTIONS=''
+ md2pdf -H doc/header_projectSpecific_tex.yaml README.md
+```
+
+You can also use a `Makefile`, as in this case, the `README.pdf` would depend on the `README.md` and potentially further files
+mentioned in the `README.md` file. Of course, more complex variations can be created that make this script independent from the current working directory; it shall just show you the principle.
