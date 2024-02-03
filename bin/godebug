@@ -45,6 +45,8 @@ function main() {
     fOption=
     declare -r _appDir=$(dirname $0)
     declare -r _app=$(basename $0)
+    # optional local override for appName
+    [ -f .appname ] && _app="$(grep -v '^#' .appname | head -n1)"
     declare -r _env=$(echo $_app | sed 's/^go//' | sed 's/\.upx//')
     
     parseCLI "$@"               # cannot use fn-s from loadLibs
@@ -58,6 +60,7 @@ function main() {
     debug OS is "$_os"
     debug Architecture is "$_arch"
     debug Environment is "$_env"
+    debug App is "$_app"
     if ! [[ "$PATH" =~ '/opt/ConfigShell/bin' ]] ; then
         PATH="$PATH:/opt/ConfigShell/bin"
         debug add ConfigShell/bin to PATH

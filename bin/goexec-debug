@@ -53,6 +53,8 @@ function execHelp() {
     local __os=$(uname | tr "A-Z" "a-z")
     local __app=$(pwd | xargs basename)
     local __arch=$(uname -m | tr "A-Z" "a-z")
+    # optional local override for appName
+    [ -f .appname ] && __app="$(grep -v '^#' .appname | head -n1)"
     [ "$__arch" = x86_64 ] && __arch=amd64
     [ -z $1 ] && echo execHelp expects an argument. && return
     local __env=$1
