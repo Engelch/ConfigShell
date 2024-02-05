@@ -80,8 +80,8 @@ function createBuildPackages() {
     [ -d ./ContainerBuild ] && debug deleting old ContainerBuild && $DRY /bin/rm -fr ./ContainerBuild # delete dir if existing
     $DRY mkdir -p ./ContainerBuild/ # fresh dir
 
-    [ "$DebugFlag" = "TRUE" ] && $DRY rsync -avL ../*.go ../go.mod ../go.sum ../packages ./ContainerBuild/
-    [ "$DebugFlag" != "TRUE" ] && $DRY rsync -aL ../*.go ../go.mod ../go.sum ../packages ./ContainerBuild/
+    [ "$DebugFlag" = "TRUE" ] && $DRY rsync -avL ../versionFilePattern ../*.go ../go.mod ../go.sum ../packages ./ContainerBuild/
+    [ "$DebugFlag" != "TRUE" ] && $DRY rsync -aL ../versionFilePattern ../*.go ../go.mod ../go.sum ../packages ./ContainerBuild/
 
     # [ "$(grep -Fc \./packages ContainerBuild/src/go.mod)" -lt 1 ] && return # no references for local packages, not copying
 
@@ -92,7 +92,7 @@ function createBuildPackages() {
     #     ln -s ../packages ./ContainerBuild/src/packages
     # done
     pushd ContainerBuild || errorExit 30 'Oops, ContainerBuild not found.'
-    tar cvf ../ContainerBuild.tar .
+    gtar cf ../ContainerBuild.tar .
     popd || errorExit 31 'createBuildPackages:Could not return to previous directory'
 }
 
@@ -106,13 +106,33 @@ function optionallyCreateGoSetup() {
     [ "$(grep -c 'golang:true' Containerfile)" -gt 0 ] && debug 'goland:true found ⇒ golang compilation' && createBuildPackages
 }
 
+# EXIT 20
+function checkForGoCompatibility() {
+    if [ "$(grep -ci 'FROM *golang:' "$containerFile")" -gt 0 ] ; then 
+        debug golang compilation detected
+        debug selected line from Containerfile: $(grep -i 'FROM *golang:' "$containerFile")
+        golangversion="$(grep -i 'From *golang:' "$containerFile" | sed 's/.*golang://' | sed 's/ .*//' | sed 's/-.*//')"
+        debug "golangversion $golangversion"
+        if [ -f ../go.mod ] ; then
+            modGoVersion="$(grep -i 'go ' ../go.mod | sed 's/go *//' | sed 's/ //g')"
+            debug modGoVersion "$modGoVersion"
+            if [ ! "$golangversion" = "$modGoVersion" ] ; then 
+                1>&2 echo "$containerFile version is of golang is: $golangversion"
+                1>&2 echo "go version in ../go.mod is: $modGoVersion"
+                1>&2 echo 'Version differ; exiting'
+                exit 20
+            fi
+        fi
+    fi
+}
+
 #########################
 
 
 function usage() {
     1>&2 cat << HERE
 USAGE
-    container-image-build.sh [ -D ] [ -a ] [ -g ] [ -t targetPlatform ] [ -n ]
+    container-image-build.sh [-D] [-a] [-g] [-t targetPlatform ] [-n] [-x]
     container-image-build.sh -h
     container-image-build.sh -V
 OPTIONS
@@ -125,6 +145,7 @@ OPTIONS
           normally checked by container-file
     -n :: dry-run
     -t :: set the target environment, default amd64
+    -x :: do not exit if Containerfile.j2 is newer than the Containerfile
 HERE
 }
 
@@ -137,7 +158,7 @@ function parseCLI() {
     declare -g awsSupport=
     declare -g goCompilation=
     declare -g DRY=
-    while getopts "DVaghnt:" options; do         # Loop: Get the next option;
+    while getopts "DVaghnt:x" options; do         # Loop: Get the next option;
         case "${options}" in                    # TIMES=${OPTARG}
             D)  err Debug enabled
                 debugSet
@@ -159,6 +180,9 @@ function parseCLI() {
             t)  extTargetEnv="$extTargetEnv --arch=$OPTARG"
                 debug setting target env to "$OPTARG"
                 ;;
+            x)  skipTestContainerfileJ2="TRUE"
+                debug enable skip for newer Containerfile.j2
+                ;;
             *)  err Help with "$app" -h
                 exit 2  # Exit abnormally.
                 ;;
@@ -174,7 +198,7 @@ function exitIfNotInContainer() {
 
 # EXIT 20
 function main() {
-    exitIfBinariesNotFound pwd basename dirname version.sh
+    exitIfBinariesNotFound pwd basename dirname version.sh gtar
     declare -g app="$(basename $0)"
     declare -g containerCmd=''
     declare -g containerFile=''
@@ -187,6 +211,7 @@ function main() {
 
     setContainerCmd
     setContainerFile
+    checkForGoCompatibility
     setContainerName
     loginAwsIfInContainerfile
     optionallyCreateGoSetup

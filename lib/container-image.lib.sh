@@ -32,12 +32,16 @@ function setContainerName() {
 # setContainerFile determines the Containerfile or Dockerfile to be used.
 # An error is created if none of them could be found.
 # EXIT 11
+# EXIT 13
 function setContainerFile() {
     for file in Containerfile Dockerfile ; do
         [ -f "$file" ] && debug "Containerfile is $file" && containerFile="$file"
         break
     done
     [ -z "$containerFile" ] && errorExit 11 Could not find a Containerfile
+    [ -f Containerfile.j2 ] && [ Containerfile.j2 -nt "$containerFile" ] && \
+        if [ "$skipTestContainerfileJ2" = TRUE ] ; then echo "Notice: Containerfile.j2 newer than $containerFile"1>&2 ; else \
+          echo "Stopping: Containerfile.j2 is newer than $containerFile" && exit 13 ; fi
 }
 
 
