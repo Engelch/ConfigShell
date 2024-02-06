@@ -97,7 +97,11 @@ function createBuildPackages() {
     #     ln -s ../packages ./ContainerBuild/src/packages
     # done
     pushd ContainerBuild || errorExit 30 'Oops, ContainerBuild not found.'
-    gtar cf ../ContainerBuild.tar .
+    if [ "$(uname)" = Darwin ] ; then
+        gtar cf ../ContainerBuild.tar .     # tar OSX creates problems with xattr
+    else
+        tar cf ../ContainerBuild.tar .
+    fi
     popd || errorExit 31 'createBuildPackages:Could not return to previous directory'
 }
 
@@ -203,7 +207,8 @@ function exitIfNotInContainer() {
 
 # EXIT 20
 function main() {
-    exitIfBinariesNotFound pwd basename dirname version.sh gtar
+    exitIfBinariesNotFound pwd basename dirname version.sh
+    [ "$(uname)" = Darwin ]  && exitIfBinariesNotFound gtar
     declare -g app="$(basename $0)"
     declare -g containerCmd=''
     declare -g containerFile=''
