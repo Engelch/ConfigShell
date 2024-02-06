@@ -6,6 +6,10 @@
 # shellcheck disable=SC2154 # as variables are assigned in the library file
 
 # Changelog
+# 2.2
+# - check that potentially existing Dockerfile is just an s-link to Containerfile
+# 2.1
+# - OSX uses gtar, all other OS tar
 # 2.0
 # - dependency checking introduced for higher consistency
 #   - stop building if the Containerfile.j2 is newer than Containerfile
@@ -135,6 +139,20 @@ function checkForGoCompatibility() {
     fi
 }
 
+# EXIT 21
+# EXIT 22
+function checkDockerFile() {
+    if [ -f Dockerfile ] ; then
+        debug Dockerfile found
+        [ ! -L Dockerfile ] && 1>&2 echo Dockerfile is not a file, not an s-link && exit 21
+        debug Dockerfile is an s-link
+        # we do not check if it points to the Containerfile in this directory; we can live with it
+        dest="$(readlink Dockerfile | xargs basename)"
+        [ "$dest" != Containerfile ] && 1>&2 echo Dockerfile does not point to Containerfile && exit 22
+        debug Dockerfile points a a file Containerfile
+    fi
+}
+
 #########################
 
 
@@ -207,7 +225,7 @@ function exitIfNotInContainer() {
 
 # EXIT 20
 function main() {
-    exitIfBinariesNotFound pwd basename dirname version.sh
+    exitIfBinariesNotFound pwd basename dirname version.sh readlink
     [ "$(uname)" = Darwin ]  && exitIfBinariesNotFound gtar
     declare -g app="$(basename $0)"
     declare -g containerCmd=''
@@ -221,6 +239,7 @@ function main() {
 
     setContainerCmd
     setContainerFile
+    checkDockerFile
     checkForGoCompatibility
     setContainerName
     loginAwsIfInContainerfile
