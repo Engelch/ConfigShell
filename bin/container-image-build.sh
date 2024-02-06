@@ -6,6 +6,11 @@
 # shellcheck disable=SC2154 # as variables are assigned in the library file
 
 # Changelog
+# 2.0
+# - dependency checking introduced for higher consistency
+#   - stop building if the Containerfile.j2 is newer than Containerfile
+#   - Dockerfile - if existing - is supposed to be an s-link to Containerfile (currently, not yet enforced)
+#   - if staged container build with golang, then check if the golang go version is identical with ../go.mod
 # 1.5
 # - additional automatic detection of golang mode for compilation by searching the Containerfile for `golang:true`
 # 1.4
