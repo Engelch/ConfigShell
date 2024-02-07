@@ -1,0 +1,5 @@
+containerimage="$1"
+[ -z "$1" ] && 1>&2 echo containerImage:version must be specified && exit 1
+current_date="$(date +%y%m%d)"
+echo creating file "trivy:${current_date}-$containerimage.txt"
+trivy image  "$containerimage" | tee  "trivy:${current_date}-$containerimage.txt"
