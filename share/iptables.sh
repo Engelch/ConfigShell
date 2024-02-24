@@ -1,0 +1,179 @@
+#!/usr/bin/env bash
+# verified with shellcheck
+# © 2024 Christian ENGEL engel-ch@outlook.com
+# LICENSE: MIT
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a copy of this software 
+# and associated documentation files (the “Software”), to deal in the Software without restriction,
+# including without limitation the rights to use, copy, modify, merge, publish, distribute,
+# sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is 
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all copies or
+# substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+# BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+# -----------------------------------------------
+# CHANGELOG 
+# 1.1.0
+# - version number integrated + both options tested manually (incl exit-code)
+# - added the ALL option for TCP INCOMING/OUTGOING calls
+# - tested on Debian 12 machine: ok
+# 1.0.0
+# - change to sequence of port numbers
+# - ok tested on local machine Debian 12 
+# - ok tested on remote cloud machine Ubu22.04
+# - ok tested for OS default rules
+# - rules persisted with `sudo netfilter-persistent save` which was installed as `sudo apt install iptables-persistent
+# 0.8.0
+# - shellcheck: ok. Required some changes echo shell output
+# 0.7.0
+# - testing basic rule settings: ok
+# - adding verbose functionality, tested: OK
+# - ok tested working for systemd-timesyncd by modified /var/lib/systemd/timesync/clock and /run/systemd/timesync/synchronized after last reboot
+#   - both are individual, regular files with different iNumbers
+# - ok tested DNS by running `uall`
+# -----------------------------------------------
+# TODO
+# - testing if port numbers are numbers in an allowed range
+# - allow INCOMING/OUTGOING calls to specific IP ranges only
+# - implement ALL option for UDP INCOMING/OUTGOING
+
+FLUSH_EXISTING_RULES="TRUE"             # normally TRUE, also resetting counters,...
+DEFAULT_POLICY="DROP"                   # usually DROP can be allow
+ALLOW_LOOPBACK="TRUE"                   # normally TRUE
+ALLOW_ESTABLISHED_CONNECTIONS="TRUE"    # depends
+UDP_INCOMING=""                         # usually empty
+UDP_OUTGOING="53 123"                   # at least DNS, NTP
+TCP_INCOMING="22 80 443"                # ALL, or usually at least 22. ALL might be required for some debugging
+TCP_OUTGOING="80 443"                   # or ALL. Some ports might be required for OS upgrades,...
+# TCP_OUTGOING="ALL"
+
+# OS default := all open, no rules is
+# FLUSH_EXISTING_RULES="TRUE"           # normally TRUE, also resetting counters,...
+# DEFAULT_POLICY="ACCEPT"               # usually DROP can be allow
+# ALLOW_LOOPBACK=""                     # normally TRUE
+# ALLOW_ESTABLISHED_CONNECTIONS=""      # depends
+# UDP_INCOMING=""                       # usually empty
+# UDP_OUTGOING=""                       # at least DNS, NTP
+# TCP_INCOMING=""                       # ALL, or usually at least 22. ALL might be required for some debugging
+# TCP_OUTGOING=""                       # or ALL. Some ports might be required for OS upgrades,...
+
+###########################################################
+# helper
+VERBOSE_FLAG=''
+function verbose() 
+{ 
+    [ -n "$VERBOSE_FLAG" ] && echo "$*"
+    return 0
+}
+
+[ "$1" = "-v" ]         && shift && VERBOSE_FLAG=TRUE
+[ "$1" = "--verbose" ]  && shift && VERBOSE_FLAG=TRUE
+
+readonly VERSION="1.1.0"
+[ "$1" = "-V" ] && 1>&2 echo "$VERSION" && exit 1
+[ "$1" = "--version" ] && 1>&2 echo "$VERSION" && exit 1
+
+###########################################################
+# FLUSH all existing rules
+if [ "$FLUSH_EXISTING_RULES" = TRUE ] ; then 
+    verbose flushing existing rules
+    sudo iptables -F
+    # Delete all Iptables Chains
+    sudo iptables -X
+    # Flush all counters too
+    sudo iptables -Z 
+    # Flush and delete all nat and  mangle
+    sudo iptables -t nat -F
+    sudo iptables -t nat -X
+    sudo iptables -t mangle -F
+    sudo iptables -t mangle -X
+    sudo iptables -t raw -F
+    sudo iptables -t raw -X
+fi
+
+###########################################################
+# must be BEFORE default policy and AFTER flushing
+if [ "$ALLOW_ESTABLISHED_CONNECTIONS" = TRUE ] ; then
+    verbose allow established connections to be continued
+    sudo iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT     # Allowing Established and Related Incoming Connections
+    sudo iptables -A OUTPUT -m conntrack --ctstate ESTABLISHED -j ACCEPT            # Allowing Established Outgoing Connections
+else
+    verbose NOT allowing to continue established connections
+fi
+
+###########################################################
+# set default policy
+if [ -n  "$DEFAULT_POLICY" ] ; then
+    verbose setting default policy to $DEFAULT_POLICY
+    sudo iptables -P INPUT      ${DEFAULT_POLICY}
+    sudo iptables -P FORWARD    ${DEFAULT_POLICY}
+    sudo iptables -P OUTPUT     ${DEFAULT_POLICY}
+else
+    verbose NOT setting default policy
+fi
+
+###########################################################
+if [ "$ALLOW_LOOPBACK" = TRUE ] ; then
+    verbose allowing loopback communication
+    sudo iptables -A INPUT  -i lo -j ACCEPT
+    sudo iptables -A OUTPUT -o lo -j ACCEPT
+else
+    verbose NOT allowing loopback communications    
+fi
+
+###########################################################
+verbose drop invalid packets
+sudo iptables -A INPUT -m conntrack --ctstate INVALID -j DROP
+
+###########################################################
+for port in $UDP_INCOMING ; do 
+    verbose allow UDP incoming on "p$port"
+    sudo iptables -A INPUT  -p udp -m udp --dport "$port" -j ACCEPT
+    sudo iptables -A OUTPUT -p udp -m udp --sport "$port" -j ACCEPT
+done
+[ -z "$UDP_INCOMING" ] && verbose NO UDP incoming
+
+###########################################################
+for port in $UDP_OUTGOING ; do 
+    verbose allow UDP outgoing on "p$port"
+    sudo iptables -A OUTPUT -p udp -m udp --dport "$port" -j ACCEPT
+    sudo iptables -A INPUT  -p udp -m udp --sport "$port" -j ACCEPT
+done    
+[ -z "$UDP_OUTGOING" ] && verbose NO UDP outgoing
+
+###########################################################
+if [ "$TCP_INCOMING" = ALL ] ; then
+    verbose Allow all TCP outgoing 
+    sudo iptables -A INPUT  -p tcp -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+    sudo iptables -A OUTPUT -p tcp -m conntrack --ctstate ESTABLISHED -j ACCEPT
+else 
+    for port in $TCP_INCOMING ; do
+        verbose allow TCP incoming on "p$port"
+        sudo iptables -A INPUT  -p tcp --dport "$port" -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+        sudo iptables -A OUTPUT -p tcp --sport "$port" -m conntrack --ctstate ESTABLISHED -j ACCEPT
+    done
+    [ -z "$TCP_INCOMING" ] && verbose NO TCP incoming
+fi
+
+###########################################################
+if [ "$TCP_OUTGOING" = ALL ] ; then
+    verbose Allow all TCP outgoing 
+    sudo iptables -A OUTPUT -p tcp -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+    sudo iptables -A INPUT -p tcp  -m conntrack --ctstate ESTABLISHED -j ACCEPT
+else
+    for port in $TCP_OUTGOING ; do 
+        verbose allow TCP outgoing on "p$port"
+        sudo iptables -A OUTPUT -p tcp --dport "$port" -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+        sudo iptables -A INPUT  -p tcp --sport "$port" -m conntrack --ctstate ESTABLISHED -j ACCEPT
+    done    
+    [ -z "$TCP_OUTGOING" ] && verbose NO TCP outgoing
+fi
+
+# EOF
