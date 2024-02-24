@@ -2,16 +2,12 @@
 
 [ -z "$KUBECTL" ] && echo >&2 "KUBECTL environment variable is not set, exiting" && exit 1
 
-declare -a cmd_to_exec=("$KUBECTL" "get" "pod")
+declare -a cmd_to_exec=("$KUBECTL" "describe" )
 
 if [ "$1" = '-n' ] || [ "$1" = '--namespace' ]; then
       cmd_to_exec+=("-n" "$2")
       shift 2
 fi
 
-cmd_to_exec+=("$("${cmd_to_exec[@]}" | grep -i "$1" | awk '{ print $1; }')")
-shift
-
-cmd_to_exec+=("$@")
-
-"${cmd_to_exec[@]}"
+echo ${cmd_to_exec[@]} "$@"
+${cmd_to_exec[@]} "$@"
