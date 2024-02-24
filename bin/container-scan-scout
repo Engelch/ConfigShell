@@ -1,5 +1,0 @@
-containerimage="$1"
-[ -z "$1" ] && 1>&2 echo containerImage:version must be specified && exit 1
-current_date="$(date +%y%m%d)"
-echo creating file "scout:${current_date}-$containerimage.txt"
-docker scout quickview "$containerimage" | tee  "scout:${current_date}-$containerimage.txt"

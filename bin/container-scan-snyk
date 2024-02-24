@@ -1,5 +1,0 @@
-containerimage="$1"
-[ -z "$1" ] && 1>&2 echo containerImage:version must be specified && exit 1
-current_date="$(date +%y%m%d)"
-echo creating file snyk:${current_date}-kite-proxy:"$containerimage".txt
-snyk container test "$containerimage" | tee  "snyk:${current_date}-$containerimage.txt"
