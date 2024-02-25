@@ -150,6 +150,7 @@ function usage()
 
 function main() {
     exitIfBinariesNotFound pwd tput basename dirname  bumpversion version.sh
+    dry=
     parseCLI $*
     shift $(($OPTIND - 1))  # not working inside parseCLI
     debug args are $*
@@ -163,9 +164,13 @@ function main() {
     _calcVersion=$(version.sh)
     [ -z $_calcVersion ] && errorExit 1 $app could not determine the version using version.sh
     debug Existing version is $_calcVersion
-    verbosenl bumpversion --current-version $_calcVersion --allow-dirty ${CMD} $(version.sh -v | cut -d: -f1)
-    $dry bumpversion --current-version $_calcVersion --allow-dirty ${CMD} $(version.sh -v | cut -d: -f1)
-    debug New version is $(version.sh)
+    
+    if [ -n "$dry" ] ; then 
+        bumpversion --current-version $_calcVersion --allow-dirty -n ${CMD} --verbose 2>&1 | grep new_version | sed 's/new_version=//'
+    else 
+        verbosenl bumpversion --current-version $_calcVersion --allow-dirty ${CMD} $(version.sh -v | cut -d: -f1)
+        bumpversion --current-version $_calcVersion --allow-dirty ${CMD} $(version.sh -v | cut -d: -f1)
+    fi
 }
 
 main $*

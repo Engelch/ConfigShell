@@ -55,6 +55,9 @@ function execHelp() {
     local __arch=$(uname -m | tr "A-Z" "a-z")
     # optional local override for appName
     [ -f .appname ] && __app="$(grep -v '^#' .appname | head -n1)"
+        if [ "$(/bin/ls | grep -c '^_name_.*' )" -eq 1 ] ; then
+        __app=$(/bin/ls | grep '^_name_.*' | sed 's/.*_name_//')
+    fi
     [ "$__arch" = x86_64 ] && __arch=amd64
     [ -z $1 ] && echo execHelp expects an argument. && return
     local __env=$1

@@ -44,10 +44,7 @@ function main() {
     debugVal=
     fOption=
     declare -r _appDir=$(dirname $0)
-    declare -r _app=$(basename $0)
-    # optional local override for appName
-    [ -f .appname ] && _app="$(grep -v '^#' .appname | head -n1)"
-    declare -r _env=$(echo $_app | sed 's/^go//' | sed 's/\.upx//')
+    declare -r _env="$(basename $0 | sed 's/go//')"
     
     parseCLI "$@"               # cannot use fn-s from loadLibs
     shift "$(( OPTIND - 1 ))"   # not working inside parseCLI
@@ -60,11 +57,12 @@ function main() {
     debug OS is "$_os"
     debug Architecture is "$_arch"
     debug Environment is "$_env"
-    debug App is "$_app"
     if ! [[ "$PATH" =~ '/opt/ConfigShell/bin' ]] ; then
         PATH="$PATH:/opt/ConfigShell/bin"
         debug add ConfigShell/bin to PATH
     fi
+    debug Press ENTER to continue or ctrl-C to exit.
+    debugExecIfDebug read
     echo Calling "${_appDir}/gobuild.${_env}.${_os}_${_arch}" $debugVal $fOption $@
     ${_appDir}/gobuild.${_env}.${_os}_${_arch} $debugVal $fOption $@
 }
