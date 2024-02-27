@@ -89,7 +89,7 @@ function doLogs() {
     for pod in $($KUBECTL get pods ${ns[@]} | grep "$matcher" | awk '{ print $1; }') ; do
         echo "$pod -------------------------------------------"
         set -x
-        "$dry" "$KUBECTL" logs ${ns[@]} "$pod" "$@"
+        $dry "$KUBECTL" logs ${ns[@]} "$pod" "$@"
         set +x
     done
 }
