@@ -9,12 +9,9 @@ if [ "$1" = '-V' ] || [ "$1" = '--version' ] ; then echo $version ; exit 1 ; fi
 
 if [ "$1" = '-n' ] || [ "$1" = '--namespace' ]; then
       cmd_to_exec+=("-n" "$2")
-      ns=("-n" "$2")
       shift 2
 fi
 
-# detect the amount of pods that we want to check
-for pod in $($KUBECTL get pods ${ns[@]} | grep -c "$@") ; do
-      echo "$pod -------------------------------------------"
-      ${cmd_to_exec[@]} "$pod"
-done
+echo ${cmd_to_exec[@]} "$@"
+${cmd_to_exec[@]} "$@"
+
