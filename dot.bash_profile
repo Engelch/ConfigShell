@@ -159,3 +159,4 @@ main "$@"
 debug "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'
 
 # EOF
+. "$HOME/.cargo/env"
