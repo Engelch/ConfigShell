@@ -20,7 +20,7 @@
 #
 # -----------------------------------------------
 # CHANGELOG
-# 1.3.0
+# 1.3
 # - more limited exposure of DNS and NTP as problems with iptable-kernel tables seems to be fixed
 # - shellcheck_ok: true
 # 1.2.0
@@ -85,7 +85,7 @@ function verbose()
 [ "$1" = "-v" ]         && shift && VERBOSE_FLAG=TRUE
 [ "$1" = "--verbose" ]  && shift && VERBOSE_FLAG=TRUE
 
-readonly VERSION="1.3.0"
+readonly VERSION="1.3.2"
 [ "$1" = "-V" ] && 1>&2 echo "$VERSION" && exit 1
 [ "$1" = "--version" ] && 1>&2 echo "$VERSION" && exit 1
 
@@ -111,8 +111,8 @@ fi
 # must be BEFORE default policy and AFTER flushing
 if [ "$_allow_established_connections" = TRUE ] ; then
     verbose allow established connections to be continued
-    sudo iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT     # Allowing Established and Related Incoming Connections
-    sudo iptables -A OUTPUT -m conntrack --ctstate ESTABLISHED -j ACCEPT            # Allowing Established Outgoing Connections
+    sudo iptables -A INPUT  -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT     # Allowing Established and Related Incoming Connections
+    sudo iptables -A OUTPUT -m conntrack --ctstate ESTABLISHED         -j ACCEPT     # Allowing Established Outgoing Connections
 else
     verbose NOT allowing to continue established connections
 fi
@@ -121,9 +121,9 @@ fi
 # set default policy
 if [ -n  "$_default_policy" ] ; then
     verbose setting default policy to "$_default_policy"
-    sudo iptables -P INPUT      "${_default_policy}"
-    sudo iptables -P FORWARD    "${_default_policy}"
-    sudo iptables -P OUTPUT     "${_default_policy}"
+    sudo iptables -P INPUT    "${_default_policy}"
+    sudo iptables -P FORWARD  "${_default_policy}"
+    sudo iptables -P OUTPUT   "${_default_policy}"
 else
     verbose NOT setting default policy
 fi
@@ -145,18 +145,20 @@ sudo iptables -A INPUT -m conntrack --ctstate INVALID -j DROP
 for port in $_udp_incoming ; do 
     # currently, only allowing requests from unprivileged ports
     verbose allow UDP incoming on "p$port"
-    iptables -A INPUT   -p udp --sport 1024:65535 --dport "$port"    -m state --state NEW,ESTABLISHED   -j ACCEPT
-    iptables -A OUTPUT  -p udp --sport "$port"    --dport 1024:65535 -m state --state ESTABLISHED       -j ACCEPT
-    iptables -A INPUT   -p udp --sport "$port"    --dport "$port"    -m state --state NEW,ESTABLISHED   -j ACCEPT
-    iptables -A OUTPUT  -p udp --sport "$port"    --dport "$port"    -m state --state ESTABLISHED       -j ACCEPT
+    sudo iptables -A INPUT   -p udp --sport 1024:65535 --dport "$port"    -m state --state NEW,ESTABLISHED   -j ACCEPT
+    sudo iptables -A OUTPUT  -p udp --sport "$port"    --dport 1024:65535 -m state --state ESTABLISHED       -j ACCEPT
+    sudo iptables -A INPUT   -p udp --sport "$port"    --dport "$port"    -m state --state NEW,ESTABLISHED   -j ACCEPT
+    sudo iptables -A OUTPUT  -p udp --sport "$port"    --dport "$port"    -m state --state ESTABLISHED       -j ACCEPT
 done
 [ -z "$_udp_incoming" ] && verbose NO UDP incoming
 
 ###########################################################
 for port in $_udp_outgoing ; do 
     verbose allow UDP outgoing on "p$port"
-    sudo iptables -A INPUT  -p udp --sport 1024:65535   --dport "$port"     -m state --state NEW,ESTABLISHED -j ACCEPT
-    sudo iptables -A OUTPUT -p udp --sport "$port"      --dport 1024:65535  -m state --state ESTABLISHED     -j ACCEPT
+    sudo iptables -A OUTPUT -p udp --sport 1024:65535 --dport "$port" -m state --state NEW,ESTABLISHED -j ACCEPT
+    sudo iptables -A INPUT  -p udp --sport 1024:65535 --dport "$port" -m state --state ESTABLISHED -j ACCEPT
+    sudo iptables -A OUTPUT -p udp --sport "$port"    --dport "$port" -m state --state NEW,ESTABLISHED -j ACCEPT
+    sudo iptables -A INPUT  -p udp --sport "$port"    --dport "$port" -m state --state ESTABLISHED -j ACCEPT
 done    
 [ -z "$_udp_outgoing" ] && verbose NO UDP outgoing
 
