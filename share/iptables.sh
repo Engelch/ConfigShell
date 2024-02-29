@@ -20,6 +20,9 @@
 #
 # -----------------------------------------------
 # CHANGELOG
+# 1.3.0
+# - more limited exposure of DNS and NTP as problems with iptable-kernel tables seems to be fixed
+# - shellcheck_ok: true
 # 1.2.0
 # - shellcheck: ok
 # - configuration settings can be overwritten by environment variables, all starting with IPT_
@@ -45,6 +48,7 @@
 # -----------------------------------------------
 # TODO
 # - testing if port numbers are numbers in an allowed range
+# - UDP incoming: can it conflict with UDP outgoing rules?
 # - allow INCOMING/OUTGOING calls to specific IP ranges only
 # - implement ALL option for UDP INCOMING/OUTGOING
 # - add environment-variable support to override the configuration variables
@@ -81,7 +85,7 @@ function verbose()
 [ "$1" = "-v" ]         && shift && VERBOSE_FLAG=TRUE
 [ "$1" = "--verbose" ]  && shift && VERBOSE_FLAG=TRUE
 
-readonly VERSION="1.2.0"
+readonly VERSION="1.3.0"
 [ "$1" = "-V" ] && 1>&2 echo "$VERSION" && exit 1
 [ "$1" = "--version" ] && 1>&2 echo "$VERSION" && exit 1
 
@@ -139,17 +143,20 @@ sudo iptables -A INPUT -m conntrack --ctstate INVALID -j DROP
 
 ###########################################################
 for port in $_udp_incoming ; do 
+    # currently, only allowing requests from unprivileged ports
     verbose allow UDP incoming on "p$port"
-    sudo iptables -A INPUT  -p udp -m udp --dport "$port" -j ACCEPT
-    sudo iptables -A OUTPUT -p udp -m udp --sport "$port" -j ACCEPT
+    iptables -A INPUT   -p udp --sport 1024:65535 --dport "$port"    -m state --state NEW,ESTABLISHED   -j ACCEPT
+    iptables -A OUTPUT  -p udp --sport "$port"    --dport 1024:65535 -m state --state ESTABLISHED       -j ACCEPT
+    iptables -A INPUT   -p udp --sport "$port"    --dport "$port"    -m state --state NEW,ESTABLISHED   -j ACCEPT
+    iptables -A OUTPUT  -p udp --sport "$port"    --dport "$port"    -m state --state ESTABLISHED       -j ACCEPT
 done
 [ -z "$_udp_incoming" ] && verbose NO UDP incoming
 
 ###########################################################
 for port in $_udp_outgoing ; do 
     verbose allow UDP outgoing on "p$port"
-    sudo iptables -A OUTPUT -p udp -m udp --dport "$port" -j ACCEPT
-    sudo iptables -A INPUT  -p udp -m udp --sport "$port" -j ACCEPT
+    sudo iptables -A INPUT  -p udp --sport 1024:65535   --dport "$port"     -m state --state NEW,ESTABLISHED -j ACCEPT
+    sudo iptables -A OUTPUT -p udp --sport "$port"      --dport 1024:65535  -m state --state ESTABLISHED     -j ACCEPT
 done    
 [ -z "$_udp_outgoing" ] && verbose NO UDP outgoing
 
