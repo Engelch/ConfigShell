@@ -25,6 +25,7 @@ function setupAliases_Abbreviations
     alias rm='rm -i'
     alias rm~='rmbak' # not realised as script because the script is deleted by rm~ :-)
     alias mv='mv -i'
+    alias o='open'
     abbr -a -g  wh which
 
     # ls aliases, all others as scripts in /opt/ConfigShell/bin
