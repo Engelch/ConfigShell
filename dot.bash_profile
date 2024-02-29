@@ -150,6 +150,7 @@ function main() {
     # iterm @OSX
     # shellcheck source=/dev/null
     [ -r "$HOME/.iterm2_shell_integration.bash" ] && [ "$(uname)" = "Darwin" ] && source "$HOME/.iterm2_shell_integration.bash"
+    [ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
     debug4 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'
 }
 
@@ -159,4 +160,3 @@ main "$@"
 debug "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'
 
 # EOF
-. "$HOME/.cargo/env"
