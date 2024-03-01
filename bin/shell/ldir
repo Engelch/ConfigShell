@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# list the directories only
+ls -CF1 "$@" | grep '/$' | paste  -s -

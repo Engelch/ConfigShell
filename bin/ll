@@ -1,3 +1,1 @@
-#!/usr/bin/env sh
-
-exec ls -lhF "$LS_COLOUR" "$@"
+shell/ll

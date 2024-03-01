@@ -1,18 +1,1 @@
-#!/usr/bin/env bash
-#
-# Install omf (oh-my-fish) and the themes bobthefish and bang-bang (!$ support).
-# It stops, it a previous installation is detected, unless '-f' is supplied as an option
-#
-
-# set -v
-# [ -f "$HOME/.config/fish/default_prompt" ]  && echo delete default_prompt && /bin/rm -fr "$HOME/.config/fish/default_prompt" 
-[ -e "$HOME/.local/share/omf" ] && [ "$1" = '-f' ] && echo deleting previous omf installation &&  /bin/rm -fr "$HOME/.local/share/omf"
-[ -e "$HOME/.local/share/omf" ] && [ "$1" != '-f' ] && echo previous omf installation found, exiting && exit 1 
-echo installing omf...
-curl https://raw.githubusercontent.com/oh-my-fish/oh-my-fish/master/bin/install | fish
-echo installing bobthefish
-omf install bobthefish
-echo installing bang-bang
-omf install bang-bang
-echo setting default_prompt
-touch "$HOME/.config/fish/default_prompt"
+shell/fish-omf-install
