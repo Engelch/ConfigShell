@@ -1,3 +1,1 @@
-#!/usr/bin/env sh
-
-git status | sed '1,/not staged/d' | grep deleted | awk '{print $2}' | xargs git rm $@
+git/girm

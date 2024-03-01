@@ -1,0 +1,149 @@
+#!/usr/bin/env bash
+# vim: set expandtab: ts=3: sw=3
+# shellcheck disable=SC2155
+#
+# TITLE: $_app
+#
+# DESCRIPTION: <see usage function below>
+#
+# LICENSE: MIT todo
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy of this
+# software and associated documentation files (the "Software"), to deal in the Software
+# without restriction, including without limitation the rights to use, copy, modify, merge,
+# publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons
+# to whom the Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all copies
+# or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+# INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+# PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+# FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+# CHANGELOG
+# 0.1.0
+# - first version
+# ! problems with directories which are also reachable via a symbolic link.
+# 1.0.0
+# - integrate bash library
+# - implement dry-run mode with option -n
+
+#########################################################################################
+# VARIABLES, CONSTANTS
+
+
+#########################################################################################
+# ConfigShell lib 1.1 (codebase 1.0.0)
+bashLib="/opt/ConfigShell/lib/bashlib.sh"
+[ ! -f "$bashLib" ] && 1>&2 echo "bash-library $bashLib not found" && exit 127
+# shellcheck source=/opt/ConfigShell/lib/bashlib.sh
+source "$bashLib"
+unset bashLib
+#########################################################################################
+# application-specific functions  ===============================================================================
+
+function exitIfNotInGitRepo() {
+    git rev-parse --show-toplevel &>/dev/null || errorExit 11 Not in a git repository
+}
+
+# main routines  ================================================================================================
+
+function usage()
+{
+    err NAME
+    err4 "$app"
+    err
+    err SYNOPSIS
+    err4 "$app" '[-D] [-r] [-n] [pattern...]'
+    err4 "$app" '-h'
+    err
+    err VERSION
+    err4 "$appVersion"
+    err
+    err DESCRIPTION
+    err4 add the patterns to the .gitignore file in the git root directory. The path is
+    err4 automatically calculated.
+    err
+    err OPTIONS
+    err4 '-D      ::= enable debug output'
+    err4 '-h      ::= show usage message and exit with exit code 1'
+    err4 '-n      ::= dry mode, show what would be executed'
+    err4 '-r      ::= raw patterns, do not convert them to absolute filenames from git root onl'
+}
+
+# EXIT 1    usage
+function parseCLI() {
+    while getopts "Dhnr" options; do         # Loop: Get the next option;
+        case "${options}" in                    # TIMES=${OPTARG}
+            D)  err Debug enabled ; debugSet
+                ;;
+            h)  usage ; exit 1
+                ;;
+             n) DRY='echo'
+                debug dry mode selected
+                ;;
+            r) rawFilename=TRUE
+                ;;
+            *)
+                err Help with "$app" -h
+                exit 2  # Exit abnormally.
+                ;;
+        esac
+    done
+}
+
+function main() {
+    exitIfBinariesNotFound pwd basename dirname mktemp realpath
+
+    declare -g -r app=$(basename "$0")
+    declare -g -r appDir=$(dirname "$0")
+    declare -g -r appVersion="1.0.0"      # use semantic versioning
+    declare -g    DebugFlag="${DebugFlag:-FALSE}"
+    declare -g    DRY='' # dry run mode
+
+    parseCLI "$@"
+    shift "$(( OPTIND - 1 ))"  # not working inside parseCLI
+
+    debug "app $app"
+    debug "appDir $appDir"
+    debug "appVersion $appVersion"
+    debug "DebugFlag $DebugFlag"
+
+    exitIfNotInGitRepo
+    declare -r Gitroot="$(git rev-parse --show-toplevel)"
+    debug "Gitroot is $Gitroot"
+
+    for pattern in "$@" ; do
+        if [ ! "$rawFilename" == TRUE ] ; then
+            if [ -d "$pattern" ] ; then
+                debug dir mode
+                dir="$pattern"
+                file=""
+            else
+               debug file mode
+                dir="$(dirname "$pattern")"
+                file="$(basename "$pattern")"
+            fi
+            debug "dir is                 : $dir"
+            debug "file is                : $file"
+            absoluteDir=$(realpath "$dir" || errorExit  98 "realpath not working")
+            debug "absoluteDir no s-links : $absoluteDir"
+            dirFromGitRoot="$(echo "$absoluteDir" | sed -e "s,^$Gitroot,,")"
+            debug "dirFromGitRoot is      : $dirFromGitRoot"
+            debug "normalised full path is: $dirFromGitRoot/$file"
+        fi
+        if [ -z "$DRY" ] ; then 
+           debug adding "$dirFromGitRoot/$file" to "$Gitroot/.gitignore"
+           echo "$dirFromGitRoot/$file" >> "$Gitroot/.gitignore"
+        else
+            echo WOULD ADD "$dirFromGitRoot/$file" to "$Gitroot/.gitignore"
+        fi
+    done
+}
+
+main "$@"
+
+# EOF

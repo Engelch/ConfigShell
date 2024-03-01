@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+echo git push $(git remote) --delete "$1"
+echo Press ENTER to execute or ^C to cancel.
+read
+git push $(git remote) --delete "$1"

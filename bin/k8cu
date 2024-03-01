@@ -1,5 +1,1 @@
-#!/usr/bin/env bash
-
-[ -z "$KUBECTL" ] && echo >&2 "KUBECTL environment variable is not set, exiting" && exit 1
-
-$KUBECTL config use-context "$@"
+k8s/k8cu

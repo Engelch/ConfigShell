@@ -1,0 +1,178 @@
+#!/usr/bin/env bash
+
+# bumpversion increase script
+# RELEASE NOTES
+# 0.3
+# - now first jumping to git root dir to execute bump version. Error handling if this directory
+#   is not under git VCS.
+
+#########################################################################################
+# FUNCTIONS
+
+# MAIN ====================================================================
+
+# _fileMask=*.go
+# _files=$(egrep  -l 'app(\.)?Version[[:space:]]*=' $_fileMask)
+# _numFiles=$(echo $_files | wc -w | xargs) # xargs to trim spaces
+# case $_numFiles in
+# 0)  errorExit 1 No file with version information found. Change the fileMask?
+#     ;;
+# 1)  debug One file found: $_files
+#     ;;
+# *)  errorExit 2 More than one file \($_numFiles\) with version information found. Change the fileMask? Files are: $_files
+#     ;;
+# esac
+
+declare -r _version="0.4.0"
+declare -r _appDir=$(cd $(dirname $0); /bin/pwd)
+CMD=$(basename $0 | sed 's/^bump//')
+
+# readonly skeleton_version=0.4.1 # variable normally not required
+
+readonly _app=$(basename $0)
+readonly _absoluteAppDir=$(cd $_appDir; /bin/pwd)
+readonly _appVersion="0.0.1" # use semantic versioning
+export DebugFlag=${DebugFlag:-FALSE}
+export VerboseFlag=${VerboseFlasg:-FALSE}
+
+#########################################################################################
+# SKELETON FUNCTIONS, considered R/O, v0.4.1
+
+# so helps to write a message in reverse mode
+function so()
+# always show such a message.  If known terminal, print the message
+# in reverse video mode. This is the other way, not using escape sequences
+{
+   [ "$1" != on -a "$1" != off ] && return
+    if [ "$TERM" = xterm -o "$TERM" = vt100 -o "$TERM" = xterm-256color  -o "$TERM" = screen ] ; then
+      [ "$1" = on ] && tput smso
+      [ "$1" = off ] && tput rmso
+    fi
+}
+
+# --- debug: Conditional debugging. All commands begin w/ debug.
+
+function debugSet()             { DebugFlag=TRUE; return 0; }
+function debugUnset()           { DebugFlag=; return 0; }
+function debugExecIfDebug()     { [ "$DebugFlag" = TRUE ] && $*; return 0; }
+function debug()                { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:'$* 1>&2 ; return 0; }
+function debug4()               { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:    ' $* 1>&2 ; return 0; }
+function debug8()               { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:        ' $* 1>&2 ; return 0; }
+function debug12()              { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:            ' $* 1>&2 ; return 0; }
+
+function verbose()              { [ "$VerboseFlag" = TRUE ] && echo -n $* ; return 0; }
+function verbosenl()            { [ "$VerboseFlag" = TRUE ] && echo $* ; return 0; }
+function verboseSet()           { VerboseFlag=TRUE; return 0; }
+
+# --- Colour lines. It requires either linux echo or zsh built-in echo
+
+function colBold()      { printf '\e[1m'; return 0; }
+function colNormal()    { printf "\e[0m"; return 0; }
+function colBlink()     { printf "\e[5m"; return 0; }
+
+# --- Exits
+
+# function error()        { err 'ERROR:' $*; return 0; } # similar to err but with ERROR prefix and possibility to include
+# Write an error message to stderr. We cannot use err here as the spaces would be removed.
+function error()        { so on; echo 'ERROR:'$* 1>&2;            so off ; return 0; }
+function error4()       { so on; echo 'ERROR:    '$* 1>&2;        so off ; return 0; }
+function error8()       { so on; echo 'ERROR:        '$* 1>&2;    so off ; return 0; }
+function error12()      { so on; echo 'ERROR:            '$* 1>&2;so off ; return 0; }
+
+function warning()      { so on; echo 'WARNING:'$* 1>&2;          so off; return 0; }
+
+
+function errorExit()    { EXITCODE=$1 ; shift; error $* ; exit $EXITCODE; }
+function exitIfErr()    { a="$1"; b="$2"; shift; shift; [ "$a" -ne 0 ] && errorExit $b App returned $b $*; }
+
+function err()          { echo $* 1>&2; }                 # just write to stderr
+function err4()         { echo '   ' $* 1>&2; }           # just write to stderr
+function err8()         { echo '       ' $* 1>&2; }       # just write to stderr
+function err12()        { echo '           ' $* 1>&2; }   # just write to stderr
+
+# --- Existance checks
+function exitIfBinariesNotFound()       { for file in $@; do [ $(command -v "$file") ] || errorExit 253 binary not found: $file; done }
+function exitIfPlainFilesNotExisting()  { for file in $*; do [ ! -f $file ] && errorExit 254 'plain file not found:'$file 1>&2; done }
+function exitIfFilesNotExisting()       { for file in $*; do [ ! -e $file ] && errorExit 255 'file not found:'$file 1>&2; done }
+function exitIfDirsNotExisting()        { for dir in $*; do [ ! -d $dir ] && errorExit 252 "$APP:ERROR:directory not found:"$dir; done }
+
+# --- Temporary file/directory  creation
+# -- file creation -- TMP1=$(tempFile); TMP2=$(tempFile) ;;;; trap "rm -f $TMP1 $TMP2" EXIT
+# -- directory creation -- TMPDIR=$(tempDir) ;;;;;  trap "rm -fr $TMPDIR;" EXIT
+#
+function tempFile()                     { mktemp ${TMPDIR:-/tmp/}$_app.XXXXXXXX; }
+function tempDir()                      { mktemp -d "${TMPDIR:-/tmp/}$_app.YYYYYYYYY"; }
+# realpath as shell, argument either supplied as stdin or as $1
+
+#########################################################################
+
+function parseCLI() {
+    local currentOption
+    while getopts "Dnvh" options; do         # Loop: Get the next option;
+        case "${options}" in                    # TIMES=${OPTARG}
+            D)  err Debug enabled ; debugSet
+                ;;
+            n)  dry=echo
+                debug dry mode enabled
+                ;;
+            h)  usage ; exit 1
+                ;;
+            v)  verboseSet
+                debug verbose mode enabled
+                ;;
+            *)
+                err Help with $_app -h
+                exit 2  # Exit abnormally.
+                ;;
+        esac
+    done
+}
+
+function usage()
+{
+    err DESCRIPTION
+    err
+    err $_app
+    err SYNOPSIS
+    err4 $_app '[-D] [-n] [-v]'
+    err4 $_app '-h'
+    err
+    err VERSION
+    err4 $_appVersion
+    err
+    err OPTIONS
+    err4 '-D      ::= enable debug output'
+    err4 '-n      ::= enable dry-run mode'
+    err4 '-v      ::= verbose, show commands which are executed'
+    err4 '-h      ::= show usage message and exit with exit code 1'
+    err4 todo .......
+}
+
+function main() {
+    exitIfBinariesNotFound pwd tput basename dirname  bumpversion version.sh
+    dry=
+    parseCLI $*
+    shift $(($OPTIND - 1))  # not working inside parseCLI
+    debug args are $*
+    # --------------------
+    # nice idea to change to the git root directory and start commands from there. But, some git solutions might
+    # contain multiple projects. So, let's expect, that the file to be upgraded is in the current directory.
+    # Another advantage is that the command can be used for development which are not under git.
+    #_gitRootDir=$(git rev-parse --show-toplevel 2>/dev/null); res=$?
+    #[ $res -eq 0 ] && debug git found, jumping to git root && cd "$_gitRootDir"
+
+    _calcVersion=$(version.sh)
+    [ -z $_calcVersion ] && errorExit 1 $app could not determine the version using version.sh
+    debug Existing version is $_calcVersion
+    
+    if [ -n "$dry" ] ; then 
+        bumpversion --current-version $_calcVersion --allow-dirty -n ${CMD} --verbose 2>&1 | grep new_version | sed 's/new_version=//'
+    else 
+        verbosenl bumpversion --current-version $_calcVersion --allow-dirty ${CMD} $(version.sh -v | cut -d: -f1)
+        bumpversion --current-version $_calcVersion --allow-dirty ${CMD} $(version.sh -v | cut -d: -f1)
+    fi
+}
+
+main $*
+
+# eof

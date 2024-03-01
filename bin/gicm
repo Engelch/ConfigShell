@@ -1,7 +1,1 @@
-#!/usr/bin/env bash
-
- if [ -n "$*" ] ; then 
-   git commit -m "$*" 
- else 
-   git commit 
- fi
+git/gicm

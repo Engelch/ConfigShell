@@ -1,5 +1,1 @@
-#!/usr/bin/env bash
-
-bumpminor
-version.sh
-
+versioning/bmi

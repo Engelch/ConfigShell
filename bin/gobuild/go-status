@@ -1,0 +1,158 @@
+#!/usr/bin/env bash
+
+# check if a recompilation of the go files makes sense as the go files are newer
+# than the newest compiled binary
+
+#########################################################################################
+# VARIABLES, CONSTANTS
+
+_app=$(basename "${0}")
+declare -r _app
+_appDir=$(dirname "$0")
+declare -r _appDir
+_absoluteAppDir=$(cd "$_appDir" || exit 99 ; /bin/pwd)
+declare -r _absoluteAppDir
+_appVersion="0.0.1"      # use semantic versioning
+declare -r _appVersion
+export DebugFlag=${DebugFlag:-FALSE}
+
+#########################################################################################
+# HELPERS
+function debugSet()             { DebugFlag=TRUE; return 0; }
+function debugUnset()           { DebugFlag=; return 0; }
+function debugExecIfDebug()     { [ "$DebugFlag" = TRUE ] && "$*"; return 0; }
+function debug()                { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:'"$*" 1>&2 ; return 0; }
+function debug4()               { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:    ' "$*" 1>&2 ; return 0; }
+function debug8()               { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:        ' "$*" 1>&2 ; return 0; }
+function debug12()              { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:            ' "$*" 1>&2 ; return 0; }
+
+# --- Exits
+
+# function error()        { err 'ERROR:' $*; return 0; } # similar to err but with ERROR prefix and possibility to include
+# Write an error message to stderr. We cannot use err here as the spaces would be removed.
+function error()        { echo 'ERROR:'"$*" 1>&2;             return 0; }
+function error4()       { echo 'ERROR:    '"$*" 1>&2;         return 0; }
+function error8()       { echo 'ERROR:        '"$*" 1>&2;     return 0; }
+function error12()      { echo 'ERROR:            '"$*" 1>&2; return 0; }
+
+function errorExit()    { EXITCODE="$1" ; shift; error "$*" ; exit "$EXITCODE"; }
+function exitIfErr()    { a="$1"; b="$2"; shift; shift; [ "$a" -ne 0 ] && errorExit "$b" App returned "$a" "$*"; }
+
+function err()          { echo "$*" 1>&2; }                 # just write to stderr
+function err4()         { echo '   ' "$*" 1>&2; }           # just write to stderr
+function err8()         { echo '       ' "$*" 1>&2; }       # just write to stderr
+function err12()        { echo '           ' "$*" 1>&2; }   # just write to stderr
+
+function exitIfBinariesNotFound()       { for file in "$@"; do [ $(command -v "$file") ] || errorExit 253 binary not found: "$file" ; done }
+
+#########################################################################################
+# APP-specific code
+
+# exit 10..12
+function exitIfNoGoFilesExisting() {
+    ! [ -d "$1" ] && errorExit 10 exitIfNoGoFilesExisting supplied arg is no directory "$1"
+    declare -i countFiles
+    countFiles=$(find "$1" -type f -name \*.go | wc -l)
+    [ "$countFiles" -eq 0 ] && errorExit 11 exitIfNoGoFilesExisting could not find any go source files
+    debug \# of go files found "$countFiles"
+}
+
+function exitIfNotInGitRepo() {
+    git rev-parse --show-toplevel &>/dev/null || errorExit 11 Not in a git repository
+}
+
+function usage()
+{
+    err DESCRIPTION
+    err4 check if a recompilation of the go files makes sense as the go files are newer
+    err4 than the newest compiled binary
+    err
+    err "$_app"
+    err SYNOPSIS
+    err4 "$_app" '[-D] [dir]'
+    err4 "$_app" '-h'
+    err
+    err VERSION
+    err4 "$_appVersion"
+    err
+    err OPTIONS
+    err4 '-D      ::= enable debug output'
+    err4 '-h      ::= show usage message and exit with exit code 1'
+}
+
+
+# exit 1..9
+function parseCLI() {
+    while getopts "Dh" options; do         # Loop: Get the next option;
+        debug parseCLI, currently option is $options
+        case "${options}" in                    # TIMES=${OPTARG}
+            D)  err Debug enabled
+                debugSet
+                ;;
+            h)  usage
+                exit 1
+                ;;
+            *)  err Help with "$_app" -h
+                exit 2  # Exit abnormally.
+                ;;
+        esac
+    done
+}
+
+
+# exit 5, 6, 253
+function main() {
+    exitIfBinariesNotFound awk find dirname basename pwd    # exit 253
+    parseCLI "$@"
+    shift "$(( OPTIND - 1 ))"  # not working inside parseCLI
+    debug args are "$*"
+    _dir="$1"
+    [ -z "$_dir" ] && debug No directory specified, setting it to . && _dir=.
+    exitIfNoGoFilesExisting "$_dir"
+    cd "$_dir"
+
+    # determine the build directory
+    if ! [ -d ./build/ ] ; then
+        exitIfNotInGitRepo
+        _buildDir=
+        [ -d $(git rev-parse --show-toplevel)/build ] && _buildDir=$(git rev-parse --show-toplevel)/build
+        [ -d $(git rev-parse --show-toplevel)/src/build ] && _buildDir=$(git rev-parse --show-toplevel)/src/build
+        [ -z "$_buildDir" ] && errorExit 5 Could not find build directory
+    else
+        _buildDir=./build/
+    fi
+    debug _buildDir is "$_buildDir"
+
+    # determine the current version
+    _version=$(version.sh); res=$?
+    debug _version is "$_version"
+    [ "$res" -ne 0 ] && errorExit 6 Could not determine version of go project
+
+    # check if a binary for this version is existing
+    if [ $(find "$_buildDir" -type f -name \*-"$_version" | wc -l) -eq 0 ] ; then
+        echo Could not find a binary for version "$_version", compilation recommended.
+        exit 0
+    fi
+
+    # determine further go directories (local ones, outside of vendor/)
+    [ -f go.mod ] && [ $(fgrep replace go.mod | fgrep .. | wc -l) -ne 0 ] && \
+        debug extra local directories/packages found $(fgrep replace go.mod | fgrep .. | wc -l) && \
+        for file in $(fgrep replace go.mod | fgrep .. | awk '{ print $NF }')  ; do
+            [ -z "$file" ] && debug skip iteration && continue
+            debug found extra source directory $file
+            extradir="$extradir $file"
+        done
+    debug extradir is $extradir
+
+    # for all current binaries, check if go src files are younger
+    for file in $(find "$_buildDir" -type f -name \*-"$_version") ; do
+        echo files newer than "$file":
+        find . -type f -name \*.go  -newer "$file"
+        for dir in $extradir ; do
+            debug find $dir -type f -name \*.go  -newer "$file"
+            find $dir -type f -name \*.go  -newer "$file"
+        done
+    done
+}
+
+main "$@"

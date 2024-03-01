@@ -1,0 +1,126 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2155
+
+#########################################################################################
+# ConfigShell lib 1.1 (codebase 1.0.0)
+bashLib="/opt/ConfigShell/lib/bashlib.sh"
+[ ! -f "$bashLib" ] && 1>&2 echo "bash-library $bashLib not found" && exit 127
+# shellcheck source=/opt/ConfigShell/lib/bashlib.sh
+source "$bashLib"
+unset bashLib
+#########################################################################################
+
+# EXIT 21
+function setAppName() {
+    if [ "$(/bin/ls | grep -c '^_name_.*' )" -gt 1 ] ; then
+        errorExit 21 "multiple _name_... found"
+    fi
+    if [ "$(/bin/ls | grep -c '^_name_.*' )" -eq 1 ] ; then
+        debug "app name from _name: $(/bin/ls | grep '^_name_.*' | sed 's/.*_name_//')"
+        /bin/ls | grep '^_name_.*' | sed 's/.*_name_//'
+    else
+        debug "app name from directory-name: $(basename "$PWD")"
+        basename "$PWD"
+    fi
+}
+
+# issueOlderVersionWarning issues a warning if the current source code version is newer
+# than the version being executed. But, it continues the execution.
+# It stops further execution if the version information cannot be obtained.
+function issueOlderVersionWarning() {
+    _srcVersion="$(version.sh 2>/dev/null)"
+    [ -z "$_srcVersion" ] && return     # stop if no version information could be obtained
+    _binVersion=$(readlink -f "$1" | sed 's/.*-//') 
+    [ -z "$_binVersion" ] && errorExit 31 "Cannot obtain binary version"
+    [ "$_srcVersion" != "$_binVersion" ] && 1>&2 echo "Warning: source version is $_srcVersion, binary version is $_binVersion"
+}
+
+function execHelp() {
+    local __os=$(uname | tr "[:upper:]" "[:lower:]")
+    local __arch=$(uname -m | tr "[:upper:]" "[:lower:]")
+    local _binaryName=$(setAppName) # setting _app
+    [ "$__arch" = x86_64 ] && __arch=amd64
+    [ -z "$1" ] && echo execHelp expects an argument. && return
+    [ ! -d ./build ] && errorExit 41 "Cannot find required build/ directory"
+    local __env=$1
+    shift
+    issueOlderVersionWarning build/"${__env}"/"${__os}"_"${__arch}"/"${_binaryName}"
+    debug executing build/"${__env}"/"${__os}"_"${__arch}"/"${_binaryName}" "$@"
+    build/"${__env}"/"${__os}"_"${__arch}"/"${_binaryName}" "$@"
+}
+
+function usage()
+{
+    1>&2 cat <<HERE
+NAME
+    $_app
+SYNOPSIS
+    $_app [-D] [dir...]
+    $_app [-V]
+    $_app -h
+VERSION
+    $_appVersion
+DESCRIPTION
+    execute a go binary from the build/ directory
+OPTIONS
+    -D      ::= enable debug output
+    -V      ::= output the version number to stderr and exit with 0
+    -h      ::= show usage message to stderr and exit with 0
+HERE
+}
+
+# EXIT 1
+function parseCLI() {
+    while getopts "DVh" options; do         # Loop: Get the next option;
+        case "${options}" in                    # TIMES=${OPTARG}
+            D)  1>&2 echo Debug enabled ; DebugFlag="TRUE"
+                ;;
+            V)  1>&2 echo $_appVersion
+                exit 0
+                ;;
+            h)  usage ; exit 0
+                ;;
+            # v)  verbose=TRUE
+            #     ;;
+            *)
+                1>&2 echo "Help with $_app -h"
+                exit 1  # Exit abnormally.
+                ;;
+        esac
+    done
+}
+
+# EXIT 11
+function main() {
+    readonly _appVersion="1.2.0"
+    readonly _app=$(basename "${0}")
+    export DebugFlag=${DebugFlag:-FALSE}
+    exitIfBinariesNotFound pwd basename
+
+    parseCLI "$@"
+    shift $(( OPTIND - 1 ))  # not working inside parseCLI
+
+
+    case "$_app" in
+    goexec-debug|goed|gode) 
+        debug executing debug binary
+        execHelp debug "$*"
+        ;;
+    goexec-release|goer|gore) 
+        debug executing release binary
+        execHelp release "$*"
+        ;;
+    goexec-upx|goeu|goue) 
+        debug executing upx binary
+        execHelp upx "$*"
+        ;;
+    *)  1>&2 echo "Unknown command being $_app"
+        exit 11
+        ;;
+    esac
+}
+
+main "$@"
+
+
+# EOF

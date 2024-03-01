@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+[ "$1" = '-h' ] && {
+    echo "DESCRIPTION"
+    echo "  Create a file for ssh-completions."
+    echo 
+    echo "SYNOPSIS"
+    echo "  $(basename $0) [-v]"
+    echo "  $(basename $0) -h"
+    echo
+    echo "OPTIONS"
+    echo "  -v: output to stdout instead of the file $HOME/.ssh/completion.lst"
+    echo "  -h: show help"
+    exit 1
+}
+
+# -v ::= output to stdout instead of the file
+output="$HOME/.ssh/completion.lst"
+[ "$1" = '-v' ] && output='/dev/tty'
+#find -L  ~/.ssh/  -name \*.config -type f | grep -v \.old | xargs grep -ri 'host ' | grep -v ':#' | sed -E 's/^.*\.config:[[:space:]]*[Hh]ost //' | tr " " "\n"
+find -L  ~/.ssh/  -name \*.config -type f | grep -v \.old | xargs grep -ri 'host ' | grep -v ':#' | tr " " "\n" | sort >| "$output"
+# | sed -E 's/^.*\.config:[Hh]ost //' | tr " " "\n" 
+# egrep -iR '^host ' $HOME/.ssh/. 2>/dev/null | fgrep .config: | fgrep -v '*' | sed -E 's/^.*\.config:[Hh]ost //' | tr " " "\n" | sort >| $HOME/.ssh/completion.lst

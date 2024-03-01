@@ -1,4 +1,1 @@
-#!/usr/bin/env bash
-
-tmux select-pane -P "fg=white,bg=black"
-
+tmux/tmux-loc2

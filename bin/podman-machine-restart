@@ -1,5 +1,1 @@
-#!/usr/bin/env bash
-
-podman machine stop
-podman machine start
-
+container/podman-machine-restart

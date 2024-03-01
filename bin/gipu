@@ -1,4 +1,1 @@
-#!/usr/bin/env bash
-
-git push --all $*
-git push --tags $*
+git/gipu

@@ -1,3 +1,1 @@
-#!/usr/bin/env bash
-
-tmux select-pane -P "fg=gold,bg=color178"
+tmux/tmux-qul1

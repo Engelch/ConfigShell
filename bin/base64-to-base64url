@@ -1,3 +1,1 @@
-#!/usr/bin/env bash
-
- tr -d '=' | tr '/+' '_-'
+ssh_tls/base64-to-base64url

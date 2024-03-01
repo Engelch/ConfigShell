@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+# ABOUT
+#   gipl shall help to update a local git clone of a remote git repository. All branches and tags are supposed to
+#   be pulled.
+# CHANGELOG
+# v2.0.0
+# - adding autostash to git pull
+# - adding --tags to git pull to reduce this command to one git call
+# - adding version info option -V
+
+[ "$1" = '-V' ] && echo 2.0.0 && exit 0
+
+git pull --all --tags --autostash $*
+# git fetch --tags $*
+
+# EOF   - ald fashioned comment, but expressing that the file is supposed to end here. This was particular important, when we did reviewing on printed copies of programmes.

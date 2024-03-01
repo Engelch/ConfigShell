@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+podman machine stop
+podman machine start
+

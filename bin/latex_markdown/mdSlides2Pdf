@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2155 disable=SC2046 disable=SC2001 disable=SC2086
+#
+# https://github.com/marp-team/marp-cli
+#
+#     Marp CLI is working only with actively supported Node.js versions,
+#     so Node.js v16 and later is required
+#
+#     Docker image marpteam/marp-cli https://hub.docker.com/r/marpteam/marp-cli/
+#
+#     We also provide standalone binaries for Linux, macOS, and Windows.
+#     These have bundled Marp CLI with Node.js binary, so no need to install 
+#     Node.js separately.
+
+#########################################################################################
+# ConfigShell lib 1.1 (codebase 1.0.0)
+bashLib="/opt/ConfigShell/lib/bashlib.sh"
+[ ! -f "$bashLib" ] && 1>&2 echo "bash-library $bashLib not found" && exit 127
+# shellcheck source=/opt/ConfigShell/lib/bashlib.sh
+source "$bashLib"
+
+#########################################################################################
+while true
+do
+    echo 1st arg is "$1"
+    if [[ "$1" =~ ^-- ]] ; then
+         echo maching arg
+         arg="$arg $1" ; shift # multiple options would be nicer
+    else
+        break
+    fi
+done
+[ -z "$arg" ] && arg="--pdf"
+
+processFile="${1:-ConfigShellNewDoc.md}"
+[ ! -r "$processFile" ] && 1>&2 echo Markdown file to be processed not found: "$processFile" && exit 1
+echo marp --allow-local-files $arg "$processFile"
+exec marp --allow-local-files $arg "$processFile"
+
+# EOF

@@ -1,0 +1,85 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2155
+
+#########################################################################################
+# FUNCTIONS
+
+function loadLibs() {
+    #########################################################################################
+    # ConfigShell lib 1.1 (codebase 1.0.0)
+    bashLib="/opt/ConfigShell/lib/bashlib.sh"
+    [ ! -f "$bashLib" ] && 1>&2 echo "bash-library $bashLib not found" && exit 127
+    # shellcheck source=/opt/ConfigShell/lib/bashlib.sh
+    source "$bashLib"
+}
+
+# EXIT 1
+function parseCLI() {
+    while getopts "DVfh" options; do         # Loop: Get the next option;
+        case "${options}" in                    # TIMES=${OPTARG}
+            D)  1>&2 echo Debug enabled ; DebugFlag="TRUE"
+                debugVal='-D'
+                ;;
+            V)  gobuild.debug.linux_amd64 -V
+                exit 0
+                ;;
+            h)  gobuild.debug.linux_amd64 -h
+                exit 0
+                ;;
+            *)  flags+=" -$options"
+                ;;
+        esac
+    done
+}
+
+# EXIT 11
+function main() {
+    loadLibs
+    exitIfBinariesNotFound mktemp
+    flags=
+    parseCLI "$@"               # cannot use fn-s from loadLibs
+    shift "$(( OPTIND - 1 ))"   # not working inside parseCLI
+    echo flags is $flags
+    readonly _app="$(basename "$0")"
+    declare -r _appDir="$(dirname "$0")"
+    _os=${GOOS:-$(uname | tr "[:upper:]" "[:lower:]")}
+    _arch=${GOARCH:-$(uname -m | tr "[:upper:]" "[:lower:]")}
+    [ "$_arch" = x86_64 ] && _arch=amd64
+
+    case "$_app" in
+    godebug|gobd)   # go build debug
+        debug debug build
+        env=debug
+        ;;
+    gorelease|gobr) # go build release
+        debug release build
+        env=release
+        ;;
+    goupx|gobu) # go build upx
+        debug upx build
+        env=upx
+        ;;
+    *) errorExit 11 "Cannot determine build environment"
+        ;;
+    esac
+       
+    ! [ -f go.mod ] && echo 1>&2 "go.mod not found. Wrong directory?" && exit 10
+
+    debug AppDir is "$_appDir"
+    debug OS is "$_os"
+    debug Architecture is "$_arch"
+    debug Environment is "$env"
+    if ! [[ "$PATH" =~ '/opt/ConfigShell/bin' ]] ; then
+        PATH="$PATH:/opt/ConfigShell/bin"
+        debug add ConfigShell/bin to PATH
+    fi
+    debug Press ENTER to continue or ctrl-C to exit.
+    debugExecIfDebug read
+    echo Calling "/opt/ConfigShell/bin/gobuild/gobuild.${env}.${_os}_${_arch}" $flags
+    unset DebugFlag
+    "/opt/ConfigShell/bin/gobuild/gobuilds/gobuild.${env}.${_os}_${_arch}" $flags
+}
+
+main "$@" 
+
+# EOF

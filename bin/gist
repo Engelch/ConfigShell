@@ -1,3 +1,1 @@
-#!/usr/bin/env bash
-
-git status -u --show-stash $*  # --ignore-submodules
+git/gist

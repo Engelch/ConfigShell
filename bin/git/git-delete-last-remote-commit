@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+currentBranch=$(git branch | grep '^*' | cut -d ' ' -f2)
+echo git push $(git remote) +HEAD^:"$currentBranch"
+echo The local commits will be untouched. Press ENTER to execute or ^C to cancel.
+read
+git push $(git remote) +HEAD^:"$currentBranch"

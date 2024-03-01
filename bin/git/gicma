@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+if [ -n "$*" ] ; then 
+   git commit -a -m "$*" 
+else
+   git commit -a 
+fi

@@ -1,5 +1,1 @@
-#!/usr/bin/env bash
-
-bumppatch
-version.sh
-
+versioning/bpa
