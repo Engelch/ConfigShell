@@ -65,6 +65,11 @@ DESCRIPTION
     will end up in better looking LaTeX/PDF version. The names of the header and footer files
     can be changed for CLI options. A local headerfile overwrites a default headerfile.
 
+    You can also add LaTeX commands to Markdown which are not visible in Markdown using the
+    following style:
+
+        [//]: # (\newpage{})
+
     Further options can be passed to the pandoc command using the environment
     variable PANDOC_OPTIONS. This environment variable is not double-quoted, so it can contain
     multiple options.
@@ -183,7 +188,7 @@ function main() {
     declare -r _app=$(basename "${0}")
     declare -r _appDir=$(dirname "$0")
     declare -r _absoluteAppDir=$(cd "$_appDir" || exit 99 ; /bin/pwd)
-    declare -r _appVersion="1.3.0"      # use semantic versioning
+    declare -r _appVersion="1.4.0"      # use semantic versioning
     declare keepTemporaryFiles=''
 
     declare footerFile="footer_tex.tex"
@@ -198,7 +203,9 @@ function main() {
     # simplification for completions: also allow to specify the input file as
     # inputFilename. instead of inputFilename.md. In both cases, the input
     # filename will we inputFilename.md
-    inputFile="$(dirname "$1")/$(basename "$1" md)"md
+    baseFile=$(basename "$1" .md)
+    baseFile=$(basename "$baseFile" .)
+    inputFile="$(dirname "$1")/${baseFile}.md"
     exitIfPlainFilesNotExisting "$inputFile"
     debug inputFile: "$inputFile"
 
@@ -219,9 +226,8 @@ function main() {
     #[ "$DebugFlag" = TRUE ] && cat $HEADER_TEXT "$TMP1" $FOOTER_TEXT >| temp.md
     #    cat $HEADER_TEXT "$TMP1" $FOOTER_TEXT | pandoc $PANDOC_OPTIONS -f markdown -t pdf -o "$outputFile" 
     if [ -n "$disableLaTeXProcessing" ] ; then
-        sed 's/delete before 4 LaTeX.*//' < "$inputFile" > "$TMP1"
-        [ -n "$keepTemporaryFiles" ] && err "creating headerRemovedFile.txt" && cp "$TMP1" "headerRemovedFile.txt"
-        pandoc $PANDOC_OPTIONS --pdf-engine=xelatex -f markdown -t pdf -o "$outputFile" < "$TMP1"
+        # keepTemporaryFiles makes no sense with -x processing
+        pandoc $PANDOC_OPTIONS --pdf-engine=xelatex -f markdown -t pdf -o "$outputFile" < "$inputFile"
     else
         # header and footer files are only used in LaTeX mode
         HEADER_TEXT=
