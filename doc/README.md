@@ -45,7 +45,14 @@ The same kind of shell default for the fish shell
    3. Shell shortcut commands
 2. Documentation and version control support
    1. LaTeX, Markdown, and Marp scripts. You can check the `/opt/ConfigShell/doc` directory. It contains one Markdown file. It is formatted using classical 
-      Markdown and LaTeX. Please, watch the difference.
+      Markdown and LaTeX. Please, watch the difference. Both PDF files are created using a Makefile. 
+      
+      If you want to try, just change the `README.md` a bit and say make (with ConfigShell: it is just an `m`) in the `/opt/ConfigShell/doc` directory. Afterwards, the reset everything just say:
+
+      ```bash  
+      cd /opt/ConfigShell  # make sure that you are in ConfigShell
+      git reset --hard
+      ```
    2. git abbreviations
 3. Development-specific support
    1. Utilities for go programming
