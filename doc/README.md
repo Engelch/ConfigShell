@@ -54,7 +54,8 @@ ConfigShell offers
    4. Versioning support (based on bumpversion)
 4. Connectivity and generic shell scripts
    1.  tmux scripts
-   2.  route53 (AWS DNS) utility
+   2.  route53 (AWS DNS) utility\
+   3.  helper routines like `eir`, `rmbak`, `8601`, `ll`, `lla`, `llad`, and many others
 
 Individual documents exist to introduce these enhancements. Please feel free to comment and to suggest improvements.
 
