@@ -24,6 +24,10 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 # CHANGELOG
+# 1.4
+# - not deleting LaTeX comments from the input file anymore (was a kind of overengineering)
+# - -k and -x together makes no sense anymore. -k has not effect if -x is selected
+# - input filename could now be README, README., or README.md
 # 1.3
 # - md2pdf -x  now uses xelatex as a default to allow Unicode characters to be better formatted
 
@@ -188,7 +192,7 @@ function main() {
     declare -r _app=$(basename "${0}")
     declare -r _appDir=$(dirname "$0")
     declare -r _absoluteAppDir=$(cd "$_appDir" || exit 99 ; /bin/pwd)
-    declare -r _appVersion="1.4.0"      # use semantic versioning
+    declare -r _appVersion="1.4.1"      # use semantic versioning
     declare keepTemporaryFiles=''
 
     declare footerFile="footer_tex.tex"
