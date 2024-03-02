@@ -1,1 +1,1 @@
-pandoc --pdf-engine=xelatex -f markdown -o README.pdf  README.md 
+md2pdf -x README.md

@@ -18,6 +18,8 @@ March 2024
 
 Welcome to our collection named *ConfigShell*. ConfigShell is a collection of scripts and helper routines which were created over the last 40 years. The first routines started still on SunOS.
 
+![ConfigShell Modules](img/ConfigShell_modules.drawio.png)
+
 Overall, all ConfigShell elements are under the MIT license. Furthermore, it splits into 3 parts:
 
 1. The basic ConfigShell is appropriate for all UNIX™-like operating systems.

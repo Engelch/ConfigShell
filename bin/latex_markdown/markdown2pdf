@@ -23,6 +23,9 @@
 # FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
+# CHANGELOG
+# 1.3
+# - md2pdf -x  now uses xelatex as a default to allow Unicode characters to be better formatted
 
 function loadLibs() {
     #########################################################################################
@@ -180,7 +183,7 @@ function main() {
     declare -r _app=$(basename "${0}")
     declare -r _appDir=$(dirname "$0")
     declare -r _absoluteAppDir=$(cd "$_appDir" || exit 99 ; /bin/pwd)
-    declare -r _appVersion="1.2.0"      # use semantic versioning
+    declare -r _appVersion="1.3.0"      # use semantic versioning
     declare keepTemporaryFiles=''
 
     declare footerFile="footer_tex.tex"
@@ -218,7 +221,7 @@ function main() {
     if [ -n "$disableLaTeXProcessing" ] ; then
         sed 's/delete before 4 LaTeX.*//' < "$inputFile" > "$TMP1"
         [ -n "$keepTemporaryFiles" ] && err "creating headerRemovedFile.txt" && cp "$TMP1" "headerRemovedFile.txt"
-        pandoc $PANDOC_OPTIONS -f markdown -t pdf -o "$outputFile" < "$TMP1"
+        pandoc $PANDOC_OPTIONS --pdf-engine=xelatex -f markdown -t pdf -o "$outputFile" < "$TMP1"
     else
         # header and footer files are only used in LaTeX mode
         HEADER_TEXT=
