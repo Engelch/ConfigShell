@@ -16,17 +16,17 @@ end
 
 function setupAliases_Abbreviations
     debug in setupAliases_Abbreviations
-    set -g -x GREP_OPTIONS "--color=auto"
-    abbr -a -g l less
+    set -x GREP_OPTIONS "--color=auto"
+    abbr -a l less
     alias j=jobs
-    abbr -a -g ln-s 'ln -s'
+    abbr -a ln-s 'ln -s'
     alias a=alias
     alias cp='cp -i'
     alias rm='rm -i'
     alias rm~='rmbak' # not realised as script because the script is deleted by rm~ :-)
     alias mv='mv -i'
     alias o='open'
-    abbr -a -g  wh which
+    abbr -a wh which
 
     # ls aliases, all others as scripts in /opt/ConfigShell/bin
     set -g -x LS_COLOUR '--color'
@@ -38,7 +38,7 @@ function setupAliases_Abbreviations
     alias ls-bw "set -g -x LS_COLOUR '--color=none'"
     functions -e la # delete default definition as fish/3.6.1/share/fish/functions/la.fish
 
-    abbr -a -g cd.. 'cd ..'
+    abbr -a cd.. 'cd ..'
     alias ..='cd ..'
     alias .2='cd ../..'
     alias .3='cd ../../..'
@@ -97,27 +97,27 @@ function setupAliases_Abbreviations
         end
     end
 
-    abbr -a -g e "grep -E"
-    abbr -a -g ei 'grep -Ei'
-    abbr -a -g eir 'grep -EiR'
-    abbr -a -g er 'grep -ER'
+    abbr -a e "grep -E"
+    abbr -a ei 'grep -Ei'
+    abbr -a eir 'grep -EiR'
+    abbr -a er 'grep -ER'
 
-    abbr -a -g enf 'env | grep -Ei'
+    abbr -a enf 'env | grep -Ei'
 
-    abbr -a -g fin 'find . -name'
-    abbr -a -g fini 'find . -iname'
+    abbr -a fin 'find . -name'
+    abbr -a fini 'find . -iname'
 
-    abbr -a -g h "history --show-time"
+    abbr -a h "history --show-time"
 
     abbr --erase hf # delete the old hf #abbr -a -g hf 'history | grep -Ei '
     function hf
-        history | grep -Ei $argv[1] | sort -r
+        history | grep -Ei --colour $argv[1] | sort
     end
-    abbr -a -g hs 'history search --reverse --contains' # new command from fish. If it is good, it shall replace/become hf
-    abbr -a -g proc 'ps -ef | grep -Ei'
+    abbr -a hs 'history search --reverse --contains' # new command from fish. If it is good, it shall replace/become hf
+    abbr -a proc 'ps -ef | grep -Ei'
 
-    abbr -a -g rl 'source /opt/ConfigShell/fish/config.fish'
-    abbr -a -g rlDebug 'debugSet ; source /opt/ConfigShell/fish/config.fish ; debugUnset'
+    abbr -a rl 'source /opt/ConfigShell/fish/config.fish'
+    abbr -a rlDebug 'debugSet ; source /opt/ConfigShell/fish/config.fish ; debugUnset'
     alias rlFull=rlDebug
 
     set -g -x KUBECTL kubectl
@@ -125,9 +125,9 @@ function setupAliases_Abbreviations
     command -q podman ; and set -g -x CONTAINER podman
     debug "  set CONTAINER $CONTAINER"
 
-    abbr -a -g k        $KUBECTL
-    abbr -a -g k8       $KUBECTL
-    abbr -a -g k8s      $KUBECTL
+    abbr -a k        $KUBECTL
+    abbr -a k8       $KUBECTL
+    abbr -a k8s      $KUBECTL
 end
 
 function build_path_by_config_files
