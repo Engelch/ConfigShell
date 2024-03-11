@@ -5,6 +5,7 @@ containerimage="$1"
 current_date="$(date +%y%m%d)"
 readonly outputFile="snyk:${current_date}-$containerimage.txt"
 echo creating file "$outputFile"
-snyk container test "$containerimage" | tee  "$outputFile"
-[ ${PIPESTATUS[0]} -ne 0 ] && /bin/rm -f "$outputFile"
+snyk container test "$containerimage" 2>&1 | tee  "$outputFile"
+# [ ${PIPESTATUS[0]} -ne 0 ] && echo deleting output file && /bin/rm -f "$outputFile"
 exit ${PIPESTATUS[0]}
+
