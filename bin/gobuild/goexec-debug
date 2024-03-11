@@ -46,7 +46,7 @@ function execHelp() {
     shift
     issueOlderVersionWarning build/"${__env}"/"${__os}"_"${__arch}"/"${_binaryName}"
     debug executing build/"${__env}"/"${__os}"_"${__arch}"/"${_binaryName}" "$@"
-    build/"${__env}"/"${__os}"_"${__arch}"/"${_binaryName}" "$@"
+    build/"${__env}"/"${__os}"_"${__arch}"/"${_binaryName}" $*
 }
 
 function usage()
