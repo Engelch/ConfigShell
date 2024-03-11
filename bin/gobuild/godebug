@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2155
 
+# Start compilation of a go application
+# and differentiate between debug, release, and upx builds.
+#
 #########################################################################################
 # FUNCTIONS
 
@@ -47,15 +50,15 @@ function main() {
     [ "$_arch" = x86_64 ] && _arch=amd64
 
     case "$_app" in
-    godebug|gobd)   # go build debug
+    godebug|gobd|go-build-debug)   # go build debug
         debug debug build
         env=debug
         ;;
-    gorelease|gobr) # go build release
+    gorelease|gobr|go-build-release) # go build release
         debug release build
         env=release
         ;;
-    goupx|gobu) # go build upx
+    goupx|gobu|go-build-upx) # go build upx
         debug upx build
         env=upx
         ;;
