@@ -13,6 +13,9 @@ $HOME/.linkerd2/bin
 $HOME/google-cloud-sdk/bin
 /usr/local/google-cloud-sdk/bin
 /opt/android-studio/bin
+/usr/local/flutter/bin
+/opt/flutter/bin
 $HOME/bin
+
 
 # eof
