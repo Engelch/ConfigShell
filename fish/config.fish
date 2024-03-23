@@ -283,6 +283,10 @@ function setupPrompt -d "fish prompt controlled by ~/.config/fish/configshellPro
     set -g theme_display_docker_machine yes
     set -g theme_display_k8s_context yes
     set -g theme_display_k8s_namespace yes
+    set -g theme_display_go verbose
+    set -g theme_display_node yes
+    set -g theme_display_nix no
+    
     if test -f "$HOME/.config/fish/configshellPrompt"
         setPromptConfigShell
     else
