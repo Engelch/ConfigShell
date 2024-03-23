@@ -1,9 +1,17 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2155
 
-# Start compilation of a go application
-# and differentiate between debug, release, and upx builds.
-#
+# 240323
+# - cleanup of script, making sure non comsumed CLI arguments are passed to the builder script
+# - extended help script
+# Start compilation of a go application.
+# It determines the 
+#   - current architecture
+#   - operating system
+#   - and differentiate between debug, release, and upx builds
+# Then it calls the appropriate builder script like /opt/ConfigShell/bin/gobuild.debug.linux_amd64
+# Options after -- or not consumed by this script here are transferred to the builder script.
+
 #########################################################################################
 # FUNCTIONS
 
@@ -18,47 +26,64 @@ function loadLibs() {
 
 # EXIT 1
 function parseCLI() {
-    while getopts "DVfh" options; do         # Loop: Get the next option;
+    while getopts "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" options; do         # Loop: Get the next option;
         case "${options}" in                    # TIMES=${OPTARG}
-            D)  1>&2 echo Debug enabled ; DebugFlag="TRUE"
+            D)  1>&2 echo Debug enabled in gobuild ; DebugFlag="TRUE"
                 debugVal='-D'
                 ;;
-            V)  gobuild.debug.linux_amd64 -V
+            V)  /opt/ConfigShell/bin/gobuild.debug.linux_amd64 -V # the version of this script is defined by the underlying gobuild.debug.... script
                 exit 0
                 ;;
-            h)  gobuild.debug.linux_amd64 -h
+            h)  echo "$_app determines the current archicture and operating system and"
+                echo "the build mode from the script name and then calls the appropriate"
+                echo "builder script gobuild.<targetEnv>.<os>.<architecture> script like this one:"
+                echo "          /opt/ConfigShell/bin/gobuild.debug.linux_amd64"
+                echo
+                echo "Support Options:"
+                echo "  -D := debug mode. -D is also passed to the builder script."
+                echo "        In debug mode you have to press enter to execute the actual builder script."
+                echo "  -V := output version and exit. The version is coming from the builder script."
+                echo "  -h := show this help and exit."
+                echo "   * := All other supplied options are passed to the builder script."
+                echo
+                echo "-24: upx compressed binaries do not seem to work with darwin_arm64."
+                echo
+                echo "------------- help of the underlying gobuild.debug.linux_amd64 -------------------------"
+                echo 
+                /opt/ConfigShell/bin/gobuild.debug.linux_amd64 -h   # help is from the underlying gobuild.debug
                 exit 0
                 ;;
-            *)  flags+=" -$options"
+            *)  flags+=" -$options"         # store all other parameters to be passed to gobuild....
                 ;;
         esac
     done
 }
 
+# EXIT 10
 # EXIT 11
 function main() {
     loadLibs
-    exitIfBinariesNotFound mktemp
     flags=
-    parseCLI "$@"               # cannot use fn-s from loadLibs
-    shift "$(( OPTIND - 1 ))"   # not working inside parseCLI
-    echo flags is $flags
-    readonly _app="$(basename "$0")"
-    declare -r _appDir="$(dirname "$0")"
-    _os=${GOOS:-$(uname | tr "[:upper:]" "[:lower:]")}
-    _arch=${GOARCH:-$(uname -m | tr "[:upper:]" "[:lower:]")}
+    readonly _app="$(basename "$0")"    # used by parseCLI
+    readonly _appDir="$(dirname "$0")"
+    parseCLI "$@"                       # cannot use fn-s from loadLibs
+    shift "$(( OPTIND - 1 ))"           # not working inside parseCLI
+    debug Arguments not eaten by parseCLI are $flags
+
+    _os=${GOOS:-$(uname | tr "[:upper:]" "[:lower:]")}          # determine os
+    _arch=${GOARCH:-$(uname -m | tr "[:upper:]" "[:lower:]")}   # determine arc; change x86_64 to amd64
     [ "$_arch" = x86_64 ] && _arch=amd64
 
-    case "$_app" in
-    godebug|gobd|go-build-debug)   # go build debug
+    case "$_app" in                     # determine env by which name this script was called
+    godebug|gobd|go-build-debug)        # go build debug
         debug debug build
         env=debug
         ;;
-    gorelease|gobr|go-build-release) # go build release
+    gorelease|gobr|go-build-release)    # go build release
         debug release build
         env=release
         ;;
-    goupx|gobu|go-build-upx) # go build upx
+    goupx|gobu|go-build-upx)            # go build upx; creating problems with darwin-arm64
         debug upx build
         env=upx
         ;;
@@ -68,19 +93,14 @@ function main() {
        
     ! [ -f go.mod ] && echo 1>&2 "go.mod not found. Wrong directory?" && exit 10
 
-    debug AppDir is "$_appDir"
     debug OS is "$_os"
     debug Architecture is "$_arch"
     debug Environment is "$env"
-    if ! [[ "$PATH" =~ '/opt/ConfigShell/bin' ]] ; then
-        PATH="$PATH:/opt/ConfigShell/bin"
-        debug add ConfigShell/bin to PATH
-    fi
+
+    echo Calling "/opt/ConfigShell/bin/gobuild.${env}.${_os}_${_arch}" $debugVal $flags
     debug Press ENTER to continue or ctrl-C to exit.
     debugExecIfDebug read
-    echo Calling "/opt/ConfigShell/bin/gobuild/gobuild.${env}.${_os}_${_arch}" $flags
-    unset DebugFlag
-    "/opt/ConfigShell/bin/gobuild/gobuilds/gobuild.${env}.${_os}_${_arch}" $flags
+    "/opt/ConfigShell/bin/gobuild.${env}.${_os}_${_arch}" $debugVal $flags
 }
 
 main "$@" 

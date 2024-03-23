@@ -1,15 +1,25 @@
 #!/usr/bin/env bash
 
+#########################################################################################
+# ConfigShell lib 1.1 (codebase 1.0.0)
+bashLib="/opt/ConfigShell/lib/bashlib.sh"
+[ ! -f "$bashLib" ] && 1>&2 echo "bash-library $bashLib not found" && exit 127
+# shellcheck source=/opt/ConfigShell/lib/bashlib.sh
+source "$bashLib"
+unset bashLib
+#########################################################################################
+
 [ "$1" = '-h' ] && {
     echo "DESCRIPTION"
     echo "  Create a file for ssh-completions."
     echo 
     echo "SYNOPSIS"
-    echo "  $(basename $0) [-v]"
+    echo "  $(basename $0) [-v | -p]"
     echo "  $(basename $0) -h"
     echo
     echo "OPTIONS"
     echo "  -v: output to stdout instead of the file $HOME/.ssh/completion.lst"
+    echo "  -p: output the files to be parsed by $(basename $0)"
     echo "  -h: show help"
     exit 1
 }
@@ -17,7 +27,13 @@
 # -v ::= output to stdout instead of the file
 output="$HOME/.ssh/completion.lst"
 [ "$1" = '-v' ] && output='/dev/tty'
+
+if [ "$1" = '-p' ] ; then
+    find -L  ~/.ssh/  -name \*.config -type f | grep -v \.old 
+    exit $?
+fi
+
 #find -L  ~/.ssh/  -name \*.config -type f | grep -v \.old | xargs grep -ri 'host ' | grep -v ':#' | sed -E 's/^.*\.config:[[:space:]]*[Hh]ost //' | tr " " "\n"
-find -L  ~/.ssh/  -name \*.config -type f | grep -v \.old | xargs grep -ri 'host ' | grep -v ':#' | tr " " "\n" | sort >| "$output"
+find -L  ~/.ssh/  -name \*.config -type f | grep -v \.old | xargs grep -ri 'host ' | egrep -v '[[:space:]]*#' | sed -E 's/^.*\.config:[[:space:]]*[Hh]ost //'  | tr " " "\n" | egrep -v '^[[:space:]]*$' | sort >| "$output"
 # | sed -E 's/^.*\.config:[Hh]ost //' | tr " " "\n" 
 # egrep -iR '^host ' $HOME/.ssh/. 2>/dev/null | fgrep .config: | fgrep -v '*' | sed -E 's/^.*\.config:[Hh]ost //' | tr " " "\n" | sort >| $HOME/.ssh/completion.lst

@@ -19,8 +19,13 @@ function setAppName() {
         debug "app name from _name: $(/bin/ls | grep '^_name_.*' | sed 's/.*_name_//')"
         /bin/ls | grep '^_name_.*' | sed 's/.*_name_//'
     else
-        debug "app name from directory-name: $(basename "$PWD")"
-        basename "$PWD"
+       if [ "$(basename "$PWD")" = src ] ; then
+          debug "fixing app name to parent directory"
+          echo "$PWD" | xargs dirname | xargs basename
+       else
+          debug "app name from directory-name: $(basename "$PWD")"
+          basename "$PWD"
+       fi
     fi
 }
 
