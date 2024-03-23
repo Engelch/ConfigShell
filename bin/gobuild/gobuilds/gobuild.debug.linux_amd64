@@ -27,6 +27,11 @@ DESCRIPTION
     Normally, by default, a local go installation is expected which is executed just by
     calling go. The can be overwritten by specifying the environment variable GoCommand.
 OPTIONS
+    -c  ::= builds with a compiler. You can specify the container in the _container file.
+            If this file does not exist, the command takes to go version from the go.mod file
+            and usess goland:<<go version>> as the compiler image.
+            The command automatically checks for either installed podman or docker binaries.
+            These binaries are supposed to be in the PATH.
     -D  ::= enable debug
     -V  ::= show Version numer
     -f  ::= force mode, compile/build even if a binary for the current version already exists
