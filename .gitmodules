@@ -7,3 +7,9 @@
 [submodule "ConfigLinux"]
 	path = ConfigLinux
 	url = git@github.com:Engelch/ConfigLinux.git
+[submodule "BinConfigLinux"]
+	path = BinConfigLinux
+	url = git@github.com:Engelch/BinConfigLinux.git
+[submodule "BinConfigDarwin"]
+	path = BinConfigDarwin
+	url = git@github.com:Engelch/BinConfigDarwin.git

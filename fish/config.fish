@@ -117,7 +117,6 @@ function setupAliases_Abbreviations
     abbr -a proc 'ps -ef | grep -Ei'
 
     abbr -a rl 'source /opt/ConfigShell/fish/config.fish'
-    abbr -a rlDebug 'debugSet ; source /opt/ConfigShell/fish/config.fish ; debugUnset'
     alias rlFull=rlDebug
 
     set -g -x KUBECTL kubectl
@@ -128,6 +127,12 @@ function setupAliases_Abbreviations
     abbr -a k        $KUBECTL
     abbr -a k8       $KUBECTL
     abbr -a k8s      $KUBECTL
+end
+
+function rlDebug
+    debugSet
+    source /opt/ConfigShell/fish/config.fish
+    debugUnset
 end
 
 function build_path_by_config_files
