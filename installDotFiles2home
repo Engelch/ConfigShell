@@ -114,25 +114,37 @@ function fixGnupg() {
 #     fi
 # }
 
-function installFish() {
-    echo fish configuration file setup
-    declare -r fishCfgDir=~/.config/fish
+function createConfigShellFishConfiguration() {
     mkdir -p "$fishCfgDir" 2>/dev/null
     test -d  "$fishCfgDir" || errorExit 20 fish config directory "$fishCfgDir" could not be created
     test -d "$_absoluteAppDir/fish" || errorExit 21 fish config directory not found in ConfigShell
     cd "$fishCfgDir" || errorExit 22 "could not change to fish directory $fishCfgDir"
-    for file in * ; do
-        test -d "$file" && ! test -h "$file" && ! [[ "$file" =~ .*orig$ ]] && echo -n '  '  && mv -v "$file" "$file.$(date +%F_%T)"
-    done
     for file in "$_absoluteAppDir/fish/"* ; do
         echo -n '  '
         ln -sfv "$file" .
     done
 }
 
+function installFish() {
+    echo fish configuration file setup
+    declare -r fishCfgDir=~/.config/fish
+    if [ -d "$fishCfgDir" ] ; then
+        read -e -r -p 'Fish shell configuration found. Shall it be overwritten? [yN]?' -i n answer
+        if [ "${answer^^}" = 'Y' ] ; then
+            /bin/rm -fr "$fishCfgDir"
+            createConfigShellFishConfiguration
+        else
+            echo keeping existing configuration
+        fi
+    else
+        createConfigShellFishConfiguration
+    fi
+}
+
 function warningIfBinariesNotFound()       { for file in "$@"; do command -v "$file" &>/dev/null || 1>&2 echo "WARNING:binary not found:$file"; done }
 
 function autoUpdateConfigShell() {
+    [ -f "$HOME/.bashrc.d/upgradeConfigShell.sh" ] && echo Shell upgrade found as $HOME/.bashrc.d/upgradeConfigShell.sh, skipping && return
     read -e -r -p 'Install auto-upgrade ConfigShell [Yn]?' -i Y answer
     if [ "${answer^^}" = 'Y' ] ; then
         mkdir ~/.bashrc.d 2>/dev/null 
