@@ -16,17 +16,17 @@ end
 
 function setupAliases_Abbreviations
     debug in setupAliases_Abbreviations
-    set -g -x GREP_OPTIONS "--color=auto"
-    abbr -a -g l less
+    set -x GREP_OPTIONS "--color=auto"
+    abbr -a l less
     alias j=jobs
-    abbr -a -g ln-s 'ln -s'
+    abbr -a ln-s 'ln -s'
     alias a=alias
     alias cp='cp -i'
     alias rm='rm -i'
     alias rm~='rmbak' # not realised as script because the script is deleted by rm~ :-)
     alias mv='mv -i'
     alias o='open'
-    abbr -a -g  wh which
+    abbr -a wh which
 
     # ls aliases, all others as scripts in /opt/ConfigShell/bin
     set -g -x LS_COLOUR '--color'
@@ -38,7 +38,7 @@ function setupAliases_Abbreviations
     alias ls-bw "set -g -x LS_COLOUR '--color=none'"
     functions -e la # delete default definition as fish/3.6.1/share/fish/functions/la.fish
 
-    abbr -a -g cd.. 'cd ..'
+    abbr -a cd.. 'cd ..'
     alias ..='cd ..'
     alias .2='cd ../..'
     alias .3='cd ../../..'
@@ -97,27 +97,26 @@ function setupAliases_Abbreviations
         end
     end
 
-    abbr -a -g e "grep -E"
-    abbr -a -g ei 'grep -Ei'
-    abbr -a -g eir 'grep -EiR'
-    abbr -a -g er 'grep -ER'
+    abbr -a e "grep -E"
+    abbr -a ei 'grep -Ei'
+    abbr -a eir 'grep -EiR'
+    abbr -a er 'grep -ER'
 
-    abbr -a -g enf 'env | grep -Ei'
+    abbr -a enf 'env | grep -Ei'
 
-    abbr -a -g fin 'find . -name'
-    abbr -a -g fini 'find . -iname'
+    abbr -a fin 'find . -name'
+    abbr -a fini 'find . -iname'
 
-    abbr -a -g h "history --show-time"
+    abbr -a h "history --show-time"
 
     abbr --erase hf # delete the old hf #abbr -a -g hf 'history | grep -Ei '
     function hf
-        history | grep -Ei $argv[1] | sort -r
+        history | grep -Ei --colour $argv[1] | sort
     end
-    abbr -a -g hs 'history search --reverse --contains' # new command from fish. If it is good, it shall replace/become hf
-    abbr -a -g proc 'ps -ef | grep -Ei'
+    abbr -a hs 'history search --reverse --contains' # new command from fish. If it is good, it shall replace/become hf
+    abbr -a proc 'ps -ef | grep -Ei'
 
-    abbr -a -g rl 'source /opt/ConfigShell/fish/config.fish'
-    abbr -a -g rlDebug 'debugSet ; source /opt/ConfigShell/fish/config.fish ; debugUnset'
+    abbr -a rl 'source /opt/ConfigShell/fish/config.fish'
     alias rlFull=rlDebug
 
     set -g -x KUBECTL kubectl
@@ -125,9 +124,15 @@ function setupAliases_Abbreviations
     command -q podman ; and set -g -x CONTAINER podman
     debug "  set CONTAINER $CONTAINER"
 
-    abbr -a -g k        $KUBECTL
-    abbr -a -g k8       $KUBECTL
-    abbr -a -g k8s      $KUBECTL
+    abbr -a k        $KUBECTL
+    abbr -a k8       $KUBECTL
+    abbr -a k8s      $KUBECTL
+end
+
+function rlDebug
+    debugSet
+    source /opt/ConfigShell/fish/config.fish
+    debugUnset
 end
 
 function build_path_by_config_files
@@ -209,43 +214,98 @@ end
      end
  end
 
- function removePromptIfFlagfileExisting
-    if test -f "$HOME/.config/fish/default_prompt"
-        debug "default prompt mode"
-        set -g theme_display_k8s_context yes
-        set -g theme_display_k8s_namespace yes
-        set -g theme_display_user ssh
-        set -g theme_show_exit_status yes
-        set -g theme_newline_cursor yes
-        set -g theme_display_git yes
-        set -g theme_display_git_dirty yes
-        set -g theme_display_git_untracked yes
-        set -g theme_display_docker_machine yes
-        set -g theme_display_ruby yes
-        function fish_right_prompt
-            git_prompt_status
-        end
+function fish_prompt_configshell -d "prompt for Configshell, toggable"
+    set -l res $status
+    if test "$res" -eq 0
+        set resString (set_color white)"$res"
     else
-        function fish_prompt    
-            set -l res $status
-            if test "$res" -eq 0
-                set resString (set_color white)"$res"
-            else
-                set resString (set_color -o red)"$res"(set_color white)
-            end
-            printf '[%s]%s · %s%s@%s%s · %s%s%s · %s%s%s · %s%s%s · %s%s%s\n>' \
-                $resString (set_color blue) \
-                (set_color white) $USER $hostname (set_color blue) \
-                (set_color green) AWS:$AWS_PROFILE (set_color blue) \
-                (set_color magenta) (watson status) (set_color blue) \
-                (set_color red) (git_prompt_status) (set_color blue) \
-                (set_color yellow) (pwd | sed -E "s,$HOME,~,") (set_color white)
+        set resString (set_color -o red)"$res"(set_color white)
+    end
+    printf '[%s]%s · %s%s@%s%s · %s%s%s · %s%s%s · %s%s%s · %s%s%s\n>' \
+        $resString (set_color blue) \
+        (set_color white) $USER $hostname (set_color blue) \
+        (set_color green) AWS:$AWS_PROFILE (set_color blue) \
+        (set_color magenta) (watson status) (set_color blue) \
+        (set_color red) (git_prompt_status) (set_color blue) \
+        (set_color yellow) (pwd | sed -E "s,$HOME,~,") (set_color white)
+end
+
+function setPromptConfigShell -d 'set the prompt to ConfigShell\'s version'
+    if not set -q fishPromptConfigShell ;or test "$fishPromptConfigShell" -eq 0
+        functions -e fish_prompt_orig
+        functions -c fish_prompt fish_prompt_orig
+        functions -e fish_prompt
+    end
+    functions -c fish_prompt_configshell fish_prompt
+    set -g fishPromptConfigShell 1
+    touch "$HOME/.config/fish/configshellPrompt"
+end 
+
+function setPromptOrig -d 'set the prompt to the stored version'
+    if functions -q fish_prompt_orig 
+        functions -e fish_prompt
+        functions -c fish_prompt_orig fish_prompt
+        set -g fishPromptConfigShell 0 
+        /bin/rm -f "$HOME/.config/fish/configshellPrompt"
+    else
+        echo No stored backup version. >&2
+    end
+end
+
+function promptToggle -d 'toggle the current prompt setup with configShell prompt style'
+    if not set -q fishPromptConfigShell
+        echo ERROR variable fishPromptConfigShell not set
+    else
+        if test $fishPromptConfigShell -eq 0
+            setPromptConfigShell
+        else
+            setPromptOrig
         end
     end
 end
 
+function setupPrompt -d "fish prompt controlled by ~/.config/fish/configshellPrompt"
+    debug "default prompt mode for bobthefish, should do not harm for other shells"
+    set -g theme_show_exit_status yes
+    set -g theme_newline_cursor yes
 
-function setupCompletion
+    set -g theme_display_git yes
+    set -g theme_display_git_dirty yes
+    set -g theme_display_git_untracked yes
+    set -g theme_display_git_dirty_verbose yes
+    set -g theme_display_git_ahead_verbose yes
+    set -g theme_display_git_stashed_verbose yes
+    set -g theme_display_git_default_branch yes
+
+    set -g theme_display_sudo_user yes
+    set -g theme_display_user ssh
+    set -g theme_display_hostname ssh
+    
+    set -g fish_prompt_pwd_dir_length 0
+    
+    set -g theme_powerline_fonts yes
+    set -g theme_display_ruby yes
+    set -g theme_display_docker_machine yes
+    set -g theme_display_k8s_context yes
+    set -g theme_display_k8s_namespace yes
+    set -g theme_display_go verbose
+    set -g theme_display_node yes
+    set -g theme_display_nix no
+    
+    if test -f "$HOME/.config/fish/configshellPrompt"
+        setPromptConfigShell
+    else
+        set -g fishPromptConfigShell 0 
+    end
+    if not test -f "$HOME/.config/fish/configshellSupport"
+        set_color red
+        echo You can change/toggle to the ConfigShell prompt using promptToggle.
+        set_color normal
+        touch "$HOME/.config/fish/configshellSupport"
+    end
+end
+
+function setupCompletion -d "load completion for rsync and ssh"
     debug in setupCompletion
     if test -r ~/.ssh/completion.lst
         complete -F -c rsync -a ~/.ssh/completion.lst
@@ -308,11 +368,11 @@ function setupExportVars
     set -g -x RSYNC_Add_Windows "--modfiy-window=1" # Windows FS updates file-times only every 2nd second
     set -g -x RSYNC_Add_RemoveSLinks "--copy-links"  # convert links into fi    les
     set -g -x VISUAL vim
-    set -g -x EDITOR vim       # bsroot has no notion about VISUAL
+    set -g -x EDITOR $VISUAL       # bsroot has no notion about VISUAL
     set -g -x BLOCKSIZE 1K
     set -g -x COLUMNS
     set -g -x PROFILES_CONFIG_DIR /opt/ConfigShell
-    set -g -x CONFIGSHELL_RC_VERSION (fish -c 'cd /opt/ConfigShell/fish ; /opt/ConfigShell/bin/version.sh')
+    set -g -x CONFIGSHELL_RC_VERSION ($SHELL -c 'cd /opt/ConfigShell/fish ; /opt/ConfigShell/bin/version.sh')
     if test -n "$_current_CONFIGSHELL_RC_VERSION" -a "$CONFIGSHELL_RC_VERSION" != "$_current_CONFIGSHELL_RC_VERSION"
         echo New CONFIGSHELL_RC_VERSION "$CONFIGSHELL_RC_VERSION"
     end
@@ -328,13 +388,13 @@ if status is-interactive # main code
         command -q bash ; and bash $file
     end
     setupExportVars
-    command -v watson &>/dev/null ; or alias watson 'echo >/dev/null' # required for setupPath
+    command -v watson &>/dev/null ; or alias watson 'echo >/dev/null' # required for prompt
     set -g fish_greeting "Welcome to ConfigShell's fish setup"
     setupPath
     setupAliases_Abbreviations
     setupCompletion
     setupSsh
-    removePromptIfFlagfileExisting
+    setupPrompt
 
     optSourceFile ~/.config/fish/post.fish
     hadmRealUser

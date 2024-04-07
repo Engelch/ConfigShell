@@ -1,6 +1,6 @@
 # Welcome to ConfigShell
 
-March 2024
+April 2024
 
 ## Contents
 
@@ -23,21 +23,26 @@ March 2024
 
 ## About
 
-Welcome to our collection named *ConfigShell*. ConfigShell offers you scripts and helper routines that were created over the last 40 years. The first routines started still on SunOS and Ultrix. Some of you might still remember. The scripts are supposed to run under Linux, OSX, *BSD, and other UNIX variants. These days, the scripts are only tested with Linux and OSX.
+Welcome to our collection named *ConfigShell*. *ConfigShell* offers you scripts and helper routines that were created over the last 40 years. The first routines started still on SunOS and Ultrix. Some of you might still remember. The scripts are supposed to run under Linux, OSX, *BSD, and other UNIX variants. These days, the scripts are only tested with Linux and OSX.
 
 ![ConfigShell Modules](img/ConfigShell_modules.drawio.png)
 
-Overall, all ConfigShell elements are under the MIT license. Furthermore, it splits into 3 parts:
+Overall, all *ConfigShell* elements are under the MIT license. Furthermore, it splits into 3 parts:
 
-1. The basic ConfigShell is appropriate for all UNIX™-like operating systems.
+1. The basic *ConfigShell* is appropriate for all UNIX™-like operating systems
 2. A special git sub-module for Linux-specifics called *ConfigLinux*
 3. A special git sub-module for OSX-specifics called *ConfigDarwin*
+4. A git sub-module called *PowerlineFonts* 
 
 The basic ConfigShell can be used without the sub-modules.
 
+## Security Notice
+
+ConfigShell only contains scripts and/or configuration files. No binaries are part of *ConfigShell*. This can be different for the optional git sub-modules *ConfigLinux* and *ConfigDarwin*. *ConfigShell* can be used without the further git sub-modules. The sub-modules only extend the functionality of *ConfigShell*; they are not required for the functionality of *ConfigShell*.
+
 ## Benefits of ConfigShell
 
-ConfigShell offers
+*ConfigShell* offers
 
 1. Shell enhancements
    1. Nice shell defaults for bash

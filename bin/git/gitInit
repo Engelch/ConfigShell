@@ -12,6 +12,8 @@ function error() {
     echo ERROR $* > /dev/stderr
 }
 
+[ -f "$HOME/.gitinit" ] && echo "git Init was run before as $HOME/.gitinit is existing, Exiting." && exit 0
+
 # initialise the git variables
 
 [ "$1" = -d ] && _debug=True
@@ -65,10 +67,12 @@ Linux)
 
     [[ ! $(uname -r ) =~ Microsoft ]] && [ -z $_debug ] && git config --global credential.helper store    # classical Linux
     [[ ! $(uname -r ) =~ Microsoft ]] && [ ! -z $_debug ] && /bin/echo WOULD:git config --global credential.helper store    # classical Linux
+    touch $HOME/.gitinit
     ;;
 Darwin)
     [ -z $_debug ] && git config --global credential.helper osxkeychain
     [ ! -z $_debug ] && /bin/echo WOULD: git config --global credential.helper osxkeychain
+    touch $HOME/.gitinit
     ;;
 *) error OS not supported to set the credential.helper variable. ;  exit 1
 esac
