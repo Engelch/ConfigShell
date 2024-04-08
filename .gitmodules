@@ -1,15 +1,20 @@
 [submodule "PowerlineFonts"]
 	path = PowerlineFonts
 	url = https://github.com/powerline/fonts.git
+	branch = master
 [submodule "ConfigDarwin"]
 	path = ConfigDarwin
 	url = git@github.com:Engelch/ConfigDarwin.git
+	branch = master
 [submodule "ConfigLinux"]
 	path = ConfigLinux
 	url = git@github.com:Engelch/ConfigLinux.git
-[submodule "BinConfigDarwin"]
-	path = BinConfigDarwin
-	url = git@github.com:Engelch/BinConfigDarwin.git
+	branch = master
 [submodule "BinConfigLinux"]
 	path = BinConfigLinux
 	url = git@github.com:Engelch/BinConfigLinux.git
+	branch = master
+[submodule "BinConfigDarwin"]
+	path = BinConfigDarwin
+	url = git@github.com:Engelch/BinConfigDarwin.git
+	branch = master
