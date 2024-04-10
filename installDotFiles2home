@@ -173,7 +173,7 @@ function main() {
     done
     fixGnupg
     installFish
-    warningIfBinariesNotFound ruby gnutls-cli openssl marp
+    warningIfBinariesNotFound ruby gnutls-cli openssl openvpn tree curl vim diff
 
     echo "git: creating private ~/.gitignore"
     [ -f ~/.gitignore ] && echo "  git: Found existing ~/.gitignore, moving it"  && mv "$HOME/.gitignore" "$HOME/.gitignore.$(date +%F_%T)"
