@@ -146,7 +146,7 @@ function main() {
 
     declare -r App=$(basename "$0")
     declare -r AppDir=$(dirname "$0")
-    declare -r AppVersion="2.4.0"
+    declare -r AppVersion="2.4.1"
     declare -r GoCmd="${GoCommand:-go}" # go application can be overwritten from the environment
     _forceMode=
 
@@ -186,7 +186,7 @@ function main() {
     declare -r _outputDir=$_binDir/$_releaseType/$_osDir
 
     declare _appName=$(pwd | xargs basename)     # app to be build, if app is src, the go for the parent directory
-    [ "$_appName" = "src" ] && echo fix appname to parent directory ............ && _appName=$(pwd | xargs dirname | xargs basename)
+    [ "$_appName" = "src" ] && _appName=$(pwd | xargs dirname | xargs basename) && echo fix appname to parent directory ..... ${_appName}
 
     declare -r _appVersion=$(version.sh)   # version of app to be build
     [ -z "$_appVersion" ] && errorExit 10 Could not determine the version of the go application.
