@@ -14,5 +14,5 @@ echo installing bobthefish
 omf install bobthefish
 echo installing bang-bang
 omf install bang-bang
-echo setting default_prompt
-touch "$HOME/.config/fish/default_prompt"
+#echo setting default_prompt
+#touch "$HOME/.config/fish/default_prompt"
