@@ -288,9 +288,12 @@ function usage() {
     err8 delete the unencrypted versions of gee files if they are older than the correspondig gee files.
     err8 In force mode, delete the unencrypted files even if they are younger thane the correspondig gee files.
     err
-    err4 $_app '( doc | doctor )'
+    err4 $_app '( doc | doctor ) [ -v | -n | -- ]'
     err8 '- for every source file under .gee, check if the source file (without .gee) is under .gitignore'
     err8 '- If the source file is not found in .gitignore, add it to it.'
+    err8 '- -n dry-run; includes verbose mode'
+    err8 '- -v ; verbose mode'
+    err8 '- -- ; end arguments'
     err
     err4 $_app '( u[n[e[n[c[r[y[p[t]]]]]]]] | d[e[c[r[y[p[t]]]]]] ) <<file>> ...'
     err8 '- creates an unencrypted version of the file. If no argument is given, it does so for all .gee files.'
