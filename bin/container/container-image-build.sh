@@ -89,8 +89,10 @@ function createBuildPackages() {
     [ -d ./ContainerBuild ] && debug deleting old ContainerBuild && $DRY /bin/rm -fr ./ContainerBuild # delete dir if existing
     $DRY mkdir -p ./ContainerBuild/ # fresh dir
 
-    [ "$DebugFlag" = "TRUE" ] && $DRY rsync -avL ../versionFilePattern ../*.go ../go.mod ../go.sum ../packages ./ContainerBuild/
-    [ "$DebugFlag" != "TRUE" ] && $DRY rsync -aL ../versionFilePattern ../*.go ../go.mod ../go.sum ../packages ./ContainerBuild/
+    [ -f ../versionFilePattern ] && local _versionPattern=../versionFilePattern
+    [ -f ../versionFilePattern ] || local _versionPattern=''
+    [ "$DebugFlag" = "TRUE" ] && $DRY rsync -avL $_versionPattern ../*.go ../go.mod ../go.sum ../packages ./ContainerBuild/
+    [ "$DebugFlag" != "TRUE" ] && $DRY rsync -aL $_versionPattern ../*.go ../go.mod ../go.sum ../packages ./ContainerBuild/
 
     # [ "$(grep -Fc \./packages ContainerBuild/src/go.mod)" -lt 1 ] && return # no references for local packages, not copying
 
