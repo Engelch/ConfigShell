@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2155
+# CHANGELOG
+# 1.3: change sed from , to % as we have files containing commata...., replaced by AWK  sed "s,^,$file:,"
 
 #########################################################################################
 # ConfigShell lib 1.1 (codebase 1.0.0)
@@ -13,7 +15,7 @@ unset bashLib
 function tlsCsr2() {
    local file;
    for file in "$@"; do
-      openssl req -in "$file"  -noout -utf8 -text | sed "s,^,$file:," | egrep -v '.*:.*:.*:'
+      openssl req -in "$file"  -noout -utf8 -text | xx=$file awk ' BEGIN { file=ENVIRON["xx"] } { printf("%s:%s\n", file, $0) }' | egrep -v '.*:.*:.*:'
    done
 }
 
@@ -50,7 +52,7 @@ HERE
 function parseCLI() {
    while getopts "VDhvf" options; do         # Loop: Get the next option;
       case "${options}" in                    # TIMES=${OPTARG}
-         V)    1>&2 echo "1.2.0"
+         V)    1>&2 echo "1.3.0"
                exit 2
                ;;
          D)    debugSet
