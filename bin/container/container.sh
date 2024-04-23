@@ -14,9 +14,9 @@ source "$bashLib"
 unset bashLib
 #########################################################################################
 
-if which podman ; then
+if which podman > /dev/null ; then
     exec podman "$@" 
-elif which docker ; then
+elif which docker > /dev/null ; then
     exec docker "$@"
 else
     errorExit 1 Neither podman nor docker found.
