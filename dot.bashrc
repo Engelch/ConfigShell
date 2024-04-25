@@ -89,7 +89,7 @@ function setAliases() {
    function mkcd(){ mkdir -p "$1" && cd "$1"; }
    alias mv='mv -i'
    alias po=popd
-   alias pu='pushd .'
+   alias pu=pushd
    alias rl="source ~/.bash_profile"
    alias rlDebug="debugSet; source ~/.bash_profile; debugUnset"
    alias rlFull=rlDebug            # backward compatibility
