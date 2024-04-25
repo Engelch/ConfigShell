@@ -88,6 +88,7 @@ if [ "$1" = '-V' ] ; then
    echo $version
    exit 0
 fi
+[ -d /opt/ConfigShell/. ] && ( cd /opt/ConfigShell || errorExit 10 "Could not jump to ConfigShell" ; git pull )
 if [[ ${_uname} == Darwin ]] ; then
    osxUpgrade
 elif [[ ${_uname} == Linux ]] ; then
@@ -101,7 +102,7 @@ elif [[ ${_uname} == Linux ]] ; then
          checkIfActualKernelAndLibc
       else
          errorExit 1 unsupported Linux
-      fi 
+      fi
 else
    errorExit 1 unsupported OS
 fi
