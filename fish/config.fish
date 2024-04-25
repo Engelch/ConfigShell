@@ -50,7 +50,7 @@ function setupAliases_Abbreviations
         mkdir -p $argv[1] ; and cd $argv[1]
     end
     alias po=popd
-    alias pu='pushd .'
+    alias pu=pushd
 
     alias disp0='export DISPLAY=:0'
     alias disp1='export DISPLAY=:1'
