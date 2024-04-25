@@ -6,6 +6,10 @@
 # DESCRIPTION: <see usage function below>
 #
 # CHANGELOG:
+# 3.1 
+# - git gee doctor -v  - less chatty for found/correct entries
+# 3.0
+# - git gee doctor introduced
 # 2.4
 # - version info in pre-commit to be checked during git gee init
 # 2.3
@@ -44,7 +48,7 @@
 # shellcheck disable=SC2155
 readonly _app=$(basename "${0}")
 readonly _appDir=$(dirname "$(readlink -f "${0}")")
-readonly _appVersion="3.0.0" # use semantic versioning # ALSO CHANGE THE PRECOMMIT FILE TO CONTAIN THE SAME VERSION NUMBER
+readonly _appVersion="3.1.0" # use semantic versioning # ALSO CHANGE THE PRECOMMIT FILE TO CONTAIN THE SAME VERSION NUMBER
 export DebugFlag=${DebugFlag:-FALSE}
 
 #########################################################################################
@@ -238,7 +242,7 @@ function doctor() {
     _dryMode=
     while true; do
         [ "$1"  = '-n' ] || [ "$1" = '--dry' ] && _dryMode=echo && 1>&2 echo DRY mode && verboseSet && shift && continue
-        [ "$1"  = '-v' ] || [ "$1" = '--verbose' ] && verboseSet && 1>&2 echo verbose && shift && continue
+        [ "$1"  = '-v' ] || [ "$1" = '--verbose' ] && verboseSet && shift && continue
         [ "$1" = '--' ] && shift && break   # break could be omitted, but so it is easier to read and more safe if the code will be changed.
         break
     done
@@ -249,17 +253,16 @@ function doctor() {
         # Inside the loop, you can perform actions on each file
         srcFile="$(echo "$file" | sed 's,.gee$,,' | sed 's,^\./,/,')"
         #suffix="$(echo "$srcFile" | sed 's,.*\.,.,')"
-        verbose "Processing src-file:$srcFile:"
         # Currently, we do not check if a wildcard line also ignores a file put under git gee as git gee a normally adds individual entries
         # for each file in .gitignore
         # You can replace this echo statement with whatever action you want to perform on each file
         # For example, you could process the file contents, move or copy the file, etc.
         if $(grep "$srcFile" .gitignore > /dev/null) ; then 
-            verbosenl file found
+            : # verbosenl file found
         else
-            verbosenl file NOT found
-            [ -n "$_dryMode" ] && echo "echo $srcFile >> .gitignore"
-            [ -z "$_dryMode" ] && echo "$srcFile" >> .gitignore
+            verbose "Processing src-file:$srcFile:file NOT found:"
+            [ -n "$_dryMode" ] && echo "would add $srcFile to .gitignore"
+            [ -z "$_dryMode" ] && echo "$srcFile" >> .gitignore && verbosenl "added to .gitignore"
         fi
     done
 }
@@ -383,7 +386,7 @@ function createPreCommit() {
     # single-quotes around ENDINIT prevents evaluation of vars inside here document
     cat >|.git/hooks/pre-commit <<'ENDINIT'
 #!/usr/bin/env bash
-# gee:version:3.0.0
+# gee:version:3.1.0
 # --- debug: Conditional debugging. All commands begin w/ debug.
 function debugSet() {
     DebugFlag=TRUE
