@@ -377,6 +377,7 @@ function setupExportVars
         echo New CONFIGSHELL_RC_VERSION "$CONFIGSHELL_RC_VERSION"
     end
     set -g _current_CONFIGSHELL_RC_VERSION "$CONFIGSHELL_RC_VERSION"
+    set -g -x CDPATH "$HOME"
 end
 
 if status is-interactive # main code
@@ -386,6 +387,14 @@ if status is-interactive # main code
     for file in $HOME/.config/fish/conf.d/*.sh $HOME/.bashrc.d/*.sh
         debug "  executing $file"
         command -q bash ; and bash $file
+    end
+    for file in $HOME/.fishrc.d/*.fish
+        debug "  executing $file"
+        fish $file
+    end
+    for file in $HOME/.fishrc.d/*.fishrc
+        debug "  sourcing $file"
+        source $file
     end
     setupExportVars
     command -v watson &>/dev/null ; or alias watson 'echo >/dev/null' # required for prompt
