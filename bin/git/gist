@@ -1,3 +1,9 @@
 #!/usr/bin/env bash
 
-git status -u --show-stash $*  # --ignore-submodules
+git status -u --show-stash $* ; res=$? # --ignore-submodules
+
+git rev-parse --show-toplevel &>/dev/null || exit "$res" 
+
+declare -gr gitroot="$(git rev-parse --show-toplevel)"
+
+[ -f "$gitroot/.git/gee" ] && echo && echo "git gee status:" && git gee s

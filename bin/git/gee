@@ -6,6 +6,8 @@
 # DESCRIPTION: <see usage function below>
 #
 # CHANGELOG:
+# 3.2
+# - git gee hasBeenInstalled - to check if the current directory is under git gee
 # 3.1 
 # - git gee doctor -v  - less chatty for found/correct entries
 # 3.0
@@ -48,7 +50,7 @@
 # shellcheck disable=SC2155
 readonly _app=$(basename "${0}")
 readonly _appDir=$(dirname "$(readlink -f "${0}")")
-readonly _appVersion="3.1.0" # use semantic versioning # ALSO CHANGE THE PRECOMMIT FILE TO CONTAIN THE SAME VERSION NUMBER
+readonly _appVersion="3.2.0" # use semantic versioning # ALSO CHANGE THE PRECOMMIT FILE TO CONTAIN THE SAME VERSION NUMBER
 export DebugFlag=${DebugFlag:-FALSE}
 
 #########################################################################################
@@ -317,6 +319,9 @@ function usage() {
     err4 $_app version
     err8 - list the current version of git gee and exits
     err
+    err4 $_app 'hasBeenInstalled'
+    err8 - show this help and exits with exit code 1.
+    err
     err4 $_app '( h[elp] | -h )'
     err8 - show this help and exits with exit code 1.
     err
@@ -386,7 +391,7 @@ function createPreCommit() {
     # single-quotes around ENDINIT prevents evaluation of vars inside here document
     cat >|.git/hooks/pre-commit <<'ENDINIT'
 #!/usr/bin/env bash
-# gee:version:3.1.0
+# gee:version:3.2.0
 # --- debug: Conditional debugging. All commands begin w/ debug.
 function debugSet() {
     DebugFlag=TRUE
@@ -733,6 +738,12 @@ function main() {
     ver | version)
         echo $_appVersion
         exit 0
+        ;;
+    hasBeenInstalled | hasbeeninstalled | hasbeenInstalled)
+        git rev-parse --show-toplevel &>/dev/null || errorExit 99 "Not a git repository"
+        declare -gr gitroot="$(git rev-parse --show-toplevel)"
+        [ -f "$gitroot/.git/gee" ] && echo git gee enabled && exit 0
+        echo git gee not installed && exit 1
         ;;
     *)
         [ -z "$1" ] && exit 0
