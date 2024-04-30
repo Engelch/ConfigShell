@@ -4,14 +4,28 @@
 #   gipl shall help to update a local git clone of a remote git repository. All branches and tags are supposed to
 #   be pulled.
 # CHANGELOG
-# v2.0.0
+# v2.0
+# - version output to stderr
 # - adding autostash to git pull
 # - adding --tags to git pull to reduce this command to one git call
 # - adding version info option -V
 
-[ "$1" = '-V' ] && echo 2.0.0 && exit 0
+dry=
+[ "$1" = '-V' ] && 1>&2 echo 2.0.1 && exit 0
+[ "$1" = '-n' ] || [ "$1" = '--dry' ] && dry=echo && echo DRY run
 
-git pull --all --tags --autostash $*
+git rev-parse --show-toplevel &>/dev/null || { 1>&2 echo NOT a git repository. ; exit 1 ; }
+
+declare -gr gitroot="$(git rev-parse --show-toplevel)"
+
+shallow=
+[ -f "$gitroot/.git/shallow" ] && shallow="--depth 1"
+
+$dry git pull --all --tags $shallow --autostash $*
+
+
+ [ -f "$gitroot/.git/gee" ] && echo "Running git gee decrypt:" && $dry git gee de
+
 # git fetch --tags $*
 
 # EOF   - ald fashioned comment, but expressing that the file is supposed to end here. This was particular important, when we did reviewing on printed copies of programmes.
