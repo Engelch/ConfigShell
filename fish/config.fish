@@ -410,3 +410,5 @@ if status is-interactive # main code
 end
 
 # EOF
+
+thefuck --alias | source
