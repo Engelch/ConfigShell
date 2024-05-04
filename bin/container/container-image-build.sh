@@ -6,6 +6,10 @@
 # shellcheck disable=SC2154 # as variables are assigned in the library file
 
 # Changelog
+# 2.3
+# - set -u
+# - _appVersion set
+# - copying all dirs from .. if not test, build, vendor,
 # 2.2
 # - check that potentially existing Dockerfile is just an s-link to Containerfile
 # 2.1
@@ -91,9 +95,14 @@ function createBuildPackages() {
 
     [ -f ../versionFilePattern ] && local _versionPattern=../versionFilePattern
     [ -f ../versionFilePattern ] || local _versionPattern=''
-    [ "$DebugFlag" = "TRUE" ] && $DRY rsync -avL $_versionPattern ../*.go ../go.mod ../go.sum ../packages ./ContainerBuild/
-    [ "$DebugFlag" != "TRUE" ] && $DRY rsync -aL $_versionPattern ../*.go ../go.mod ../go.sum ../packages ./ContainerBuild/
-
+    [ "$DebugFlag" = "TRUE" ] && local -r rsyncFlags="-av --copy-links"
+    [ "$DebugFlag" != "TRUE" ] && local -r rsyncFlags="-a --copy-links"
+    $DRY rsync $rsyncFlags $_versionPattern ../*.go ../go.mod ../go.sum ./ContainerBuild/
+    for file in ../* ; do
+        [ -d "$file" ] && [ "$file" != ../Container ]  && [ "$file" !=  ../build ] && [ "$file" != ../test ] && \
+        echo $file && \
+        $DRY rsync $rsyncFlags "$file" ./ContainerBuild/
+    done
     # [ "$(grep -Fc \./packages ContainerBuild/src/go.mod)" -lt 1 ] && return # no references for local packages, not copying
 
     # # for all ./packages/xyz listed, copy them to ./ContainerBuild/packages
@@ -192,7 +201,7 @@ function parseCLI() {
             D)  err Debug enabled
                 debugSet
                 ;;
-            V)  err "$_appVersion"
+            V)  err "$appVersion"
                 exit 3
                 ;;
             a)  awsSupport="TRUE"
@@ -229,7 +238,9 @@ function exitIfNotInContainer() {
 function main() {
     exitIfBinariesNotFound pwd basename dirname version.sh readlink
     [ "$(uname)" = Darwin ]  && exitIfBinariesNotFound gtar
+    set -u
     declare -g app="$(basename $0)"
+    declare -gr appVersion='2.3.0'
     declare -g containerCmd=''
     declare -g containerFile=''
     declare -g containerName=''
