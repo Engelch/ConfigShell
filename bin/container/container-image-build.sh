@@ -99,7 +99,7 @@ function createBuildPackages() {
     [ "$DebugFlag" != "TRUE" ] && local -r rsyncFlags="-a --copy-links"
     $DRY rsync $rsyncFlags $_versionPattern ../*.go ../go.mod ../go.sum ./ContainerBuild/
     for file in ../* ; do
-        [ -d "$file" ] && [ "$file" != ../Container ]  && [ "$file" !=  ../build ] && [ "$file" != ../test ] && \
+        [ -d "$file" ] && [ "$file" != ../Container ]  && [ "$file" !=  ../build ] && [ "$file" != ../test ] && [ "$file" != ../Old ] && [ "$file" != ../old ] && [ "$file" != ../archive ] && [ "$file" != ../tmp ] && \
         echo $file && \
         $DRY rsync $rsyncFlags "$file" ./ContainerBuild/
     done
@@ -240,7 +240,7 @@ function main() {
     [ "$(uname)" = Darwin ]  && exitIfBinariesNotFound gtar
     set -u
     declare -g app="$(basename $0)"
-    declare -gr appVersion='2.3.0'
+    declare -gr appVersion='2.4.0'
     declare -g containerCmd=''
     declare -g containerFile=''
     declare -g containerName=''
