@@ -18,6 +18,7 @@ function setupAliases_Abbreviations
     debug in setupAliases_Abbreviations
     set -x GREP_OPTIONS "--color=auto"
     abbr -a l less
+    alias f=fuck
     alias j=jobs
     abbr -a ln-s 'ln -s'
     alias a=alias
@@ -407,8 +408,7 @@ if status is-interactive # main code
 
     optSourceFile ~/.config/fish/post.fish
     hadmRealUser
+    thefuck --alias | source
 end
 
 # EOF
-
-thefuck --alias | source
