@@ -90,7 +90,7 @@ function tempDir()                      { mktemp -d "${TMPDIR:-/tmp/}$_app.YYYYY
 
 export CONFIGSHELL_RC_VERSION="$(grep -v '^$' /opt/ConfigShell/Shell/version.txt | grep -v '^#' | xargs echo)" # avoid recursion, xargs to remove potential spaces
 debug CONFIGSHELL_RC_VERSION is $CONFIGSHELL_RC_VERSION
-[ ! -z $CONFIGSHELL_MMONRC_VERSION ] && [ $CONFIGSHELL_MMONRC_VERSION != $CONFIGSHELL_RC_VERSION ] && echo New CONFIGSHELL_RC_VERSION $CONFIGSHELL_RC_VERSION. 1>&2
+[ ! -z "${CONFIGSHELL_MMONRC_VERSION:-}" ] && [ $CONFIGSHELL_MMONRC_VERSION != $CONFIGSHELL_RC_VERSION ] && echo New CONFIGSHELL_RC_VERSION $CONFIGSHELL_RC_VERSION. 1>&2
 CONFIGSHELL_MMONRC_VERSION=$CONFIGSHELL_RC_VERSION
 
 # EOF

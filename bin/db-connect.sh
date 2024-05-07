@@ -1,1 +1,1 @@
-connectivity/db-connect.sh
+/opt/ConfigShell/bin/dbms/db-connect.sh
