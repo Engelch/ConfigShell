@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+
+declare -g -r _options='init|start|stop|delete|status|version|help'
+
 function err() {
   1>&2 echo "$@"
 }
@@ -42,6 +45,20 @@ function startContainer() {
   fi
 }
 
+function helpExit() {
+    err $(basename $0) ${_options}
+    err
+    err SUMMARY
+    err Script to create a local PSQL DB as a container with a persistent volume,
+    err
+    err "OPTIONAL EXTERNAL ENVIRONMENT VARIABLES:"
+    err "PSQL_CONTAINER_NAME:-psql0"
+    err "PSQL_CONTAINER_VOLUME:-psql0"
+    err "PSQL_IMAGE_NAME:-postgres"
+    err "PSQL_CONTAINER_ARCHITECURE:-\'--platform linux/arm64\'"
+    exit 2
+}
+
 #  EXIT 0
 #  EXIT 1
 #  EXIT 2
@@ -63,6 +80,9 @@ function main() {
   # environment variables to override the labels for the containes
   POSTGRESQL_CONTAINER_LABEL="${PSQL_CONTAINER_NAME:-psql0}"
   CONTAINER_VOLUME="${PSQL_CONTAINER_VOLUME:-psql0}" # set again for delete command
+  if [ "$1" = '-h' ]; then
+    helpExit
+  fi
   DRY=
   if [ "$1" = '-n' ]; then
     err DRY run mode
@@ -75,7 +95,6 @@ function main() {
   container.sh ps > /dev/null ; res=$?
   [ $res -ne 0 ] && errorExit 5 Container environment does not seem to be started or user is not in the required group.
 
-  local -r _options='init|start|stop|delete|status|version|help'
   case "$1" in
   init)
     shift
@@ -100,20 +119,10 @@ function main() {
     echo "$output" ; exit 0
     ;;
   help)
-    err $(basename $0) ${_options}
-    err
-    err SUMMARY
-    err Script to create a local PSQL DB as a container with a persistent volume,
-    err
-    err "OPTIONAL EXTERNAL ENVIRONMENT VARIABLES:"
-    err "PSQL_CONTAINER_NAME:-psql0"
-    err "PSQL_CONTAINER_VOLUME:-psql0"
-    err "PSQL_IMAGE_NAME:-postgres"
-    err "PSQL_CONTAINER_ARCHITECURE:-\'--platform linux/arm64\'"
-    exit 2
+    helpExit
     ;;
   version)
-    err 1.2.0
+    err 1.3.0
     exit 3
     ;;
   *)
