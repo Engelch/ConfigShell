@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -u
 
-declare -g -r _options='init|s|start|e|stop|delete|status|version|h|-h|help|--help|name=...|volume=...|arch=...|image=...'
+declare -g -r _options='init|s|start|e|stop|delete|status|version|h|-h|help|--help|name=...|volume=...|arch=...|image=...|port=...'
 
 # EXIT 10
 # EXIT 11
@@ -19,13 +19,14 @@ function startContainer() {
   source db-connect.pws
   [ -z "$localadm_USER" ] && errorExit 12 'ERROR_USAGE:cannot find localadm user'
   [ -z "$localadm_PW" ] && errorExit 13 'ERROR_USAGE:cannot find password for localadm'
+  PSQL_PORT="${PSQL_PORT:-$localadm_PORT}"
 
   if [ -n "$CONTAINER_VOLUME" ]; then
     $DRY container.sh volume create "$CONTAINER_VOLUME" && res=$?
     [ "$res" -ne 0 ] && errorExit 14 'ERROR_INTERNAL:creating the container volume'
-    $DRY container.sh run -d --name $POSTGRESQL_CONTAINER_LABEL ${PSQL_CONTAINER_ARCHITECTURE:-}  -p 5432:5432 --volume "$CONTAINER_VOLUME":"/var/lib/postgresql/data" -e POSTGRES_PASSWORD=$localadm_PW -e "POSTGRES_USER=$localadm_USER" -e "POSTGRES_DB=$localadm_DB" -d  "$@" "${PSQL_IMAGE_NAME:-postgres}"
+    $DRY container.sh run -d --name $POSTGRESQL_CONTAINER_LABEL ${PSQL_CONTAINER_ARCHITECTURE:-}  -p $PSQL_PORT:5432 --volume "$CONTAINER_VOLUME":"/var/lib/postgresql/data" -e POSTGRES_PASSWORD=$localadm_PW -e "POSTGRES_USER=$localadm_USER" -e "POSTGRES_DB=$localadm_DB" -d  "$@" "${PSQL_IMAGE_NAME:-postgres}"
   else # same without volume
-    $DRY container.sh run -d --name $POSTGRESQL_CONTAINER_LABEL ${PSQL_CONTAINER_ARCHITECTURE:-} -p 5432:5432 -e POSTGRES_PASSWORD=$localadm_PW -e "POSTGRES_USER=$localadm_USER" -e "POSTGRES_DB=$localadm_DB" -d "$@" "${PSQL_IMAGE_NAME:-postgres}"
+    $DRY container.sh run -d --name $POSTGRESQL_CONTAINER_LABEL ${PSQL_CONTAINER_ARCHITECTURE:-} -p $PSQL_PORT:5432 -e POSTGRES_PASSWORD=$localadm_PW -e "POSTGRES_USER=$localadm_USER" -e "POSTGRES_DB=$localadm_DB" -d "$@" "${PSQL_IMAGE_NAME:-postgres}"
   fi
 }
 
@@ -59,6 +60,7 @@ function helpExit() {
     err volume=psql0 default is psql0, or use "PSQL_CONTAINER_VOLUME=..."
     err image=postgres default is postgres "PSQL_IMAGE_NAME=..."
     err arch='linux/arm64' default is not set, or set it like: "PSQL_CONTAINER_ARCHITECTURE='--platform linux/arm64'"
+    err port=nnn default is defined from db-connect.pws, or use "PSQL_PORT=..." to overwrite it.
     exit 2
 }
 
@@ -84,8 +86,9 @@ function main() {
   exitIfBinariesNotFound container.sh
 
   # environment variables to override the labels for the containes
-  POSTGRESQL_CONTAINER_LABEL="${PSQL_CONTAINER_NAME:-psql0}"
-  CONTAINER_VOLUME="${PSQL_CONTAINER_VOLUME:-psql0}" # set again for delete command
+  export POSTGRESQL_CONTAINER_LABEL="${PSQL_CONTAINER_NAME:-psql0}"
+  export CONTAINER_VOLUME="${PSQL_CONTAINER_VOLUME:-psql0}" # set again for delete command
+  export PSQL_PORT=
 
   DRY=
   if [ "${1:-}" = '-n' ]; then
@@ -123,6 +126,11 @@ function main() {
       shift
       echo image:"$PSQL_IMAGE_NAME"
       ;;
+    port=*)
+      export PSQL_PORT="${1/port=/}"
+      shift
+      echo port:"$PSQL_PORT"
+      ;;
     i|in|ini|init)
       shift
       startContainer "$POSTGRESQL_CONTAINER_LABEL" "$CONTAINER_VOLUME" "$@"
@@ -155,7 +163,7 @@ function main() {
       helpExit  # exits
       ;;
     version)
-      err 1.4.0
+      err 1.5.0
       exit 3
       ;;
     *)
