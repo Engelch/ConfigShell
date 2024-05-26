@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+[ -z "$1" ] && 1>&2 echo branch is missing && exit 1
+
+git switch "$1" && git pull
+
+declare -gr gitroot="$(git rev-parse --show-toplevel)"
+
+# run git gee decrypt if files have a modified status
+[ -f "$gitroot/.git/gee" ] && echo && echo "git gee status:" && git gee s || git gee de

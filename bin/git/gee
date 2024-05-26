@@ -50,8 +50,10 @@
 # shellcheck disable=SC2155
 readonly _app=$(basename "${0}")
 readonly _appDir=$(dirname "$(readlink -f "${0}")")
-readonly _appVersion="3.2.0" # use semantic versioning # ALSO CHANGE THE PRECOMMIT FILE TO CONTAIN THE SAME VERSION NUMBER
+readonly _appVersion="3.3.0" # ALSO CHANGE THE PRECOMMIT FILE TO CONTAIN THE SAME VERSION NUMBER
 export DebugFlag=${DebugFlag:-FALSE}
+export VerboseFlag=''
+set -u
 
 #########################################################################################
 # SKELETON FUNCTIONS, considered R/O, v0.4.1 excerpt
@@ -103,12 +105,12 @@ function debug12() {
 
 function verbose() {
     # shellcheck disable=SC2048,SC2086
-    [ "$VerboseFlag" = TRUE ] && echo -n $*
+    [ "${VerboseFlag:-}" = TRUE ] && echo -n $*
     return 0
 }
 function verbosenl() {
     # shellcheck disable=SC2048,SC2086
-    [ "$VerboseFlag" = TRUE ] && echo $*
+    [ "${VerboseFlag:-}" = TRUE ] && echo $*
     return 0
 }
 function verboseSet() {
@@ -376,7 +378,7 @@ function exitIfNotInGitGeeRepo() {
 }
 
 function initDefaultVars() {
-    if [ -z "$geeInitDefaultVars" ]; then
+    if [ -z "${geeInitDefaultVars:-}" ]; then
         declare -gr gitroot="$(git rev-parse --show-toplevel)"
         declare -gr gitignore="$gitroot/.gitignore"
         declare -gr geePwFile="$(dirname "$gitroot")/$(basename "$gitroot").gee.pw"
@@ -391,7 +393,7 @@ function createPreCommit() {
     # single-quotes around ENDINIT prevents evaluation of vars inside here document
     cat >|.git/hooks/pre-commit <<'ENDINIT'
 #!/usr/bin/env bash
-# gee:version:3.2.0
+# gee:version:3.3.0
 # --- debug: Conditional debugging. All commands begin w/ debug.
 function debugSet() {
     DebugFlag=TRUE
@@ -580,7 +582,7 @@ function decryptMode() {
     exitIfNotInGitGeeRepo
     exitIfBinariesNotFound ansible-vault
     shift
-    if [ "$1" = -f ] || [ "$1" = --force ]; then
+    if [ "${1:-}" = -f ] || [ "${1:-}" = --force ]; then
         _force=TRUE
         shift
     else _force=; fi
@@ -658,14 +660,18 @@ function listMode() {
     cd "$gitroot" || return
     local found=0
     local file
-    find . -type f -name '*.gee' -print | while read -r file; do
+    output=$(find . -type f -name '*.gee' -print | while read -r file; do
         echo -n "$file"
         local _basefile="$(dirname "$file")/$(basename "$file" .gee)"
         [ -f "$_basefile" ] && found=1 && echo -n " ($_basefile existing"
-        [ "$_basefile" -nt "$file" ] && echo ', modified)' && continue
+        [ "$_basefile" -nt "$file" ] && echo ', modified)' && found=0 && continue
         [ "$found" -eq 1 ] && echo -n ')' && found=0
         echo
-    done
+    done)
+    echo "$output"
+    [ $(echo $"$output" | grep -cv '(') -ne 0 ] && return 1
+    [ $(echo $"$output" | grep -c 'modified') -ne 0 ] && return 2
+    return 0
 }
 
 #############################################################################################
@@ -716,7 +722,7 @@ function main() {
         ;;
     l | li | list | lst)
         checkGeeVersions
-        listMode "$@" # created dependency by gee s
+        listMode "$@" ; exit $? # created dependency by gee s
         ;;
     doc | doctor)
         checkGeeVersions
@@ -733,7 +739,8 @@ function main() {
         ;;
     s | status)
         checkGeeVersions
-        git gee l | grep -E --color ', modified\)$' # must be changed if the output format of l is changed
+        git gee l | grep -E --color ', modified\)$' ; res=$? # must be changed if the output format of l is changed
+        [ "$res" -eq 0 ] && exit 1 ; exit 0 # swap exit codes as if grep matches, we should return ne 0
         ;;
     ver | version)
         echo $_appVersion
