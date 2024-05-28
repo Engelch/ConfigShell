@@ -38,7 +38,7 @@ The basic ConfigShell can be used without the sub-modules.
 
 ## Security Notice
 
-ConfigShell only contains scripts and/or configuration files. No binaries are part of *ConfigShell*. This can be different for the optional git sub-modules *ConfigLinux* and *ConfigDarwin*. *ConfigShell* can be used without the further git sub-modules. The sub-modules only extend the functionality of *ConfigShell*; they are not required for the functionality of *ConfigShell*.
+ConfigShell contains only scripts and / or configuration files. There are no binaries included with ConfigShell. This may be different for the optional git submodules such as ConfigLinux and ConfigDarwin. ConfigShell can be used without the git submodules. The submodules only extend the functionality of ConfigShell; they are not required for the functionality of ConfigShell.
 
 ## Benefits of ConfigShell
 
