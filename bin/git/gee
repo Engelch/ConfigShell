@@ -245,9 +245,9 @@ function doctor() {
     # handle CLI options, dry mode implies verbose mode, -- finishes 
     _dryMode=
     while true; do
-        [ "$1"  = '-n' ] || [ "$1" = '--dry' ] && _dryMode=echo && 1>&2 echo DRY mode && verboseSet && shift && continue
-        [ "$1"  = '-v' ] || [ "$1" = '--verbose' ] && verboseSet && shift && continue
-        [ "$1" = '--' ] && shift && break   # break could be omitted, but so it is easier to read and more safe if the code will be changed.
+        [ "${1:-}"  = '-n' ] || [ "${1:-}" = '--dry' ] && _dryMode=echo && 1>&2 echo DRY mode && verboseSet && shift && continue
+        [ "${1:-}"  = '-v' ] || [ "${1:-}" = '--verbose' ] && verboseSet && shift && continue
+        [ "${1:-}" = '--' ] && shift && break   # break could be omitted, but so it is easier to read and more safe if the code will be changed.
         break
     done
     [ $# -gt 0 ]&& errorExit 90 "No argument supported"     # was thinking to allow us to specify sub-directory. But, how do we check that this arg specifies a *sub*-directory easily? 
@@ -514,7 +514,7 @@ function addMode() {
         [[ "$file" =~ .*.gee ]] && errorExit 42 "not adding .gee files"
         [ -f "$file.gee" ] && errorExit 43 "$file.gee already existing"
         local gitFile="$(git-root-relative-path "$file")"
-        if grep -q -E "$gitFile" "$gitignore"; then
+        if [ -f "$gitignore" ] && grep -q -E "$gitFile" "$gitignore"; then
             echo 1>&2 "WARNING: file $file already in .gitignore"
         else
             echo "/$gitFile" >>"$gitroot/.gitignore"
