@@ -50,7 +50,7 @@
 # shellcheck disable=SC2155
 readonly _app=$(basename "${0}")
 readonly _appDir=$(dirname "$(readlink -f "${0}")")
-readonly _appVersion="3.3.0" # ALSO CHANGE THE PRECOMMIT FILE TO CONTAIN THE SAME VERSION NUMBER
+readonly _appVersion="3.3.1" # ALSO CHANGE THE PRECOMMIT FILE TO CONTAIN THE SAME VERSION NUMBER
 export DebugFlag=${DebugFlag:-FALSE}
 export VerboseFlag=''
 set -u
@@ -310,7 +310,7 @@ function usage() {
     err8 todo force mode?
     err8 - encrypts the specificied files.
     err8 - No difference if the file is specified with .gee or without it.
-    err8 - -f force mode
+    err8 - -f force mode. Re-encrypt any file, regardless of when it was modified.
     err
     err4 $_app '( l[i[st]] | lst )'
     err8 - list files under git gee
@@ -393,7 +393,7 @@ function createPreCommit() {
     # single-quotes around ENDINIT prevents evaluation of vars inside here document
     cat >|.git/hooks/pre-commit <<'ENDINIT'
 #!/usr/bin/env bash
-# gee:version:3.3.0
+# gee:version:3.3.1
 # --- debug: Conditional debugging. All commands begin w/ debug.
 function debugSet() {
     DebugFlag=TRUE
@@ -535,7 +535,7 @@ function cleanMode() {
     initDefaultVars
     exitIfNotInGitGeeRepo
     shift
-    if [ "$1" = -f ] || [ "$1" = --force ]; then _force=TRUE; else _force=; fi
+    if [ "${1:-}" = -f ] || [ "${1:-}" = --force ]; then _force=TRUE; else _force=; fi
     cd "$gitroot" || return
     local basefile
     find . -name '*.gee' -type f -print | while read -r file; do
@@ -632,7 +632,7 @@ function encryptMode() {
     exitIfBinariesNotFound ansible-vault
     shift
     local file
-    if [ "$1" = -f ] || [ "$1" = --force ]; then
+    if [ "${1:-}" = -f ] || [ "${1:-}" = --force ]; then
         _force=TRUE
         shift
     else _force=; fi     # in force mode, encrypt file anyway if unencrypted version exists
