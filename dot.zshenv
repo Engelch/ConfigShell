@@ -172,6 +172,7 @@ export RSYNC_LINK='--copy-links'
 export VISUAL=vim
 export EDITOR=vim    # bsroot has no notion about VISUAL
 export BLOCKSIZE=1K
+export LC_ALL=C.UTF-8
 
-debug STOP dot.zshenv
+debug END dot.zshenv
 # EOF
