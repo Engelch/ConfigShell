@@ -24,6 +24,7 @@ function so()
 # --- debug: Conditional debugging. All commands begin w/ debug.
 
 function debugSet()             { DebugFlag=TRUE; return 0; }
+[ -f "$HOME/.zsh.debug" ] && debugSet
 function debugUnset()           { DebugFlag=; return 0; }
 function debugExecIfDebug()     { [ "$DebugFlag" = TRUE ] && $*; return 0; }
 function debug()                { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:'$* 1>&2 ; return 0; }
@@ -87,79 +88,69 @@ function loadSource() {
 
 # setupPath sets the path
 function setupPath() {
-    export PATHFILE="$HOME/.zsh.profile.path"
-    if [ ! -f "$PATHFILE" ] ; then
-        debug4 PATHFILE $PATHFILE not found, creating it...
-        # set up initial path
-        [ $UID = 0 ] && debug4 root PATH initialisation &&  PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin
-        [ $UID != 0 ] && debug4 normal user PATH init &&    PATH=./bin:/usr/local/bin:/sbin:/usr/sbin:/bin:/usr/bin
-        # add directories if existing for all platforms
-        for _POTENTIAL_DIR in \
-            $HOME/go/bin \
-            $HOME/Library/Android/sdk/platform-tools /usr/local/share/dotnet /usr/local/go/bin \
-            $HOME/bin $HOME/Bin $HOME/.dotnet/tools $HOME/.rvm/bin \
-            /usr/local/google-cloud-sdk/ $HOME/google-cloud-sdk/ $HOME/.pub-cache/bin /opt/flutter/bin \
-            $HOME/.linkerd2/bin $HOME/.local/bin $HOME/google-cloud-sdk/bin \
-            /opt/PublicConfigurations/bin $HOME/PublicConfigurations/bin $HOME/PublicConfigurations/bin_$(uname | tr [A-Z] [a-z])-$(uname -m)\
-            /usr/local/google-cloud-sdk/bin \
-            /opt/android-studio/bin
-        do
-            debug4 checking for dir $_POTENTIAL_DIR
-            [ -d "$_POTENTIAL_DIR/." ] && debug8 adding path element $_POTENTIAL_DIR && PATH="$_POTENTIAL_DIR":$PATH
-        done
-        # only check for WSL
-        [ -d /mnt/c/ ] && for _POTENTIAL_DIR in \
-            /mnt/c/Windows/System32 /mnt/c/Windows /mnt/c/Windows/System32/wbem \
-            /mnt/c/Windows/System32/WindowsPowerShell/v1.0 /mnt/c/Users/$USER/AppData/Local/Microsoft/WindowsApps \
-            /mnt/c/go/bin /mnt/c/Program\ Files/Microsoft\ VS\ Code/bin \
-            /mnt/c/Program\ Files/dotnet/ /mnt/c/Program\ Files/Haskell\ Platform/actual/bin \
-            /mnt/c/Program\ Files/Haskell\ Platform/actual/winghci $HOME/$USER/AppData/Roaming/local/bin \
-            /mnt/c/Program\ Files/Docker/Docker/resources/bin /mnt/c/Program\ Files/7-Zip \
-            /mnt/c/Program\ Files/Affinity/Designer /mnt/c/Program\ Files/Affinity/Photo \
-            /mnt/c/Program\ Files/MiKTeX\ 2.9/miktex/bin/x64 /mnt/c/Program\ Files/PDFCreator /mnt/c/Program\ Files/PDFsam\ Basic \
-            /mnt/c/Program\ Files/VueScan /mnt/c/Program\ Files/VeraCrypt /mnt/c/Program\ Files/Wireshark \
-            /mnt/c/Program\ Files/draw.io /mnt/c/Program\ Files/Mozilla\ Firefox /snap/bin/
-        do
-            debug4 checking for dir $_POTENTIAL_DIR
-            [ -d "$_POTENTIAL_DIR/." ] && debug8 adding path element $_POTENTIAL_DIR && PATH="$_POTENTIAL_DIR":$PATH
-        done
+    debug4 START setupPath
+    [ $UID = 0 ] && debug4 root PATH initialisation &&  PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin
+    [ $UID != 0 ] && debug4 normal user PATH init &&    PATH=./bin:/usr/local/bin:/sbin:/usr/sbin:/bin:/usr/bin
+    # add directories if existing for all platforms
 
-        # OS-specific paths
-        if [ -z $NO_OS_Specifics ] ; then 
-            if [ -f "$PROFILES_CONFIG_DIR/Zsh/zsh.path.$(uname).sh" ] ; then
-                debug8 OS is $(uname)
-                source "$PROFILES_CONFIG_DIR/Zsh/zsh.path.$(uname).sh"
-            else
-                err4 No OS-specific path file "$PROFILES_CONFIG_DIR/Zsh/zsh.path.$(uname).sh" found
-            fi
-        else
-            debug4 NO_OS_Specifics was set
-        fi    
+    # 1
+    debug8 "PREPENDING global PATH ENTRIES ........"
+    [ -r "$PROFILES_CONFIG_DIR/Shell/path.prepend.txt" ] && \
+        while IFS= read -r line ; do
+            line=$(echo "$line" | sed -e "s,^~,$HOME," | sed -e "s,^\$HOME,$HOME," | xargs) # xargs for trimming outer spaces
+            if [ -d "$line"  ] ; then debug12 "ok found path $line ::prepending" ; PATH="$line:$PATH"
+            else debug12 "NOT ok path $line" ; fi
+        done < "$PROFILES_CONFIG_DIR/Shell/path.prepend.txt"
 
-        [ -z $NO_LaTeX ] && source $PROFILES_CONFIG_DIR/Zsh/zsh.path.latex.sh 
+    # 2
+    debug8 "PREPENDING os-specific PATH ENTRIES ........"
+    [ -r "$PROFILES_CONFIG_DIR/Shell/path.$(uname).prepend.txt" ] && \
+        while IFS= read -r line &>/dev/null; do
+            line=$(echo "$line" | sed -e "s,^~,$HOME," | sed -e "s,^\$HOME,$HOME," | xargs)
+            if [ -d "$line" ] ; then debug12 "ok found path $line ::prepending" ; PATH="$line:$PATH"
+            else debug12 "NOT ok path $line" ; fi
+        done < "$PROFILES_CONFIG_DIR/Shell/path.$(uname).prepend.txt"
 
-        # go sdk setup, NO_GoSDK might require a second load as loadSource pre is not executed before 
-        if [ -z $NO_GoSDK -a -d $HOME/sdk ] ; then
-            local -r _go=$(/bin/ls -1 $HOME/sdk/ | tail -n 1 | sed 's,/$,,')
-            PATH=$HOME/sdk/$_go/bin:$PATH
-            export GOROOT=$HOME/sdk/$_go/
-            debug4  Setting PATH for local go environment and GOROOT to $GOROOT
-        fi
+  # 3
+    debug8 "PREPENDING architecture-specific PATH ENTRIES ........"
+    [ -r "$PROFILES_CONFIG_DIR/Shell/path.$(uname).$(uname -m).prepend.txt" ] && \
+        while IFS= read -r line &>/dev/null; do
+            line=$(echo "$line" | sed -e "s,^~,$HOME," | sed -e "s,^\$HOME,$HOME," | xargs)
+            if [ -d "$line" ] ; then debug12 "ok found path $line ::prepending" ; PATH="$line:$PATH"
+            else debug12 "NOT ok path $line" ; fi
+        done < "$PROFILES_CONFIG_DIR/Shell/path.$(uname).$(uname -m).prepend.txt"
 
-        #### PATH should not be touched after this _line anymore, here begins the caching
-        debug4 Writing PATHFILE $PATHFILE ...
-        echo "PATH=\"$PATH\"" > "$PATHFILE"
-    else
-        debug4 .. PATHFILE $PATHFILE found, sourcing cache ...
-        source "$PATHFILE"
-        debug8 PATH is
-        debug8 $PATH
-    fi
-    unset _POTENTIAL_DIR _os  _file _line _latex _jdk
+    # 4
+    debug8 "APPENDING global PATH ENTRIES ........"
+    [ -r "$PROFILES_CONFIG_DIR/Shell/path.append.txt" ] && \
+        while IFS= read -r line; do
+            line=$(echo "$line" | sed -e "s,^~,$HOME," | sed -e "s,^\$HOME,$HOME," | xargs)
+            if [ -d "$line" ] ; then debug12 "ok found path $line ::appending" ; PATH="$PATH:$line"
+            else debug12 "NOT ok path $line" ; fi
+        done < "$PROFILES_CONFIG_DIR/Shell/path.append.txt"
+
+    # 5
+    debug8 "APPENDING os-specific PATH ENTRIES ........"
+    [ -r "$PROFILES_CONFIG_DIR/Shell/path.$(uname).append.txt" ] && \
+        while IFS= read -r line; do
+            line=$(echo "$line" | sed -e "s,^~,$HOME," | sed -e "s,^\$HOME,$HOME," | xargs)
+            if [ -d "$line" ] ; then debug12 "ok found path $line ::appending" ; PATH="$PATH:$line" ;
+            else debug12 "NOT ok path $line" ; fi
+        done < "$PROFILES_CONFIG_DIR/Shell/path.$(uname).append.txt"
+
+    # 6
+    debug8 "APPENDING architecture-specific PATH ENTRIES ........"
+    [ -r "$PROFILES_CONFIG_DIR/Shell/path.$(uname).$(uname -m).append.txt" ] && \
+        while IFS= read -r line; do
+            line=$(echo "$line" | sed -e "s,^~,$HOME," | sed -e "s,^\$HOME,$HOME," | xargs)
+            if [ -d "$line" ] ; then debug12 "ok found path $line ::apppending" ; PATH="$PATH:$line"
+            else debug12 "NOT ok path $line" ; fi
+        done < "$PROFILES_CONFIG_DIR/Shell/path.$(uname).$(uname -m).append.txt"
+    debug4 END setupPath
 }
 
 loadSource env
-[ -z $NO_setupPath ] && debug4 setupPath... && setupPath
+[ -z $NO_setupPath ] && setupPath
 
 export ZSH_DISABLE_COMPFIX=true
 export LESS='-iR'    # -i := searches are case insensitive; -R := Like -r, but only ANSI "color" escape sequences are output in "raw" form. The default is to display control characters using the caret notation.
@@ -170,9 +161,9 @@ export RSYNC_SLINK_FLAGS="$RSYNCFLAGS --copy-links" # copy s-links as files
 export RSYNC_LINK='--copy-links'
 
 export VISUAL=vim
-export EDITOR=vim    # bsroot has no notion about VISUAL
+export EDITOR="$VISUAL"    # bsroot has no notion about VISUAL
 export BLOCKSIZE=1K
-export LC_ALL=C.UTF-8
+export LC_ALL=en_US.UTF-8       # for ansible-vault which is required for git gee
 
 debug END dot.zshenv
 # EOF
