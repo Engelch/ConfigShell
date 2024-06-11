@@ -379,6 +379,7 @@ function setupExportVars
     end
     set -g _current_CONFIGSHELL_RC_VERSION "$CONFIGSHELL_RC_VERSION"
     set -g -x CDPATH "$HOME"
+    export LC_ALL=C.UTF-8 # required for ansible-vault -> git gee
 end
 
 if status is-interactive # main code
