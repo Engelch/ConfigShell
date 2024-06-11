@@ -1,8 +1,5 @@
 
-# echo in zshenv
-
-# fix for docker
-[ -z "$SHELL" ] && echo Setting SHELL... && export SHELL=/bin/zsh
+[ -z "$SHELL" ] && echo Setting SHELL... && export SHELL=/bin/zsh # fix for docker
 
 # setopt noglob   # getting no error if a wildcard cannot be extended into strings
 setopt ignoreeof                             # prevent ^d logout
