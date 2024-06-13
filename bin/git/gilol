@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+# git log long format
+#
+git log --branches --remotes --tags --graph --decorate "$@"
