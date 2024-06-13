@@ -20,7 +20,7 @@ fuunction interactiveShell() {
       # DISABLE_LS_COLORS="true"      # Uncomment the following line to disable colors in ls.
       # DISABLE_AUTO_TITLE="true"      # Uncomment the following line to disable auto-setting terminal title.
 
-      ENABLE_CORRECTION="true"      # Uncomment the following line to enable command auto-correction.
+      ENABLE_CORRECTION="false"      # Uncomment the following line to enable command auto-correction.
 
       # Uncomment the following line to display red dots whilst waiting for completion.
       # You can also set it to another string to have that shown instead of the default red dots.
@@ -48,6 +48,51 @@ fuunction interactiveShell() {
    fi
 }
 
+function loadAliases() {
+   alias .2='cd ../..'
+   alias .3='cd ../../..'
+   alias .4='cd ../../../..'
+   alias .5='cd ../../../../..'
+
+   alias a=alias
+   alias af='alias | ei'
+   alias brmd='[ -f .DS_Store ] &&  /bin/rm -f .DS_Store ; cd .. ; rmdir "$OLDPWD"'
+   alias cd..='cd ..'
+   alias cp='cp -i'
+   # X11 commands
+   alias disp0='export DISPLAY=:0'
+   alias disp1='export DISPLAY=:1'
+   alias e='grep -E'
+   alias ei='grep -iE'
+   alias eir='grep -iER'
+   alias enf='env | grep -Ei'
+   alias er='grep -ER'
+   alias f=fuck
+   alias fin='find . -name'
+   alias fini='find . -iname'
+   alias h=history
+   alias hf='history | grep -Ei'
+   alias j=jobs
+   alias k=$KUBECTL
+   alias k8=$KUBECTL
+   alias k8s=$KUBECTL
+   alias l=less
+   alias 'ln-s'='ln -s'
+   alias mcd=mkcd
+   function mkcd(){ mkdir -p "$1" && cd "$1"; }
+   alias mv='mv -i'
+   alias o=open
+   alias po=popd
+   alias pu=pushd
+   alias rm='rm -i'
+   alias rm~=rmbak
+   alias wh=which
+}
+
+function rl() {
+   source /opt/ConfigShell/dot.zshenv
+   source /opt/ConfigShell/dot.zshrc
+}
 
 function main() {
    local files
@@ -85,6 +130,7 @@ function main() {
             powertheme=/opt/homebrew/opt/powerlevel9k/powerlevel9k.zsh-theme
             [ -f "$powertheme" ] && source "$powertheme"
 
+            loadAliases
             [ -z "$NO_loadPost" ] && loadSource post
             ;;
         *) #echo "This is a script";;
