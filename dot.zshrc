@@ -42,7 +42,7 @@ fuunction interactiveShell() {
       # Which plugins would you like to load?   Standard plugins can be found in $ZSH/plugins/
       # Custom plugins may be added to $ZSH_CUSTOM/plugins/  Example format: plugins=(rails git textmate ruby lighthouse)
       # Add wisely, as too many plugins slow down shell startup.
-      plugins=(rails git ruby)
+      plugins=(z) # ruby rails git
 
       source $ZSH/oh-my-zsh.sh
    fi
@@ -70,6 +70,7 @@ function loadAliases() {
    alias f=fuck
    alias fin='find . -name'
    alias fini='find . -iname'
+   alias g=git
    alias h=history
    alias hf='history | grep -Ei'
    alias j=jobs
@@ -87,7 +88,13 @@ function loadAliases() {
    alias rm='rm -i'
    alias rm~=rmbak
    alias wh=which
+   # suffix aliases
+   alias -s c="$VISUAL"
+   alias -s rb="$VISUAL"
+   alias -s php="$VISUAL"
+   alias -s go="$VISUAL"
 }
+
 
 function rl() {
    source /opt/ConfigShell/dot.zshenv
