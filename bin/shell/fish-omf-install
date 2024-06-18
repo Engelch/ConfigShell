@@ -10,6 +10,7 @@
 [ -e "$HOME/.local/share/omf" ] && [ "$1" != '-f' ] && echo previous omf installation found, exiting && exit 1 
 echo installing omf...
 curl https://raw.githubusercontent.com/oh-my-fish/oh-my-fish/master/bin/install | fish
+reload
 echo installing bobthefish
 omf install bobthefish
 echo installing bang-bang
