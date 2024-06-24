@@ -139,6 +139,12 @@ function main() {
 
             loadAliases
             [ -z "$NO_loadPost" ] && loadSource post
+            for file in $HOME/.sh.d/*.sh(N) $HOME/.zshrc.d/*.sh(N) ; do
+              [ -f "$file" ] && zsh "$file"
+            done
+            for file in $HOME/.zshrc.d/*.rc(N) ; do
+              [ -f "$file" ] && source "$file"
+            done
             ;;
         *) #echo "This is a script";;
             ;;

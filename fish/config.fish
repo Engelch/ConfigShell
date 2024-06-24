@@ -182,7 +182,9 @@ end
 
 function setupPath
     debug "in setupPath"
-    set -g -x UID (id -u)
+    [ -f /bin/id ] && set -g -x UID (/bin/id -u)
+    [ -f /usr/bin/id ] && set -g -x UID (/usr/bin/id -u)
+    [ -f /bin/id ] ;or  [ -f /usr/bin/id ] ;or echo "WARNING: id not found, function setupPath"
     if test "$UID" -eq 0
         debug "  UID is 0, root path setup"
         set fish_user_paths /bin /usr/bin/ /sbin /usr/sbin  # no /usr/local,... for root
@@ -386,7 +388,7 @@ if status is-interactive # main code
     debug "main - is-interactive case"
     optSourceFile ~/.config/fish/pre.fish
 
-    for file in $HOME/.config/fish/conf.d/*.sh $HOME/.bashrc.d/*.sh
+    for file in $HOME/.config/fish/conf.d/*.sh $HOME/.sh.d/*.sh
         debug "  executing $file"
         command -q bash ; and bash $file
     end
@@ -394,7 +396,7 @@ if status is-interactive # main code
         debug "  executing $file"
         fish $file
     end
-    for file in $HOME/.fishrc.d/*.fishrc
+    for file in $HOME/.fishrc.d/*.fishrc $HOME/.fishrc.d/*.rc
         debug "  sourcing $file"
         source $file
     end

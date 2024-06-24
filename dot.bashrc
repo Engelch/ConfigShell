@@ -265,6 +265,11 @@ function main() {
             [ -r "$file" ] && debug4 executing "$file" && bash "$file"
             [ -r "$file" ] || err could not read "$file"
          done
+         for file in $HOME/.sh.d/*.sh ; do
+            [ "$file" = "$HOME/.sh.d/"'*.sh' ] && continue # in case that no file is found
+            [ -r "$file" ] && debug4 executing "$file" && bash "$file"
+            [ -r "$file" ] || err could not read "$file"
+         done
          ;;
       *) #echo "This is a script";;
          debug non-interactive shell
