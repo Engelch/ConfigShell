@@ -392,7 +392,7 @@ if status is-interactive # main code
         debug "  executing $file"
         command -q bash ; and bash $file
     end
-    for file in $HOME/.fishrc.d/*.fish
+    for file in $HOME/.fishrc.d/*.fish $HOME/.fishrc.d/*.sh
         debug "  executing $file"
         fish $file
     end
