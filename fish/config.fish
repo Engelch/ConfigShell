@@ -31,16 +31,7 @@ function setupAliases_Abbreviations
 
     # ls aliases, all others as scripts in /opt/ConfigShell/bin
     set -g -x LS_COLOUR '--color'
-<<<<<<< Updated upstream
-    if [ (uname) = "Darwin" ]
-=======
-    which eza &> /dev/null ;and alias ls "eza -lO"
-    which eza &> /dev/null ;or  if [ (uname) = "Darwin" ]
->>>>>>> Stashed changes
-        alias ls "gls -hCF --group-directories-first \$LS_COLOUR"
-    else
-        alias ls "/bin/ls -hCF --group-directories-first \$LS_COLOUR"
-    end
+    which eza &> /dev/null ;and { alias ls "eza -O" ; alias ls "/bin/ls -hCF --group-directories-first \$LS_COLOUR" } 
     alias ls-bw "set -g -x LS_COLOUR '--color=none'"
     functions -e la # delete default definition as fish/3.6.1/share/fish/functions/la.fish
 
