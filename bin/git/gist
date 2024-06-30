@@ -7,3 +7,4 @@ git rev-parse --show-toplevel &>/dev/null || exit "$res"
 declare -r gitroot="$(git rev-parse --show-toplevel)"
 
 [ -f "$gitroot/.git/gee" ] && echo && echo "git gee status:" && git gee s
+exit 0
