@@ -84,6 +84,7 @@ function loadAliases() {
    alias mv='mv -i'
    alias o=open
    alias po=popd
+   alias proc='ps -ef | grep -Ei'
    alias pu=pushd
    alias rm='rm -i'
    alias rm~=rmbak
