@@ -179,8 +179,11 @@ function main() {
     [ -f ~/.gitignore ] && echo "  git: Found existing ~/.gitignore, moving it"  && mv "$HOME/.gitignore" "$HOME/.gitignore.$(date +%F_%T)"
     [ -f /opt/ConfigShell/gitignore ] && cp /opt/ConfigShell/gitignore "$HOME/.gitignore"
     [ -f /opt/ConfigShell/gitignore ] || echo "  ERROR:/opt/ConfigShell/gitignore not found" > /dev/stderr
+    # gitconfig will be managed by install-ssh from the ssh-client-base-config repository
     echo "  git: defining global excludesfile"
     git config --global core.excludesfile "$HOME/.gitignore"
+
+    mkdir -p ~/.sh.d    # add common shell directory for *.sh commands to be run as a sub-shell
 
     echo Creating vim directories ' ~/.vim/backup ~/.vim/swap ~/.vim/undo ~/.vim/autoload ~/.vim/plugged'
     mkdir -p ~/.vim/backup ~/.vim/swap ~/.vim/undo ~/.vim/autoload ~/.vim/plugged
