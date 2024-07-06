@@ -7,6 +7,9 @@ April 2024
 - [Welcome to ConfigShell](#welcome-to-configshell)
   - [Contents](#contents)
   - [About](#about)
+  - [Security Notice](#security-notice)
+  - [License](#license)
+  - [Modular, Optional Extensions](#modular-optional-extensions)
   - [Benefits of ConfigShell](#benefits-of-configshell)
     - [ConfigLinux](#configlinux)
     - [ConfigDarwin](#configdarwin)
@@ -23,32 +26,48 @@ April 2024
 
 ## About
 
-Welcome to our collection named *ConfigShell*. *ConfigShell* offers you scripts and helper routines that were created over the last 40 years. The first routines started still on SunOS and Ultrix. Some of you might still remember. The scripts are supposed to run under Linux, OSX, *BSD, and other UNIX variants. These days, the scripts are only tested with Linux and OSX.
+Welcome to *ConfigShell*. *ConfigShell* offers you scripts and helper routines that were created over the last 40 years. 
+The first bits were started still on SunOS and Ultrix. Some of you might still remember.
+The scripts are supposed to run under Linux, OSX, Free-, Open-, and NetBSD, and other UNIX variants.
+These days, the scripts are only tested with Linux and OSX.
+
+## Security Notice
+
+ConfigShell is script-only, i.e. it contains only scripts and / or configuration files. There are no binaries included in the  ConfigShell repository. So, you shall be able to see what every bit does.
+
+This is different for the optional git submodules such as ConfigLinux and ConfigDarwin. ConfigShell can be used without the git submodules.
+
+## License
+
+This collection is under the MIT license.
+
+## Modular, Optional Extensions
 
 ![ConfigShell Modules](img/ConfigShell_modules.drawio.png)
 
-Overall, all *ConfigShell* elements are under the MIT license. Furthermore, it splits into 3 parts:
+Overall, all *ConfigShell* elements are under the MIT license. Furthermore, it splits into multiple parts. These
+parts are realised using git submodules:
 
 1. The basic *ConfigShell* is appropriate for all UNIX™-like operating systems
 2. A special git sub-module for Linux-specifics called *ConfigLinux*
 3. A special git sub-module for OSX-specifics called *ConfigDarwin*
-4. A git sub-module called *PowerlineFonts* 
+4. A git sub-module called *PowerlineFonts*
 
-The basic ConfigShell can be used without the sub-modules.
-
-## Security Notice
-
-ConfigShell contains only scripts and / or configuration files. There are no binaries included with ConfigShell. This may be different for the optional git submodules such as ConfigLinux and ConfigDarwin. ConfigShell can be used without the git submodules. The submodules only extend the functionality of ConfigShell; they are not required for the functionality of ConfigShell.
+Again, the basic ConfigShell can be used without the sub-modules.
 
 ## Benefits of ConfigShell
 
 *ConfigShell* offers
 
 1. Shell enhancements
-   1. Nice shell defaults for bash
-The same kind of shell default for the fish shell
-   3. Shell shortcut commands
-2. Documentation and version control support
+   1. Nice shell defaults for 3 shells
+      1. bash
+      2. fish
+      3. zsh
+2. Shell shortcut commands
+   1. They help to reduce the amount of typing :-)
+   2. They speed up processes by automatically applying every day defaults.
+3. Documentation and version control support
    1. LaTeX, Markdown, and Marp scripts. You can check the `/opt/ConfigShell/doc` directory. It contains one Markdown file. It is formatted using classical 
       Markdown and LaTeX. Please, watch the difference. Both PDF files are created using a Makefile. 
       
@@ -59,12 +78,12 @@ The same kind of shell default for the fish shell
       git reset --hard
       ```
    2. git abbreviations
-3. Development-specific support
+4. Development-specific support
    1. Utilities for go programming
    2. Script for creating container images
    3. Kubernetes (K8s) and EKS (AWS K8s) utilities
    4. Versioning support (based on bumpversion)
-4. Connectivity and generic shell scripts
+5. Connectivity and generic shell scripts
    1. tmux scripts
    2. route53 (AWS DNS) utility
    3. Additional helper routines like `eir`, `rmbak`, `8601`, `ll`, `lla`, `llad`, and many others
