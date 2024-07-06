@@ -11,6 +11,9 @@ April 2024
   - [License](#license)
   - [Modular, Optional Extensions](#modular-optional-extensions)
   - [Benefits of ConfigShell](#benefits-of-configshell)
+    - [Daily Use Support](#daily-use-support)
+    - [Documentation Support](#documentation-support)
+    - [Development Support](#development-support)
     - [ConfigLinux](#configlinux)
     - [ConfigDarwin](#configdarwin)
   - [Installation of ConfigShell](#installation-of-configshell)
@@ -27,13 +30,19 @@ April 2024
 ## About
 
 Welcome to *ConfigShell*. *ConfigShell* offers you scripts and helper routines that were created over the last 40 years. 
-The first bits were started still on SunOS and Ultrix. Some of you might still remember.
-The scripts are supposed to run under Linux, OSX, Free-, Open-, and NetBSD, and other UNIX variants.
-These days, the scripts are only tested with Linux and OSX.
+The first bits were started still on SunOS, Ultrix, Xenix, and Microport UNIX. Some of you might still remember...
+
+The scripts are supposed to run under Linux, OSX, Free-, Open-, and NetBSD, and other UNIX variants. These days, the scripts are only tested with Linux and OSX.
+
+ConfigShell supports 3 major areas denoted here.
+
+![3 major modules](img/configShellModules.drawio.png)
 
 ## Security Notice
 
-ConfigShell is script-only, i.e. it contains only scripts and / or configuration files. There are no binaries included in the  ConfigShell repository. So, you shall be able to see what every bit does.
+**ConfigShell is script-only.**
+
+I.e., it contains only scripts and / or configuration files. There are no binaries included in the  ConfigShell repository. So, you shall be able to see what every bit does.
 
 This is different for the optional git submodules such as ConfigLinux and ConfigDarwin. ConfigShell can be used without the git submodules.
 
@@ -43,7 +52,7 @@ This collection is under the MIT license.
 
 ## Modular, Optional Extensions
 
-![ConfigShell Modules](img/ConfigShell_modules.drawio.png)
+![ConfigShell Modules](img/configShell-gitSubmodules.drawio.png)
 
 Overall, all *ConfigShell* elements are under the MIT license. Furthermore, it splits into multiple parts. These
 parts are realised using git submodules:
@@ -57,17 +66,20 @@ Again, the basic ConfigShell can be used without the sub-modules.
 
 ## Benefits of ConfigShell
 
-*ConfigShell* offers
+### Daily Use Support
 
-1. Shell enhancements
-   1. Nice shell defaults for 3 shells
-      1. bash
-      2. fish
-      3. zsh
-2. Shell shortcut commands
-   1. They help to reduce the amount of typing :-)
-   2. They speed up processes by automatically applying every day defaults.
-3. Documentation and version control support
+*ConfigShell* offers **Daily Use** shell support for the shells:
+
+  1. bash (https://www.gnu.org/software/bash/) [GPLv3 license](https://www.gnu.org/licenses/gpl-3.0.html)
+  1. fish (https://fishshell.com/) [GPLv2 based](https://fishshell.com/docs/current/license.html)
+  2. zsh (https://zsh.org) [MIT license, parts with GPL](https://github.com/zsh-users/zsh/blob/master/LICENCE)
+
+### Documentation Support
+
+### Development Support
+
+
+1. Documentation and version control support
    1. LaTeX, Markdown, and Marp scripts. You can check the `/opt/ConfigShell/doc` directory. It contains one Markdown file. It is formatted using classical 
       Markdown and LaTeX. Please, watch the difference. Both PDF files are created using a Makefile. 
       
@@ -78,12 +90,12 @@ Again, the basic ConfigShell can be used without the sub-modules.
       git reset --hard
       ```
    2. git abbreviations
-4. Development-specific support
+3. Development-specific support
    1. Utilities for go programming
    2. Script for creating container images
    3. Kubernetes (K8s) and EKS (AWS K8s) utilities
    4. Versioning support (based on bumpversion)
-5. Connectivity and generic shell scripts
+4. Connectivity and generic shell scripts
    1. tmux scripts
    2. route53 (AWS DNS) utility
    3. Additional helper routines like `eir`, `rmbak`, `8601`, `ll`, `lla`, `llad`, and many others
