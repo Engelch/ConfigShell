@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+if which eza &>/dev/null ; then
+    eza -lrt mod "$@"
+else
+    ls -ltr "$@"
+fi
