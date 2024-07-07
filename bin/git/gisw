@@ -1,10 +1,28 @@
 #!/usr/bin/env bash
 
+# Synopsis
+#   gisw <<branch>> | -V | --version
+#
+# Description
+# 1. switch to the specified git branch
+# 2. pull to the latest commit of the specified branch
+# 3. check if the repository uses git gee (ConfigShell encryption addition for git),
+#    If so, show the current status and run git decrypt if required.
+
 [ -z "$1" ] && 1>&2 echo branch is missing && exit 1
+
+if [ "$1" = -V ] || [ "$1" = '--version' ] ; then
+    cd "$PROFILES_CONFIG_DIR/bin/git" || { 1>&2 echo ERROR, unusual ConfigShell installation ; exit 10 ; }
+    [ ! -f ./version.txt ] && { 1>&2 echo ERROR, version of git tools cannot be determined. ; exit 11 ; }
+    version.sh
+    exit 0
+fi
 
 git switch "$1" && git pull
 
 declare -gr gitroot="$(git rev-parse --show-toplevel)"
 
-# run git gee decrypt if files have a modified status
+# run git gee decrypt if git gee is used and some file has the status modified.
 [ -f "$gitroot/.git/gee" ] && echo && echo "git gee status:" && git gee s || git gee de
+
+# EOF
