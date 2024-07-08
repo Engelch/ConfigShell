@@ -28,4 +28,4 @@ $dry git pull --all --tags $shallow --autostash "$@"
 
 # git fetch --tags $*
 
-# EOF   - ald fashioned comment, but expressing that the file is supposed to end here. This was particular important, when we did reviewing on printed copies of programmes.
+# EOF   - old fashioned comment, but expressing that the file is supposed to end here. This was particular important, when we did reviewing on printed copies of programmes.
