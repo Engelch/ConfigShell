@@ -28,10 +28,17 @@ export -f checkGitDir       # export function to sub-processes
 # alternative, POSIX compliant
 # find . | while read file; do dosomething "$file"; done
 
-[ "$1" = "-V" ] && echo "1.2.0" && exit 1
+if [ "$1" = -V ] || [ "$1" = '--version' ] ; then
+    cd "$PROFILES_CONFIG_DIR/bin/git" || { 1>&2 echo ERROR, unusual ConfigShell installation ; exit 10 ; }
+    [ ! -f ./version.txt ] && { 1>&2 echo ERROR, version of git tools cannot be determined. ; exit 11 ; }
+    version.sh
+    exit 0
+fi
 
 [ "$1" = "-h" ] || [ "$1" = "--help" ] && usage && exit 2
 
 
 [ -n "$1" ] && find "$@" -name .git -execdir bash -c 'checkGitDir' \;
 [ -z "$1" ] && find . /opt/ConfigShell/ -name .git -execdir bash -c 'checkGitDir' \;
+
+# EOF

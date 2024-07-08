@@ -1,7 +1,16 @@
 #!/usr/bin/env bash
 
+if [ "$1" = -V ] || [ "$1" = '--version' ] ; then
+    cd "$PROFILES_CONFIG_DIR/bin/git" || { 1>&2 echo ERROR, unusual ConfigShell installation ; exit 10 ; }
+    [ ! -f ./version.txt ] && { 1>&2 echo ERROR, version of git tools cannot be determined. ; exit 11 ; }
+    version.sh
+    exit 0
+fi
+
 currentBranch=$(git branch | grep '^*' | cut -d ' ' -f2)
 echo git push $(git remote) +HEAD^:"$currentBranch"
 echo The local commits will be untouched. Press ENTER to execute or ^C to cancel.
 read
 git push $(git remote) +HEAD^:"$currentBranch"
+
+# EOF

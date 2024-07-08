@@ -70,13 +70,11 @@ function usage()
 
 # EXIT 1    usage
 function parseCLI() {
-    while getopts "DVh" options; do         # Loop: Get the next option;
+    while getopts "Dh" options; do         # Loop: Get the next option;
         case "${options}" in                    # TIMES=${OPTARG}
             D)  err Debug enabled ; debugSet
                 ;;
             h)  usage ; exit 1
-                ;;
-            V) echo $appVersion ; exit 1
                 ;;
             *)
                 err Help with "$app" -h
@@ -89,6 +87,13 @@ function parseCLI() {
 function main() {
     set -u
     exitIfBinariesNotFound pwd basename dirname mktemp realpath
+
+    if [ "$1" = -V ] || [ "$1" = '--version' ] ; then
+        cd "$PROFILES_CONFIG_DIR/bin/git" || { 1>&2 echo ERROR, unusual ConfigShell installation ; exit 10 ; }
+        [ ! -f ./version.txt ] && { 1>&2 echo ERROR, version of git tools cannot be determined. ; exit 11 ; }
+        version.sh
+        exit 0
+    fi
 
     declare -g -r app=$(basename "$0")
     declare -g -r appDir=$(dirname "$0")

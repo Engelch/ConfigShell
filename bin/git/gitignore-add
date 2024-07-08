@@ -82,10 +82,10 @@ function parseCLI() {
                 ;;
             h)  usage ; exit 1
                 ;;
-             n) DRY='echo'
+            n)  DRY='echo'
                 debug dry mode selected
                 ;;
-            r) rawFilename=TRUE
+            r)  rawFilename=TRUE
                 ;;
             *)
                 err Help with "$app" -h
@@ -97,6 +97,13 @@ function parseCLI() {
 
 function main() {
     exitIfBinariesNotFound pwd basename dirname mktemp realpath
+
+    if [ "$1" = -V ] || [ "$1" = '--version' ] ; then
+        cd "$PROFILES_CONFIG_DIR/bin/git" || { 1>&2 echo ERROR, unusual ConfigShell installation ; exit 10 ; }
+        [ ! -f ./version.txt ] && { 1>&2 echo ERROR, version of git tools cannot be determined. ; exit 11 ; }
+        version.sh
+        exit 0
+    fi
 
     declare -g -r app=$(basename "$0")
     declare -g -r appDir=$(dirname "$0")

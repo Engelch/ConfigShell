@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 
+if [ "$1" = -V ] || [ "$1" = '--version' ] ; then
+    cd "$PROFILES_CONFIG_DIR/bin/git" || { 1>&2 echo ERROR, unusual ConfigShell installation ; exit 10 ; }
+    [ ! -f ./version.txt ] && { 1>&2 echo ERROR, version of git tools cannot be determined. ; exit 11 ; }
+    version.sh
+    exit 0
+fi
+
 git status -u --show-stash $* ; res=$? # --ignore-submodules
 
 git rev-parse --show-toplevel &>/dev/null || exit "$res" 
@@ -8,3 +15,6 @@ declare -r gitroot="$(git rev-parse --show-toplevel)"
 
 [ -f "$gitroot/.git/gee" ] && echo && echo "git gee status:" && git gee s
 exit 0
+
+ # EOF
+ 

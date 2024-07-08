@@ -1,3 +1,12 @@
 #!/usr/bin/env bash
 
+if [ "$1" = -V ] || [ "$1" = '--version' ] ; then
+    cd "$PROFILES_CONFIG_DIR/bin/git" || { 1>&2 echo ERROR, unusual ConfigShell installation ; exit 10 ; }
+    [ ! -f ./version.txt ] && { 1>&2 echo ERROR, version of git tools cannot be determined. ; exit 11 ; }
+    version.sh
+    exit 0
+fi
+
 git cherry-pick "$@"
+
+# EOF

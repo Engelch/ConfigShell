@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 
+if [ "$1" = -V ] || [ "$1" = '--version' ] ; then
+    cd "$PROFILES_CONFIG_DIR/bin/git" || { 1>&2 echo ERROR, unusual ConfigShell installation ; exit 10 ; }
+    [ ! -f ./version.txt ] && { 1>&2 echo ERROR, version of git tools cannot be determined. ; exit 11 ; }
+    version.sh
+    exit 0
+fi
+
 for remoterepo in $(grep '^\[remote' $(git rev-parse --show-toplevel)/.git/config | sed -e 's/.remote \"//' -e s'/..$//') ; do 
       git push --all $remoterepo 
-      git push --tags $* 
+      git push --tags "$@"
 done 
+
+# EOF

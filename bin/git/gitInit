@@ -12,6 +12,13 @@ function error() {
     echo ERROR $* > /dev/stderr
 }
 
+if [ "$1" = -V ] || [ "$1" = '--version' ] ; then
+    cd "$PROFILES_CONFIG_DIR/bin/git" || { 1>&2 echo ERROR, unusual ConfigShell installation ; exit 10 ; }
+    [ ! -f ./version.txt ] && { 1>&2 echo ERROR, version of git tools cannot be determined. ; exit 11 ; }
+    version.sh
+    exit 0
+fi
+
 [ -f "$HOME/.gitinit" ] && echo "git Init was run before as $HOME/.gitinit is existing, Exiting." && exit 0
 
 # initialise the git variables
