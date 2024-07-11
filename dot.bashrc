@@ -224,7 +224,7 @@ function loadCompletions() {
 
 function main() {
    debug4 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '...............................................'
-   umask 0022
+   umask 002
 
    case $- in
       *i*) #  "This shell is interactive"
