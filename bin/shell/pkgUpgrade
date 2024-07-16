@@ -23,7 +23,7 @@ declare -r touchFile="$HOME/.pkgU"
 
 function osxUpgrade() {
    echo homebrew....................................................................  1>&2
-   brew update && brew upgrade && brew upgrade --cask --greedy && \
+   brew update && brew upgrade "$ForceInstall" && brew upgrade "$ForceInstall" --cask --greedy && \
       brew autoremove && \
       brew cleanup # casks are also updated to today's brew upgrade && brew cu -ay # cu := cask upgrade
    echo Google Cloud SDK....................................................................  1>&2
@@ -84,32 +84,39 @@ function yumUpgrade() {
    sudo yum -y update && sudo yum -y clean packages
 }
 
-if [ "$1" = '-V' ] || [ "$1" = '--version' ] ; then
-   echo $version
-   exit 0
-fi
-[ -d /opt/ConfigShell/. ] && ( cd /opt/ConfigShell || errorExit 10 "Could not jump to ConfigShell" ; echo ConfigShell Upgrade... ;  git pull )
-if [[ ${_uname} == Darwin ]] ; then
-   echo OSX Homebrew Upgrade...
-   osxUpgrade
-elif [[ ${_uname} == Linux ]] ; then
-      if [ -e /etc/debian_version ] ; then
-         echo Debian Upgrade...
-         debianUpgrade
-      elif command -v dnf &>/dev/null ; then
-         echo Fedora DNF Upgrade...
-         dnfUpgrade
-         checkIfActualKernelAndLibc
-      elif command -v yum &>/dev/null ; then
-         echo RedHat YUM Upgrade...
-         yumUpgrade
-         checkIfActualKernelAndLibc
-      else
-         errorExit 1 unsupported Linux
-      fi
-else
-   errorExit 1 unsupported OS
-fi
-touch "$touchFile"
+function main() {
+   if [ "$1" = '-V' ] || [ "$1" = '--version' ] ; then
+      echo $version
+      exit 0
+   fi
+   if [ "$1" = '-f' ] || [ "$1" = '--force' ] ; then
+      declare -rg ForceInstall='--force'
+   fi
+   [ -d /opt/ConfigShell/. ] && ( cd /opt/ConfigShell || errorExit 10 "Could not jump to ConfigShell" ; echo ConfigShell Upgrade... ;  git pull )
+   if [[ ${_uname} == Darwin ]] ; then
+      echo OSX Homebrew Upgrade...
+      osxUpgrade
+   elif [[ ${_uname} == Linux ]] ; then
+         if [ -e /etc/debian_version ] ; then
+            echo Debian Upgrade...
+            debianUpgrade
+         elif command -v dnf &>/dev/null ; then
+            echo Fedora DNF Upgrade...
+            dnfUpgrade
+            checkIfActualKernelAndLibc
+         elif command -v yum &>/dev/null ; then
+            echo RedHat YUM Upgrade...
+            yumUpgrade
+            checkIfActualKernelAndLibc
+         else
+            errorExit 1 unsupported Linux
+         fi
+   else
+      errorExit 1 unsupported OS
+   fi
+   touch "$touchFile"
+}
+
+main "$@"
 
 # EOF
