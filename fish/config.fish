@@ -239,7 +239,7 @@ function fish_prompt_configshell -d "prompt for Configshell, toggable"
         (set_color yellow) (pwd | sed -E "s,$HOME,~,") (set_color white)
 end
 
-function setPromptConfigShell -d 'set the prompt to ConfigShell\'s version'
+function setPromptConfigShell -d 'set the prompt for ConfigShell'
     if not set -q fishPromptConfigShell ;or test "$fishPromptConfigShell" -eq 0
         functions -e fish_prompt_orig
         functions -c fish_prompt fish_prompt_orig
@@ -393,18 +393,6 @@ if status is-interactive # main code
     debug "main - is-interactive case"
     optSourceFile ~/.config/fish/pre.fish
 
-    for file in $HOME/.config/fish/conf.d/*.sh $HOME/.sh.d/*.sh
-        debug "  executing $file"
-        command -q bash ; and bash $file
-    end
-    for file in $HOME/.fishrc.d/*.fish $HOME/.fishrc.d/*.sh
-        debug "  executing $file"
-        fish $file
-    end
-    for file in $HOME/.fishrc.d/*.fishrc $HOME/.fishrc.d/*.rc
-        debug "  sourcing $file"
-        source $file
-    end
     setupExportVars
     command -v watson &>/dev/null ; or alias watson 'echo >/dev/null' # required for prompt
     set -g fish_greeting "Welcome to ConfigShell's fish setup"
@@ -414,9 +402,25 @@ if status is-interactive # main code
     setupSsh
     setupPrompt
 
+    for file in $HOME/.config/fish/conf.d/*.sh $HOME/.sh.d/*.sh
+        debug "  executing $file"
+        command -q bash ; and bash $file
+        command -q bash ; or echo bash not found >&2
+    end
+    for file in $HOME/.fishrc.d/*.fish $HOME/.fishrc.d/*.sh
+        debug "  executing $file"
+        fish $file
+    end
+    for file in $HOME/.fishrc.d/*.fishrc $HOME/.fishrc.d/*.rc
+        debug "  sourcing $file"
+        source $file
+    end
+
     optSourceFile ~/.config/fish/post.fish
+
     hadmRealUser
-    thefuck --alias | source
+    command -q thefuck ; and thefuck --alias | source
+    command -q thefuck ; or echo thefuck not found >&2
 end
 
 # EOF

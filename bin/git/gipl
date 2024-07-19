@@ -4,17 +4,21 @@
 #   gipl shall help to update a local git clone of a remote git repository. All branches and tags are supposed to
 #   be pulled.
 # CHANGELOG
+# V2.1
+# - set umask for the application
 # v2.0
 # - version output to stderr
 # - adding autostash to git pull
 # - adding --tags to git pull to reduce this command to one git call
 # - adding version info option -V
 
+orig_umask=$(umask)
+umask 022
 dry=
-[ "$1" = '-V' ] && 1>&2 echo 2.0.1 && exit 0
+[ "$1" = '-V' ] && 1>&2 echo 2.1.0 && exit 0
 [ "$1" = '-n' ] || [ "$1" = '--dry' ] && dry=echo && echo DRY run
 
-git rev-parse --show-toplevel &>/dev/null || { 1>&2 echo NOT a git repository. ; exit 1 ; }
+git rev-parse --show-toplevel &>/dev/null || { 1>&2 echo NOT a git repository. ; umask $orig_umask ; exit 1 ; }
 
 declare -gr gitroot="$(git rev-parse --show-toplevel)"
 
@@ -25,6 +29,8 @@ $dry git pull --all --tags $shallow --autostash "$@"
 
 
  [ -f "$gitroot/.git/gee" ] && echo "Running git gee decrypt:" && $dry git gee de
+
+umask $orig_umask
 
 # git fetch --tags $*
 
