@@ -58,6 +58,7 @@ DESCRIPTION
         2. OS packages or homebrew packages (OSX)
         3. TeX-Manager installation
         4. Cargo installed applications (Rust)
+        5. User-added executables in $HOME/.cpkg.d/upgrade/
 OPTIONS
     -D      ::= enable debug output
     -V      ::= output the version number to stderr and exit with 0
@@ -102,7 +103,9 @@ function determineSubCmd() {
         ;;
     l|ls|lst|list) echo List
         ;;
-    *)  errorExit 10 subCommand not found.
+    h|?|help) echo Help
+        ;;
+    *)  errorExit 10 subCommand $1 not found.
         ;;
     esac
 }
@@ -152,7 +155,13 @@ function cmdDelete() {
 
 function cmdList() {
     echo lst "$@"
-} 
+}
+
+# EXIT 1
+function cmdHelp() {
+    usage
+    exit 1
+}
 
 function main() {
     # Variables
@@ -173,6 +182,7 @@ function main() {
     debug args are "$*"
     cmd="cmd$(determineSubCmd "$1")"
     shift
+    debug calling function $cmd
     $cmd "$@"
 }
 
