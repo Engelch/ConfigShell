@@ -41,6 +41,7 @@ NAME
 SYNOPSIS
     $_app [-D] [-f] u|up|upg|upgrade [ -f | --force ] 
     $_app [-D] s|se|sea|search <<pkg>>
+    $_app [-D] i|in|info <<pkg>>
     $_app [-D] a|add <<pkg>>
     $_app [-D] del|delete <<pkg>>
     $_app [-D] l|ls|lst|list [ <<pkgNameSubString>> ]
@@ -59,6 +60,9 @@ DESCRIPTION
         3. TeX-Manager installation
         4. Cargo installed applications (Rust)
         5. User-added executables in $HOME/.cpkg.d/upgrade/
+
+            To get rid of messages for non-existing local directories, just
+            create the requested directory.
 OPTIONS
     -D      ::= enable debug output
     -V      ::= output the version number to stderr and exit with 0
@@ -103,6 +107,8 @@ function determineSubCmd() {
         ;;
     l|ls|lst|list) echo List
         ;;
+    i|in|info) echo Info
+        ;;
     h|?|help) echo Help
         ;;
     *)  errorExit 10 subCommand $1 not found.
@@ -110,51 +116,73 @@ function determineSubCmd() {
     esac
 }
 
-function cmdAdd() {
-    echo add "$@"
+# EXIT 30..
+function subSubCmdHelper() {
+    [ -z "$1" ] && errorExit 30 subSubCmdHelper no command specified
+    local _prog="/opt/ConfigShell/lib/cpkg/$(uname)/$1"
+    shift
+    if [ -x "$_prog" ] ; then  debug  "$_prog" "$@" ;  "$_prog" "$@" ; else errorExit 20 "$_prog is for the OS $(uname) not yet implemented." ; fi
+}
+
+# EXIT 40..
+function subSubUserExtension() {
+    [ -z "${1:-}" ] && errorExit 40 subSubUserExtension no command specified
+    _localDir="$HOME/.cpkg.d/$1/"
+    if [ -d "$_localDir" ] ; then
+        shift
+        for file in "$_localDir/*" ; do
+            echo local ${_localDir} ........................................................
+            [ -x "$file" ] && debug executing "$file" && "$file"
+        done
+    else
+        echo local dir for $_localDir NOT FOUND ....................................................
+    fi
 }
 
 function cargoUpdate() {
     `which cargo &>/dev/null` && debug cargo found && {
         if [ "$(cargo --list | grep -c install-update)" -gt 0 ] ; then
-            echo CARGO update ................................
+            echo CARGO update ..............................................................
             debug updating cargo installations
             cargo install-update -a
         else
-            echo CARGO .......................................
+            echo CARGO .....................................................................
             err Could find cargo but not cargo-update, consider running cargo install cargo-update
         fi
     }
 }
 
+function cmdAdd() {
+    subSubCmdHelper add "$@"
+    subSubUserExtension add "$@"
+}
+
 function cmdUpgrade() {
-    echo upg "$@"
-    # compatibility help, forcing is also allowed to be defined after the subcommand
-    [ "$1" = '-f' ] && forceMode='--force' && shift
-    [ "$1" = '--force' ] && forceMode='--force' && shift
+    [ "${1:-}" = '-f' ] && forceMode='--force' && shift         # compatibility help, forcing is also allowed to be defined after the subcommand
+    [ "${1:-}" = '--force' ] && forceMode='--force' && shift
     pkgUpgrade $forceMode
     cargoUpdate
-    _localUpgradeDir="$HOME/.cpkg.d/upgrade/"
-    if [ -d "$_localUpgradeDir" ] ; then
-        for file in "$_localUpgradeDir/*" ; do
-            echo local upgrades ..................................
-            [ -x "$file" ] && debug executing "$file" && "$file"
-        done
-    else
-        echo local upgrades NOT FOUND ........................
-    fi
+    echo OSX base ..................................................................
+    if which softwareupdate &>/dev/null ; then softwareupdate -ai ; else 1>&2 echo softwareupdate NOT FOUND ; fi
+    subSubUserExtension upgrade "$@"
 }   
 
 function cmdSearch() {
-    echo search "$@"
+    subSubCmdHelper search "$@"
+    subSubUserExtension search "$@" # potentially for statistics
 }
 
 function cmdDelete() {
-    echo del "$@"
+    subSubCmdHelper delete "$@"
+    subSubUserExtension delete "$@"
 }
 
 function cmdList() {
-    echo lst "$@"
+    subSubCmdHelper list "$@"
+}
+
+function cmdInfo() {
+    subSubCmdHelper info "$@"  # potentially for statistics
 }
 
 # EXIT 1
@@ -164,6 +192,7 @@ function cmdHelp() {
 }
 
 function main() {
+    set -u
     # Variables
     declare -r _app=$(basename "${0}")
     declare -r _appDir=$(dirname "$0")
