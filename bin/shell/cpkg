@@ -1,0 +1,181 @@
+#!/usr/bin/env bash
+# vim: set expandtab: ts=3: sw=3
+# shellcheck disable=SC2155
+#
+# TITLE: cpkg
+#
+# DESCRIPTION: <see usage function below>
+#
+# LICENSE: MIT ©2024 Christian ENGEL (mailto:engel-ch@outlook.com)
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy of this
+# software and associated documentation files (the "Software"), to deal in the Software
+# without restriction, including without limitation the rights to use, copy, modify, merge,
+# publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons
+# to whom the Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all copies
+# or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+# INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+# PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+# FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+
+function loadLibs() {
+    #########################################################################################
+    # ConfigShell lib 1.1 (codebase 1.0.0)
+    bashLib="/opt/ConfigShell/lib/bashlib.sh"
+    [ ! -f "$bashLib" ] && 1>&2 echo "bash-library $bashLib not found" && exit 127
+    # shellcheck source=/opt/ConfigShell/lib/bashlib.sh
+    source "$bashLib"
+}
+
+function usage()
+{
+    1>&2 cat <<HERE
+NAME
+    $_app
+SYNOPSIS
+    $_app [-D] [-f] u|up|upg|upgrade [ -f | --force ] 
+    $_app [-D] s|se|sea|search <<pkg>>
+    $_app [-D] a|add <<pkg>>
+    $_app [-D] del|delete <<pkg>>
+    $_app [-D] l|ls|lst|list [ <<pkgNameSubString>> ]
+
+    $_app [-V]
+    $_app -h
+VERSION
+    $_appVersion
+DESCRIPTION
+    cpkg is Configshell's abstraction layer to the local OS upgrade
+    management system. It is pluggable and can be extended.
+
+    Besides OS packages, it upgrades in the following sequence:
+        1. ConfigShell
+        2. OS packages or homebrew packages (OSX)
+        3. TeX-Manager installation
+        4. Cargo installed applications (Rust)
+OPTIONS
+    -D      ::= enable debug output
+    -V      ::= output the version number to stderr and exit with 0
+    -h      ::= show usage message to stderr and exit with 0
+    -f      ::= force installation, might overwrite other existing installations
+HERE
+}
+
+# EXIT 1..
+function parseCLI() {
+    while getopts "DVfh" options; do         # Loop: Get the next option;
+        case "${options}" in                    # TIMES=${OPTARG}
+            D)  1>&2 echo Debug enabled ; DebugFlag="TRUE"
+                ;;
+            V)  1>&2 echo $_appVersion
+                exit 0
+                ;;
+            f)  forceMode='--force'
+                ;;
+            h)  usage ; exit 0
+                ;;
+            # v)  verbose=TRUE
+            #     ;;
+            *)
+                1>&2 echo "Help with $_app -h"
+                exit 1  # Exit abnormally.
+                ;;
+        esac
+    done
+}
+
+# EXIT 10..
+function determineSubCmd() {
+    case "$1" in
+    u|up|upg|upgrade) echo Upgrade
+        ;;
+    s|se|sea|search) echo Search
+        ;;
+    a|add) echo Add
+        ;;
+    del|delete) echo Delete
+        ;;
+    l|ls|lst|list) echo List
+        ;;
+    *)  errorExit 10 subCommand not found.
+        ;;
+    esac
+}
+
+function cmdAdd() {
+    echo add "$@"
+}
+
+function cargoUpdate() {
+    `which cargo &>/dev/null` && debug cargo found && {
+        if [ "$(cargo --list | grep -c install-update)" -gt 0 ] ; then
+            echo CARGO update ................................
+            debug updating cargo installations
+            cargo install-update -a
+        else
+            echo CARGO .......................................
+            err Could find cargo but not cargo-update, consider running cargo install cargo-update
+        fi
+    }
+}
+
+function cmdUpgrade() {
+    echo upg "$@"
+    # compatibility help, forcing is also allowed to be defined after the subcommand
+    [ "$1" = '-f' ] && forceMode='--force' && shift
+    [ "$1" = '--force' ] && forceMode='--force' && shift
+    pkgUpgrade $forceMode
+    cargoUpdate
+    _localUpgradeDir="$HOME/.cpkg.d/upgrade/"
+    if [ -d "$_localUpgradeDir" ] ; then
+        for file in "$_localUpgradeDir/*" ; do
+            echo local upgrades ..................................
+            [ -x "$file" ] && debug executing "$file" && "$file"
+        done
+    else
+        echo local upgrades NOT FOUND ........................
+    fi
+}   
+
+function cmdSearch() {
+    echo search "$@"
+}
+
+function cmdDelete() {
+    echo del "$@"
+}
+
+function cmdList() {
+    echo lst "$@"
+} 
+
+function main() {
+    # Variables
+    declare -r _app=$(basename "${0}")
+    declare -r _appDir=$(dirname "$0")
+    declare -r _absoluteAppDir=$(cd "$_appDir" || exit 99 ; /bin/pwd)
+    declare -r _appVersion="0.0.1"      # use semantic versioning
+    export DebugFlag=${DebugFlag:-FALSE}
+    declare -g forceMode=''
+    # verbose=
+
+    parseCLI "$@"               # cannot use fn-s from loadLibs
+    shift "$(( OPTIND - 1 ))"   # not working inside parseCLI
+
+    loadLibs
+    exitIfBinariesNotFound mktemp
+
+    debug args are "$*"
+    cmd="cmd$(determineSubCmd "$1")"
+    shift
+    $cmd "$@"
+}
+
+main "$@"
+
+# EOF
