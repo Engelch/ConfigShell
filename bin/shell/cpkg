@@ -161,9 +161,14 @@ function cmdUpgrade() {
     [ "${1:-}" = '-f' ] && forceMode='--force' && shift         # compatibility help, forcing is also allowed to be defined after the subcommand
     [ "${1:-}" = '--force' ] && forceMode='--force' && shift
     pkgUpgrade $forceMode
+    $(which rustup &> /dev/null) && 
+        echo rustup ..................................................................... &&
+        rustup update
     cargoUpdate
-    echo OSX base ..................................................................
-    if which softwareupdate &>/dev/null ; then softwareupdate -ai ; else 1>&2 echo softwareupdate NOT FOUND ; fi
+    [ $(uname) = Darwin ] && {
+        echo OSX base ..................................................................
+        if which softwareupdate &>/dev/null ; then softwareupdate -ai ; else 1>&2 echo softwareupdate NOT FOUND ; fi
+    }
     subSubUserExtension upgrade "$@"
 }   
 
