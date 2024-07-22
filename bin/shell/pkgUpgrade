@@ -17,13 +17,13 @@ function err()          { echo "$*" 1>&2; return 0; }
 function warning()      { err "WARNING:$*" ; return 0; }                                  # depends on err
 function errorExit()    { EXITCODE=$1 ; shift; err "ERROR:$*" ; exit "${EXITCODE}"; }    # depends on err
 
-declare -r version=0.4.1
+declare -r version=0.4.2
 _uname=$(uname)
 declare -r touchFile="$HOME/.pkgU" 
 
 function osxUpgrade() {
    echo homebrew....................................................................  1>&2
-   brew update && brew upgrade "$ForceInstall" && brew upgrade "$ForceInstall" --cask --greedy && \
+   brew update && brew upgrade $ForceInstall && brew upgrade $ForceInstall --cask --greedy && \
       brew autoremove && \
       brew cleanup # casks are also updated to today's brew upgrade && brew cu -ay # cu := cask upgrade
    echo Google Cloud SDK....................................................................  1>&2
