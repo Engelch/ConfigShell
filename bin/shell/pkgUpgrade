@@ -44,9 +44,11 @@ function osxUpgrade() {
 }
 
 function debianUpgrade() {
+   echo debian upgrade ............................................................
    sudo apt-get update && \
       sudo DEBIAN_FRONTEND=noninteractive apt-get dist-upgrade && \
       sudo apt-get autoremove
+   echo reboot ....................................................................
    if [ -f /run/reboot-required ] ; then 
       echo "reboot is REQUIRED!"
    else
@@ -77,10 +79,12 @@ function checkIfActualKernelAndLibc() {
 }
 
 function dnfUpgrade() {
+   echo dnf ugprade .............................................................
    sudo dnf -y upgrade && sudo dnf -y clean packages
 }
 
 function yumUpgrade() {
+   echo yum ugprade .............................................................
    sudo yum -y update && sudo yum -y clean packages
 }
 

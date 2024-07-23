@@ -39,7 +39,7 @@ function usage()
 NAME
     $_app
 SYNOPSIS
-    $_app [-D] [-f] u|up|upg|upgrade [ -f | --force ] 
+    $_app [-D] [-f] u|up|upg|upgrade [ -f | --force | -D | --debug ] 
     $_app [-D] s|se|sea|search <<pkg>>
     $_app [-D] i|in|info <<pkg>>
     $_app [-D] a|add <<pkg>>
@@ -127,12 +127,12 @@ function subSubCmdHelper() {
 # EXIT 40..
 function subSubUserExtension() {
     [ -z "${1:-}" ] && errorExit 40 subSubUserExtension no command specified
-    _localDir="$HOME/.cpkg.d/$1/"
+    _localDir="$HOME/.cpkg.d/$1"
     if [ -d "$_localDir" ] ; then
-        shift
-        for file in "$_localDir/*" ; do
-            echo local ${_localDir} ........................................................
+        echo local ${_localDir} ........................................................
+        find "$_localDir" -type f -print0 | while IFS= read -r -d '' file; do
             [ -x "$file" ] && debug executing "$file" && "$file"
+            [ ! -x "$file" ] && debug file not executable "$file"
         done
     else
         echo local dir for $_localDir NOT FOUND ....................................................
@@ -158,11 +158,16 @@ function cmdAdd() {
 }
 
 function cmdUpgrade() {
-    [ "${1:-}" = '-f' ] && forceMode='--force' && shift         # compatibility help, forcing is also allowed to be defined after the subcommand
-    [ "${1:-}" = '--force' ] && forceMode='--force' && shift
+    while : ; do
+        [ "${1:-}" = '-D' ] && debugSet && debug Debug enabled && shift && continue
+        [ "${1:-}" = '--debug' ] && debugSet && debug Debug enabled && shift && continue
+        [ "${1:-}" = '-f' ] && forceMode='--force' && debug force mode enabled && shift && continue        # compatibility help, forcing is also allowed to be defined after the subcommand
+        [ "${1:-}" = '--force' ] && forceMode='--force' && debug force mode enabled && shift && continue
+        break
+    done     
     pkgUpgrade $forceMode
+    echo rustup ..................................................................... &&
     $(which rustup &> /dev/null) && 
-        echo rustup ..................................................................... &&
         rustup update
     cargoUpdate
     [ $(uname) = Darwin ] && {
