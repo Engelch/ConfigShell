@@ -201,12 +201,18 @@ function setupPath
     end
 end
 
+# optSourceFile tries to read an optionally existing script file to be sourced into the current shell.
 function optSourceFile
     debug in optSourceFile $argv
-    if ! count $argv >/dev/null         #err no argument supplied to optSourceFile
+    if ! count $argv >/dev/null         # err no argument supplied to optSourceFile
+        err "  ERROR: optSourceFile was called without an argument."
         return
     end
-    if ! test -r $argv[1]               #err supplied plain file is not readable
+    if ! test -f $argv[1]               # ok, if the file is not existing that is to be sourced, no err msg
+        return
+    end
+    if ! test -r $argv[1]               # err supplied plain file is not readable
+        err "  ERROR: optSourceFile supplied argument :$argv[1]: not readable"
         return
     end
     debug "  sourcing $argv[1]"
@@ -245,6 +251,7 @@ function setPromptConfigShell -d 'set the prompt for ConfigShell'
         functions -c fish_prompt fish_prompt_orig
         functions -e fish_prompt
     end
+    functions -e fish_prompt    # the next line copying to fish_prompt creates an error if fish_prompt already exists
     functions -c fish_prompt_configshell fish_prompt
     set -g fishPromptConfigShell 1
     touch "$HOME/.config/fish/configshellPrompt"
@@ -319,6 +326,8 @@ function setupCompletion -d "load completion for rsync and ssh"
     if test -r ~/.ssh/completion.lst
         complete -F -c rsync -a ~/.ssh/completion.lst
         complete -x -c ssh -a ~/.ssh/completion.lst
+    else
+        err 'Cannot find ~/.ssh/completion.lst. Cannot load completions for ssh and rsync.'
     end
 end
 
