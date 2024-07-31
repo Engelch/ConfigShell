@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+
+function err()          { echo "$*" 1>&2; return 0; }
+function warning()      { err "WARNING:$*" ; return 0; }                                  # depends on err
+function errorExit()    { EXITCODE=$1 ; shift; err "ERROR:$*" ; exit "${EXITCODE}"; }    # depends on err
+function debug()                { [ "$DebugFlag:-" = TRUE ] && echo 'DEBUG:'"$*" 1>&2 ; return 0; }
+
+set -u
+
+function aptInstall() {
+    debug aptInstall
+    sudo apt-get install -y "$@"
+}
+
+if [ -e /etc/debian_version ] ; then
+    debug add Debian            
+    aptInstall "$@"
+elif [ -e /etc/fedora-release ] ; then
+    debug add Fedora
+    sudo dnf install -y "$@"
+elif [ -e /etc/redhat-release ] ; then
+    debug add Redhat
+    sudo yum install -y "$@"
+elif [ -e /etc/os-release ] && grep -q 'ID=ubuntu' /etc/os-release ; then
+    debug add Ubuntu
+    aptInstall "$@"
+elif [ -e /etc/os-release ] && grep -q 'ID=Alpine' /etc/os-release ; then
+    debug add Alpine Linux
+    sudo apk add "$@"
+elif [ -e /etc/os-release ] && grep -q 'ID=arch' /etc/os-release ; then
+    debug add Arch Linux
+    sudo pacman -S --noconfirm "$@"
+elif [ -e /etc/NIXOS ] ; then
+    debug add NixOS
+    nix-env -i "$@"
+else
+    errorExit 1 "Could not determine the OS"
+fi
+
+# EOF

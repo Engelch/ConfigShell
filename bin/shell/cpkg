@@ -45,6 +45,7 @@ SYNOPSIS
     $_app [-D] a|add <<pkg>>
     $_app [-D] del|delete <<pkg>>
     $_app [-D] l|ls|lst|list [ <<pkgNameSubString>> ]
+    $_app [-D] c|con|contents [ <<pkgNameSubString>> ]
 
     $_app [-V]
     $_app -h
@@ -108,6 +109,8 @@ function determineSubCmd() {
     l|ls|lst|list) echo List
         ;;
     i|in|info) echo Info
+        ;;
+    c|con|contents) echo Contents
         ;;
     h|?|help) echo Help
         ;;
@@ -195,6 +198,10 @@ function cmdInfo() {
     subSubCmdHelper info "$@"  # potentially for statistics
 }
 
+function cmdContents() {
+    subSubCmdHelper contents "$@"
+}
+
 # EXIT 1
 function cmdHelp() {
     usage
@@ -207,7 +214,7 @@ function main() {
     declare -r _app=$(basename "${0}")
     declare -r _appDir=$(dirname "$0")
     declare -r _absoluteAppDir=$(cd "$_appDir" || exit 99 ; /bin/pwd)
-    declare -r _appVersion="0.0.1"      # use semantic versioning
+    declare -r _appVersion="0.1.0"      # use semantic versioning
     export DebugFlag=${DebugFlag:-FALSE}
     declare -g forceMode=''
     # verbose=
