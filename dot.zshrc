@@ -104,7 +104,7 @@ function rl() {
 
 function main() {
    local files
-   umask 002 # umask 022 for group work, removed again because this does not work properly for SSH cfg files...
+   umask 022
 
    export PROFILES_CONFIG_DIR=$(dirname "$(readlink -f ~/.zshrc)")
    debug PROFILES_CONFIG_DIR: $PROFILES_CONFIG_DIR
