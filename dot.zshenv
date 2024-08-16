@@ -24,7 +24,7 @@ function so()
 # --- debug: Conditional debugging. All commands begin w/ debug.
 
 function debugSet()             { DebugFlag=TRUE; return 0; }
-[ -f "$HOME/.zsh.debug" ] && debugSet
+[ -f "$HOME/.zsh.debug" ] && debugSet && debug debug enabled by ~/.zsh.debug
 function debugUnset()           { DebugFlag=; return 0; }
 function debugExecIfDebug()     { [ "$DebugFlag" = TRUE ] && $*; return 0; }
 function debug()                { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:'$* 1>&2 ; return 0; }
@@ -78,13 +78,6 @@ function tempDir()                      { mktemp -d "${TMPDIR:-/tmp/}$_app.YYYYY
 # =========================================================================================
 
 # debugSet
-
-# user-specific pre/post/... configuration
-function loadSource() {
-   if [ -r "$HOME/.zshrc.$1" ] ; then debug loadSource .zshrc.$1 ; source "$HOME/.zshrc.$1" ; else 
-      debug4 loadSource FILE NOT FOUND $HOME/.zshrc.$1 
-   fi
-}
 
 # setupPath sets the path
 function setupPath() {
@@ -149,7 +142,6 @@ function setupPath() {
     debug4 END setupPath
 }
 
-loadSource env
 [ -z $NO_setupPath ] && setupPath
 
 export ZSH_DISABLE_COMPFIX=true

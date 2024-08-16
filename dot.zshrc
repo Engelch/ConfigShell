@@ -79,6 +79,7 @@ function loadAliases() {
    alias k8s=$KUBECTL
    alias l=less
    alias 'ln-s'='ln -s'
+   alias ls='ls -FG'
    alias mcd=mkcd
    function mkcd(){ mkdir -p "$1" && cd "$1"; }
    alias mv='mv -i'
@@ -94,6 +95,7 @@ function loadAliases() {
    alias -s rb="$VISUAL"
    alias -s php="$VISUAL"
    alias -s go="$VISUAL"
+   alias -s rs="$VISUAL"
 }
 
 
@@ -108,8 +110,6 @@ function main() {
 
    export PROFILES_CONFIG_DIR=$(dirname "$(readlink -f ~/.zshrc)")
    debug PROFILES_CONFIG_DIR: $PROFILES_CONFIG_DIR
-
-   loadSource pre
 
     case $- in
         *i*) #  "This shell is interactive"
@@ -128,23 +128,23 @@ function main() {
             # bindkey '^[^[[D' emacs-backward-word
          # realUserForHadm
             autoload -U +X bashcompinit && bashcompinit
-# complete -o nospace -C /opt/homebrew/bin/terraform terraform
 
             #THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
             export SDKMAN_DIR="$HOME/.sdkman"
             [[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
 
-#            complete -o nospace -C /usr/bin/terraform terraform
+
             powertheme=/opt/homebrew/opt/powerlevel9k/powerlevel9k.zsh-theme
             [ -f "$powertheme" ] && source "$powertheme"
 
             loadAliases
-            [ -z "$NO_loadPost" ] && loadSource post
             for file in $HOME/.sh.d/*.sh(N) $HOME/.zshrc.d/*.sh(N) ; do
-              [ -f "$file" ] && zsh "$file"
+              [ -f "$file" ] && zsh -f "$file"
+              [ ! -f "$file" ] && echo found $file but it is not a plain file
             done
             for file in $HOME/.zshrc.d/*.rc(N) ; do
               [ -f "$file" ] && source "$file"
+              [ ! -f "$file" ] && echo found $file but it is not a plain file
             done
             ;;
         *) #echo "This is a script";;
@@ -152,7 +152,7 @@ function main() {
     esac
 }
 
-main $@
+main "$@"
 return 0
 
 # EOF
