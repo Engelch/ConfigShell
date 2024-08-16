@@ -76,15 +76,10 @@ function setAliases() {
    alias eir='grep -iER'
    alias er='grep -ER'
 
-   alias enf='env | grep -Ei '   # search the environment in case-insensitive mode
-   alias fin='find . -name'      # search for a filename
-   alias fini='find . -iname'    # search for a filename in case-insensitive mode
-
    alias h=history
    alias hf='history | grep -Ei'
    alias j=jobs
    alias l=less
-   alias ln-s='ln -s'
    alias mcd=mkcd
    function mkcd(){ mkdir -p "$1" && cd "$1"; }
    alias mv='mv -i'

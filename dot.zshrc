@@ -65,11 +65,8 @@ function loadAliases() {
    alias e='grep -E'
    alias ei='grep -iE'
    alias eir='grep -iER'
-   alias enf='env | grep -Ei'
    alias er='grep -ER'
    alias f=fuck
-   alias fin='find . -name'
-   alias fini='find . -iname'
    alias g=git
    alias h=history
    alias hf='history | grep -Ei'
@@ -78,14 +75,12 @@ function loadAliases() {
    alias k8=$KUBECTL
    alias k8s=$KUBECTL
    alias l=less
-   alias 'ln-s'='ln -s'
    alias ls='ls -FG'
    alias mcd=mkcd
    function mkcd(){ mkdir -p "$1" && cd "$1"; }
    alias mv='mv -i'
    alias o=open
    alias po=popd
-   alias proc='ps -ef | grep -Ei'
    alias pu=pushd
    alias rm='rm -i'
    alias rm~=rmbak

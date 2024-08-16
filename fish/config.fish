@@ -109,11 +109,6 @@ function setupAliases_Abbreviations
     abbr -a eir 'grep -EiR'
     abbr -a er 'grep -ER'
 
-    abbr -a enf 'env | grep -Ei'
-
-    abbr -a fin 'find . -name'
-    abbr -a fini 'find . -iname'
-
     abbr -a h "history --show-time"
 
     abbr --erase hf # delete the old hf #abbr -a -g hf 'history | grep -Ei '
@@ -121,7 +116,6 @@ function setupAliases_Abbreviations
         history | grep -Ei --colour $argv[1] | sort
     end
     abbr -a hs 'history search --reverse --contains' # new command from fish. If it is good, it shall replace/become hf
-    abbr -a proc 'ps -ef | grep -Ei'
 
     abbr -a rl 'source /opt/ConfigShell/fish/config.fish'
     alias rlFull=rlDebug

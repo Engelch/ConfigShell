@@ -4,4 +4,17 @@
 /usr/local/texlive/2023/bin/universal-darwin/ 
 $HOME/Library/Application Support/JetBrains/Toolbox/scripts
 
+$HOME/Applications/Android Studio.app/Contents/MacOS
+$HOME/Applications/Fleet.app/Contents/app/bin/
+$HOME/Applications/Datagrip.app/Contents/MacOS
+$HOME/Applications/GoLand.app/Contents/MacOS
+$HOME/Applications/PyCharm Professional Edition.app/Contents/MacOS/
+$HOME/Applications/RubyMine.app/Contents/MacOS/
+$HOME/Applications/Writerside.app/Contents/MacOS/
+$HOME/Applications/WebStorm.app/Contents/MacOS/
+$HOME/Applications/RustRover.app/Contents/MacOS/
+$HOME/Applications/Rider.app/Contents/MacOS/
+$HOME/Applications/IntelliJ IDEA Ultimate.app/Contents/MacOS
+
+
 # eof
