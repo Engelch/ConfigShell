@@ -384,11 +384,11 @@ function setupExportVars
     set -g -x BLOCKSIZE 1K
     set -g -x COLUMNS
     set -g -x PROFILES_CONFIG_DIR /opt/ConfigShell
-    set -g -x CONFIGSHELL_RC_VERSION ($SHELL -c 'cd /opt/ConfigShell/fish ; /opt/ConfigShell/bin/version.sh')
-    if test -n "$_current_CONFIGSHELL_RC_VERSION" -a "$CONFIGSHELL_RC_VERSION" != "$_current_CONFIGSHELL_RC_VERSION"
-        echo New CONFIGSHELL_RC_VERSION "$CONFIGSHELL_RC_VERSION"
+    set -g -x CONFIGSHELL_FISH_VERSION ($SHELL -c 'cd /opt/ConfigShell/fish ; /opt/ConfigShell/bin/version.sh')
+    if test -n "$_current_CONFIGSHELL_FISH_VERSION" -a "$CONFIGSHELL_FISH_VERSION" != "$_current_CONFIGSHELL_FISH_VERSION"
+        echo New CONFIGSHELL_FISH_VERSION "$CONFIGSHELL_FISH_VERSION"
     end
-    set -g _current_CONFIGSHELL_RC_VERSION "$CONFIGSHELL_RC_VERSION"
+    set -g _current_CONFIGSHELL_FISH_VERSION "$CONFIGSHELL_FISH_VERSION"
     export LC_ALL=en_US.UTF-8 # required for ansible-vault -> git gee
 end
 
