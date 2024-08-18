@@ -217,7 +217,7 @@ function main() {
     declare -r _absoluteAppDir=$(cd "$_appDir" || exit 99 ; /bin/pwd)
     declare -r _appVersion="0.1.1"      # use semantic versioning
     export DebugFlag=${DebugFlag:-FALSE}
-    declare -g forceMode=''
+    declare forceMode=''
     # verbose=
 
     parseCLI "$@"               # cannot use fn-s from loadLibs
