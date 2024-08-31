@@ -42,7 +42,7 @@ fuunction interactiveShell() {
       # Which plugins would you like to load?   Standard plugins can be found in $ZSH/plugins/
       # Custom plugins may be added to $ZSH_CUSTOM/plugins/  Example format: plugins=(rails git textmate ruby lighthouse)
       # Add wisely, as too many plugins slow down shell startup.
-      plugins=(z) # ruby rails git
+      plugins=(z golang) # ruby rails git
 
       source $ZSH/oh-my-zsh.sh
    fi
@@ -105,7 +105,6 @@ function main() {
 
    export PROFILES_CONFIG_DIR=$(dirname "$(readlink -f ~/.zshrc)")
    debug PROFILES_CONFIG_DIR: $PROFILES_CONFIG_DIR
-   export CONFIGSHELL_ZSH_VERSION="5.14.5"
 
     case $- in
         *i*) #  "This shell is interactive"
@@ -142,6 +141,13 @@ function main() {
               [ -f "$file" ] && source "$file"
               [ ! -f "$file" ] && echo found $file but it is not a plain file
             done
+
+            # terraform completion
+            if [ -f /opt/homebrew/bin/terraform ] ; then
+               autoload -U +X bashcompinit && bashcompinit
+               complete -o nospace -C /opt/homebrew/bin/terraform terraform
+            fi   
+         
             ;;
         *) #echo "This is a script";;
             ;;
@@ -152,4 +158,3 @@ main "$@"
 return 0
 
 # EOF
-

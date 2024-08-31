@@ -220,7 +220,6 @@ function loadCompletions() {
 function main() {
    debug4 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '...............................................'
    umask 022
-   export CONFIGSHELL_BASH_VERSION="5.14.5"
 
    case $- in
       *i*) #  "This shell is interactive"

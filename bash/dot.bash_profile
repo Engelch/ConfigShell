@@ -151,6 +151,8 @@ function main() {
     # shellcheck source=/dev/null
     [ -r "$HOME/.iterm2_shell_integration.bash" ] && [ "$(uname)" = "Darwin" ] && source "$HOME/.iterm2_shell_integration.bash"
     [ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
+    # terraform
+    [ -f /opt/homebrew/bin/terraform ] && complete -C /opt/homebrew/bin/terraform terraform
     debug4 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'
 }
 
