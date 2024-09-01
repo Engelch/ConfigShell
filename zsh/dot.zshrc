@@ -103,58 +103,52 @@ function main() {
    local files
    umask 022
 
-   export PROFILES_CONFIG_DIR=/opt/ConfigShell
-   if [ ! -d /opt/ConfigShell/. ] ; then
-      error4 "Default PROFILES_CONFIG_DIR=/opt/ConfigShell not fullfilled, stopping.."
-      return
-   fi
+   case $- in
+      *i*) #  "This shell is interactive"
+         interactiveShell
+         NEWLINE=$'\n'
+         if [ -n "$ownPrompt" ] ; then
+               setopt PROMPT_SUBST
+               echo setting own prompt
+               autoload -U colors
+               PROMPT='%(?..%F{red}%?$reset_color • )%F{green}%n@%m$reset_color • %* • %F{yellow}$(gitContents)$reset_color • %F{red}$AWS_PROFILE$reset_color • %{%F{cyan}%c%{$reset_color%}'$reset_color${NEWLINE}
+               RPROMPT=
+         fi
+         bindkey '^R' history-incremental-pattern-search-backward # history-incremental-search-backward
+         bindkey -e # emacs mode
+         # bindkey '^[[1;5C' emacs-forward-word
+         # bindkey '^[^[[D' emacs-backward-word
+      # realUserForHadm
+         autoload -U +X bashcompinit && bashcompinit
 
-    case $- in
-        *i*) #  "This shell is interactive"
-            interactiveShell
-            NEWLINE=$'\n'
-            if [ -n "$ownPrompt" ] ; then
-                setopt PROMPT_SUBST
-                echo setting own prompt
-                autoload -U colors
-                PROMPT='%(?..%F{red}%?$reset_color • )%F{green}%n@%m$reset_color • %* • %F{yellow}$(gitContents)$reset_color • %F{red}$AWS_PROFILE$reset_color • %{%F{cyan}%c%{$reset_color%}'$reset_color${NEWLINE}
-                RPROMPT=
-            fi
-            bindkey '^R' history-incremental-pattern-search-backward # history-incremental-search-backward
-            bindkey -e # emacs mode
-            # bindkey '^[[1;5C' emacs-forward-word
-            # bindkey '^[^[[D' emacs-backward-word
-         # realUserForHadm
+         #THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
+         export SDKMAN_DIR="$HOME/.sdkman"
+         [[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
+
+
+         powertheme=/opt/homebrew/opt/powerlevel9k/powerlevel9k.zsh-theme
+         [ -f "$powertheme" ] && source "$powertheme"
+
+         loadAliases
+         for file in $HOME/.sh.d/*.sh(N) $HOME/.zshrc.d/*.sh(N) ; do
+            [ -f "$file" ] && zsh -f "$file"
+            [ ! -f "$file" ] && echo found $file but it is not a plain file
+         done
+         for file in $HOME/.zshrc.d/*.rc(N) ; do
+            [ -f "$file" ] && source "$file"
+            [ ! -f "$file" ] && echo found $file but it is not a plain file
+         done
+
+         # terraform completion
+         if [ -f /opt/homebrew/bin/terraform ] ; then
             autoload -U +X bashcompinit && bashcompinit
-
-            #THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
-            export SDKMAN_DIR="$HOME/.sdkman"
-            [[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
-
-
-            powertheme=/opt/homebrew/opt/powerlevel9k/powerlevel9k.zsh-theme
-            [ -f "$powertheme" ] && source "$powertheme"
-
-            loadAliases
-            for file in $HOME/.sh.d/*.sh(N) $HOME/.zshrc.d/*.sh(N) ; do
-              [ -f "$file" ] && zsh -f "$file"
-              [ ! -f "$file" ] && echo found $file but it is not a plain file
-            done
-            for file in $HOME/.zshrc.d/*.rc(N) ; do
-              [ -f "$file" ] && source "$file"
-              [ ! -f "$file" ] && echo found $file but it is not a plain file
-            done
-
-            # terraform completion
-            if [ -f /opt/homebrew/bin/terraform ] ; then
-               autoload -U +X bashcompinit && bashcompinit
-               complete -o nospace -C /opt/homebrew/bin/terraform terraform
-            fi   
-         
-            ;;
-        *) #echo "This is a script";;
-            ;;
-    esac
+            complete -o nospace -C /opt/homebrew/bin/terraform terraform
+         fi   
+      
+         ;;
+      *) #echo "This is a script";;
+         ;;
+   esac
 }
 
 main "$@"
