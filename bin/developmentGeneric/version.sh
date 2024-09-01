@@ -14,7 +14,7 @@
 # - exit code 14
 #
 #########################################################################################
-# ConfigShell lib 1.1 (codebase 1.0.0)
+# ConfigShell lib 1.1 (codebase 1.0.1)
 bashLib="/opt/ConfigShell/lib/bashlib.sh"
 [ ! -f "$bashLib" ] && 1>&2 echo "bash-library $bashLib not found" && exit 127
 # shellcheck source=/opt/ConfigShell/lib/bashlib.sh
@@ -106,6 +106,7 @@ function main() {
     declare -r _appDir="$(dirname "$0")"
     declare -r _absoluteAppDir=$(cd "$_appDir" || exit 126; /bin/pwd)
     declare -r _version="2.3.3"
+    debug This is "$_app" version "$_version"
 
     exitIfBinariesNotFound pwd tput basename dirname mktemp
 
@@ -122,12 +123,14 @@ function main() {
     readonly versionFilePattern="./versionFilePattern"
 
     if [ -f "$versionFile" ] ; then
+            debug version.txt file found
             [ "$_showFileName" = TRUE ] && echo -n 'version.txt:'
             output=$(grep -Ev '^[[:space:]]*#' "$versionFile"| grep -Ev '^$')
             [ -z "$output" ] && 1>&2 echo "ERROR:version number could not be obtained from version.txt file." && exit 11
             [ "$(echo "$output" | wc -l)" -gt 1 ] && 1>&2 echo "ERROR:multiple lines were obtained from version.txt file." && exit 12
             echo "$output"
     elif [ -f "$versionFilePattern" ] ; then
+        debug versionFilePattern file found
         # _versionFilePattern can either contain specific filenames to search for version information or a pattern
         _versionFilePattern=$(grep -v '^$' < "$versionFilePattern" | grep -Ev '^[[:space:]]*#' | sed 's/[[:space:]]*#.*$//')
         _numPattern="$(echo "$_versionFilePattern" | wc -w )" 
@@ -152,6 +155,7 @@ function main() {
         done < <(find . -name "$_file" -print0) # find .... | while  >>>> executes the while block in a subshell
         [ -z "$fileFound" ] && 1>&2 echo 'ERROR:Version versionFilePattern mode, information could not be determined.' && exit 10
     else
+        debug "no version.txt file found, search for app.?version in files"
         # find file(s) with app.?version information included. It should result in exactly one file.
         # should only return one line or less => -quit option
         fileFound=''
@@ -166,7 +170,6 @@ function main() {
         exit 0
     fi
 }
-
 
 main "$@"
 

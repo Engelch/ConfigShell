@@ -79,6 +79,24 @@ function tempDir()                      { mktemp -d "${TMPDIR:-/tmp/}$_app.YYYYY
 
 # debugSet
 
+# helper for setupPath
+function loadPath() {
+    debug8 START loadPath
+    [ ! -r "$2" ] && error12 "loadPath: file not found: $2" && return
+    [   -r "$2" ] && while IFS= read -r line; do
+        line=$(echo "$line" | sed -e "s,^~,$HOME," | sed -e "s,^\$HOME,$HOME," | xargs)
+        if [ -d "$line" ] ; then 
+            debug12 "ok found directory $line" ; 
+            case "$1" in
+                prepend) PATH="$line:$PATH" ;;
+                append)  PATH="$PATH:$line" ;;
+                *) error12 "loadPath: unknown mode $1 for path $2" && return ;;
+            esac
+        else debug12 "not found: directory $line" ; fi
+    done < "$2"
+    debug8 END loadPath
+}
+
 # setupPath sets the path
 function setupPath() {
     debug4 START setupPath
@@ -87,62 +105,23 @@ function setupPath() {
     # add directories if existing for all platforms
 
     # 1
-    debug8 "PREPENDING global PATH ENTRIES ........"
-    [ -r "$PROFILES_CONFIG_DIR/Shell/path.prepend.txt" ] && \
-        while IFS= read -r line ; do
-            line=$(echo "$line" | sed -e "s,^~,$HOME," | sed -e "s,^\$HOME,$HOME," | xargs) # xargs for trimming outer spaces
-            if [ -d "$line"  ] ; then debug12 "ok found path $line ::prepending" ; PATH="$line:$PATH"
-            else debug12 "NOT ok path $line" ; fi
-        done < "$PROFILES_CONFIG_DIR/Shell/path.prepend.txt"
-
+    loadPath prepend "$PROFILES_CONFIG_DIR/ShellPaths/path.prepend.txt"
     # 2
-    debug8 "PREPENDING os-specific PATH ENTRIES ........"
-    [ -r "$PROFILES_CONFIG_DIR/Shell/path.$(uname).prepend.txt" ] && \
-        while IFS= read -r line &>/dev/null; do
-            line=$(echo "$line" | sed -e "s,^~,$HOME," | sed -e "s,^\$HOME,$HOME," | xargs)
-            if [ -d "$line" ] ; then debug12 "ok found path $line ::prepending" ; PATH="$line:$PATH"
-            else debug12 "NOT ok path $line" ; fi
-        done < "$PROFILES_CONFIG_DIR/Shell/path.$(uname).prepend.txt"
-
-  # 3
-    debug8 "PREPENDING architecture-specific PATH ENTRIES ........"
-    [ -r "$PROFILES_CONFIG_DIR/Shell/path.$(uname).$(uname -m).prepend.txt" ] && \
-        while IFS= read -r line &>/dev/null; do
-            line=$(echo "$line" | sed -e "s,^~,$HOME," | sed -e "s,^\$HOME,$HOME," | xargs)
-            if [ -d "$line" ] ; then debug12 "ok found path $line ::prepending" ; PATH="$line:$PATH"
-            else debug12 "NOT ok path $line" ; fi
-        done < "$PROFILES_CONFIG_DIR/Shell/path.$(uname).$(uname -m).prepend.txt"
-
+    loadPath prepend "$PROFILES_CONFIG_DIR/ShellPaths/path.$(uname).prepend.txt"
+    # 3
+    loadPath prepend "$PROFILES_CONFIG_DIR/ShellPaths/path.$(uname).$(uname -m).prepend.txt"
     # 4
-    debug8 "APPENDING global PATH ENTRIES ........"
-    [ -r "$PROFILES_CONFIG_DIR/Shell/path.append.txt" ] && \
-        while IFS= read -r line; do
-            line=$(echo "$line" | sed -e "s,^~,$HOME," | sed -e "s,^\$HOME,$HOME," | xargs)
-            if [ -d "$line" ] ; then debug12 "ok found path $line ::appending" ; PATH="$PATH:$line"
-            else debug12 "NOT ok path $line" ; fi
-        done < "$PROFILES_CONFIG_DIR/Shell/path.append.txt"
-
+    loadPath append "$PROFILES_CONFIG_DIR/ShellPaths/path.append.txt"
     # 5
-    debug8 "APPENDING os-specific PATH ENTRIES ........"
-    [ -r "$PROFILES_CONFIG_DIR/Shell/path.$(uname).append.txt" ] && \
-        while IFS= read -r line; do
-            line=$(echo "$line" | sed -e "s,^~,$HOME," | sed -e "s,^\$HOME,$HOME," | xargs)
-            if [ -d "$line" ] ; then debug12 "ok found path $line ::appending" ; PATH="$PATH:$line" ;
-            else debug12 "NOT ok path $line" ; fi
-        done < "$PROFILES_CONFIG_DIR/Shell/path.$(uname).append.txt"
-
+    loadPath append "$PROFILES_CONFIG_DIR/ShellPaths/path.$(uname).append.txt"
     # 6
-    debug8 "APPENDING architecture-specific PATH ENTRIES ........"
-    [ -r "$PROFILES_CONFIG_DIR/Shell/path.$(uname).$(uname -m).append.txt" ] && \
-        while IFS= read -r line; do
-            line=$(echo "$line" | sed -e "s,^~,$HOME," | sed -e "s,^\$HOME,$HOME," | xargs)
-            if [ -d "$line" ] ; then debug12 "ok found path $line ::apppending" ; PATH="$PATH:$line"
-            else debug12 "NOT ok path $line" ; fi
-        done < "$PROFILES_CONFIG_DIR/Shell/path.$(uname).$(uname -m).append.txt"
+    loadPath append "$PROFILES_CONFIG_DIR/ShellPaths/path.$(uname).$(uname -m).append.txt"
     debug4 END setupPath
 }
 
-[ -z $NO_setupPath ] && setupPath
+[ -z "$NO_setupPath" ] && setupPath
+[ -n "$NO_setupPath" ] && echo setupPath disabled
+
 
 export ZSH_DISABLE_COMPFIX=true
 export LESS='-iR'    # -i := searches are case insensitive; -R := Like -r, but only ANSI "color" escape sequences are output in "raw" form. The default is to display control characters using the caret notation.
@@ -150,7 +129,7 @@ export PAGER=less
 
 export RSYNC_FLAGS="-rltDvu --modfiy-window=1"     # Windows FS updates file-times only every 2nd second
 export RSYNC_SLINK_FLAGS="$RSYNCFLAGS --copy-links" # copy s-links as files
-export RSYNC_LINK='--copy-links'
+export RSYNC_LINK='--copy-links'                    # transform s-links to files
 
 export VISUAL=vim
 export EDITOR="$VISUAL"    # bsroot has no notion about VISUAL

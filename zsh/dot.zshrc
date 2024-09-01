@@ -103,8 +103,11 @@ function main() {
    local files
    umask 022
 
-   export PROFILES_CONFIG_DIR=$(dirname "$(readlink -f ~/.zshrc)")
-   debug PROFILES_CONFIG_DIR: $PROFILES_CONFIG_DIR
+   export PROFILES_CONFIG_DIR=/opt/ConfigShell
+   if [ ! -d /opt/ConfigShell/. ] ; then
+      error4 "Default PROFILES_CONFIG_DIR=/opt/ConfigShell not fullfilled, stopping.."
+      return
+   fi
 
     case $- in
         *i*) #  "This shell is interactive"
