@@ -1,77 +1,58 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2155 disable=SC2012 disable=SC2153
 
-######################################
-# ConfigShell lib 1.1 (codebase 1.0.0)
-bashLib="/opt/ConfigShell/lib/bashlib.sh"
-[ ! -f "$bashLib" ] && 1>&2 echo "bash-library $bashLib not found" && return  # no exit for bash_profile or bashrc
-# shellcheck source=/opt/ConfigShell/lib/bashlib.sh
-source "$bashLib"
-unset bashLib
-##########################
+function loadLibs() {
+    bashLib="$PROFILES_CONFIG_DIR/lib/bashlib.sh"
+    [ ! -f "$bashLib" ] && 1>&2 echo "bash-library $bashLib not found" && export errorSet=1
+    source "$bashLib"
+    unset bashLib
+}
 
-function setupPathsFromFiles() {
-   debug12 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '...............................................'
-
-   # 1
-    debug12 "PREPENDING global PATH ENTRIES ........"
-    [ -r "$PROFILES_CONFIG_DIR/Shell/path.prepend.txt" ] && \
-       while IFS= read -r line ; do
-         line=$(echo "$line" | sed -e "s,^~,$HOME," | sed -e "s,^\$HOME,$HOME," | xargs) # xargs for trimming outer spaces
-         if [ -d "$line"  ] ; then debug12 "Found path $line ::prepending" ; PATH="$line:$PATH"
-         else debug12 "NOT found path $line" ; fi
-       done < "$PROFILES_CONFIG_DIR/Shell/path.prepend.txt"
-
-    # 2
-    debug12 "PREPENDING os-specific PATH ENTRIES ........"
-    [ -r "$PROFILES_CONFIG_DIR/Shell/path.$(uname).prepend.txt" ] && \
-       while IFS= read -r line &>/dev/null; do
-          line=$(echo "$line" | sed -e "s,^~,$HOME," | sed -e "s,^\$HOME,$HOME," | xargs)
-          if [ -d "$line" ] ; then debug12 "Found path $line ::prepending" ; PATH="$line:$PATH"
-          else debug12 "NOT found path $line" ; fi
-       done < "$PROFILES_CONFIG_DIR/Shell/path.$(uname).prepend.txt"
-
-    # 3
-    debug12 "PREPENDING architecture-specific PATH ENTRIES ........"
-    [ -r "$PROFILES_CONFIG_DIR/Shell/path.$(uname).$(uname -m).prepend.txt" ] && \
-       while IFS= read -r line &>/dev/null; do
-          line=$(echo "$line" | sed -e "s,^~,$HOME," | sed -e "s,^\$HOME,$HOME," | xargs)
-          if [ -d "$line" ] ; then debug12 "Found path $line ::prepending" ; PATH="$line:$PATH"
-          else debug12 "NOT found path $line" ; fi
-       done < "$PROFILES_CONFIG_DIR/Shell/path.$(uname).$(uname -m).prepend.txt"
-
-    # 4
-    debug12 "APPENDING global PATH ENTRIES ........"
-    [ -r "$PROFILES_CONFIG_DIR/Shell/path.append.txt" ] && \
-       while IFS= read -r line; do
-          line=$(echo "$line" | sed -e "s,^~,$HOME," | sed -e "s,^\$HOME,$HOME," | xargs)
-          if [ -d "$line" ] ; then debug12 "Found path $line ::appending" ; PATH="$PATH:$line"
-          else debug12 "NOT found path $line" ; fi
-       done < "$PROFILES_CONFIG_DIR/Shell/path.append.txt"
-
-    # 5
-    debug12 "APPENDING os-specific PATH ENTRIES ........"
-    [ -r "$PROFILES_CONFIG_DIR/Shell/path.$(uname).append.txt" ] && \
-       while IFS= read -r line; do
-          line=$(echo "$line" | sed -e "s,^~,$HOME," | sed -e "s,^\$HOME,$HOME," | xargs)
-          if [ -d "$line" ] ; then debug12 "Found path $line ::appending" ; PATH="$PATH:$line" ;
-          else debug12 "NOT found path $line" ; fi
-       done < "$PROFILES_CONFIG_DIR/Shell/path.$(uname).append.txt"
-
-    # 6
-    debug12 "APPENDING architecture-specific PATH ENTRIES ........"
-    [ -r "$PROFILES_CONFIG_DIR/Shell/path.$(uname).$(uname -m).append.txt" ] && \
-       while IFS= read -r line; do
-          line=$(echo "$line" | sed -e "s,^~,$HOME," | sed -e "s,^\$HOME,$HOME," | xargs)
-          if [ -d "$line" ] ; then debug12 "Found path $line ::apppending" ; PATH="$PATH:$line"
-          else debug12 "NOT found path $line" ; fi
-       done < "$PROFILES_CONFIG_DIR/Shell/path.$(uname).$(uname -m).append.txt"
-
-    debug12 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'
+# helper for setupPath
+function loadPath() {
+    debug8 START loadPath
+    [ ! -r "$2" ] && error12 "loadPath: file not found: $2" && return
+    [   -r "$2" ] && while IFS= read -r line; do
+        line=$(echo "$line" | sed -e "s,^~,$HOME," | sed -e "s,^\$HOME,$HOME," | xargs)
+        if [ -d "$line" ] ; then 
+            debug12 "ok found directory $line" ; 
+            case "$1" in
+                prepend) PATH="$line:$PATH" ;;
+                append)  PATH="$PATH:$line" ;;
+                *) error12 "loadPath: unknown mode $1 for path $2" && return ;;
+            esac
+        else debug12 "not found: directory $line" ; fi
+    done < "$2"
+    debug8 END loadPath
 }
 
 # setupPath sets the path
-function setupPath() {
+function setupPath2() {
+    debug4 START setupPath
+    [ $UID = 0 ] && debug4 root PATH initialisation &&  PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin
+    [ $UID != 0 ] && debug4 normal user PATH init &&    PATH=./bin:/usr/local/bin:/sbin:/usr/sbin:/bin:/usr/bin
+    # add directories if existing for all platforms
+
+    # 1
+    loadPath prepend "$PROFILES_CONFIG_DIR/ShellPaths/path.prepend.txt"
+    # 2
+    loadPath prepend "$PROFILES_CONFIG_DIR/ShellPaths/path.$(uname).prepend.txt"
+    # 3
+    loadPath prepend "$PROFILES_CONFIG_DIR/ShellPaths/path.$(uname).$(uname -m).prepend.txt"
+    # 4
+    loadPath append "$PROFILES_CONFIG_DIR/ShellPaths/path.append.txt"
+    # 5
+    loadPath append "$PROFILES_CONFIG_DIR/ShellPaths/path.$(uname).append.txt"
+    # 6
+    loadPath append "$PROFILES_CONFIG_DIR/ShellPaths/path.$(uname).$(uname -m).append.txt"
+    debug4 END setupPath
+}
+
+# =========================================================================================
+
+
+# setupPath sets the path
+function setupPath1() {
     debug8 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '...............................................'
     local _POTENTIAL_DIR
     # set up initial path
@@ -81,7 +62,7 @@ function setupPath() {
         PATH=/sbin:/usr/sbin:/bin:/usr/bin
     fi
     # add directories if existing for all platforms
-    setupPathsFromFiles
+    setupPath2
     if [ -f  "$HOME/.rbenv/version" ] ; then
       debug "rbenv version file found"
       ruby_version=$(cat "$HOME/.rbenv/version" | head -n 1)
@@ -141,8 +122,18 @@ function main() {
     set -o ignoreeof                             # prevent ^d logout
     set -o noclobber                             # overwrite protection, use >| to force
 
-    envVars     # load environment variables (above), required for PROFILES_CONFIG_DIR below, must be done after PATH setup
-    setupPath
+
+   export PROFILES_CONFIG_DIR=/opt/ConfigShell
+   if [ ! -d /opt/ConfigShell/. ] ; then
+      echo 1>&2 "   Default PROFILES_CONFIG_DIR=/opt/ConfigShell not fullfilled, stopping.."
+      return
+   fi
+   loadLibs
+   [ "$errorSet" = 1 ] && echo error loading libary && return
+   debug default lib loaded
+
+   envVars     # load environment variables (above), required for PROFILES_CONFIG_DIR below, must be done after PATH setup
+   setupPath1
 
     # shellcheck source=/dev/null
     [ -z "$NO_bashrc" ] && [ -f "$HOME/.bashrc" ] && source "$HOME/.bashrc"    # start all the normal files
