@@ -139,12 +139,12 @@ end
 function build_path_by_config_files
     debug in build_path_by_config_files
     for pathfile in \
-            $PROFILES_CONFIG_DIR/Shell/path.prepend.txt \
-            $PROFILES_CONFIG_DIR/Shell/path.(uname).prepend.txt \
-            $PROFILES_CONFIG_DIR/Shell/path.(uname).(uname -m).prepend.txt \
-            $PROFILES_CONFIG_DIR/Shell/path.append.txt \
-            $PROFILES_CONFIG_DIR/Shell/path.(uname).append.txt \
-            $PROFILES_CONFIG_DIR/Shell/path.(uname).(uname -m).append.txt
+            $PROFILES_CONFIG_DIR/ShellPaths/path.prepend.txt \
+            $PROFILES_CONFIG_DIR/ShellPaths/path.(uname).prepend.txt \
+            $PROFILES_CONFIG_DIR/ShellPaths/path.(uname).(uname -m).prepend.txt \
+            $PROFILES_CONFIG_DIR/ShellPaths/path.append.txt \
+            $PROFILES_CONFIG_DIR/ShellPaths/path.(uname).append.txt \
+            $PROFILES_CONFIG_DIR/ShellPaths/path.(uname).(uname -m).append.txt
         if test -r "$pathfile"
             debug "  Pathfile $pathfile existing"
             grep -v '^$' "$pathfile" | while read -l line
