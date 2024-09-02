@@ -105,7 +105,10 @@ function main() {
 
    case $- in
       *i*) #  "This shell is interactive"
-         interactiveShell
+         debug START zshrc interactive
+         [ "$ZSHENV_LOADED" != 1 ] && debug loading zshenv && source /opt/ConfigShell/zsh/dot.zshenv
+         interactiveShell # deletes $PATH
+         setupPath
          NEWLINE=$'\n'
          if [ -n "$ownPrompt" ] ; then
                setopt PROMPT_SUBST
@@ -118,8 +121,9 @@ function main() {
          bindkey -e # emacs mode
          # bindkey '^[[1;5C' emacs-forward-word
          # bindkey '^[^[[D' emacs-backward-word
-      # realUserForHadm
+         # realUserForHadm
          autoload -U +X bashcompinit && bashcompinit
+
 
          #THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
          export SDKMAN_DIR="$HOME/.sdkman"
@@ -145,6 +149,7 @@ function main() {
             complete -o nospace -C /opt/homebrew/bin/terraform terraform
          fi   
       
+         debug end zshrc
          ;;
       *) #echo "This is a script";;
          ;;

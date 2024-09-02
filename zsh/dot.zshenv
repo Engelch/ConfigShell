@@ -3,25 +3,25 @@
 
 # helper for setupPath
 function loadPath() {
-    debug8 START loadPath
+    debug4 START loadPath "$@"
     [ ! -r "$2" ] && error12 "loadPath: file not found: $2" && return
     [   -r "$2" ] && while IFS= read -r line; do
-        line=$(echo "$line" | sed -e "s,^~,$HOME," | sed -e "s,^\$HOME,$HOME," | xargs)
+        line=$(echo "$line" | grep -v '^#' | grep -v '^$' | sed -e "s,^~,$HOME," | sed -e "s,^\$HOME,$HOME," | xargs)
         if [ -d "$line" ] ; then 
-            debug12 "ok found directory $line" ; 
+            debug8 "ok found directory $line" ; 
             case "$1" in
                 prepend) PATH="$line:$PATH" ;;
                 append)  PATH="$PATH:$line" ;;
-                *) error12 "loadPath: unknown mode $1 for path $2" && return ;;
+                *) error8 "loadPath: unknown mode $1 for path $2" && return ;;
             esac
-        else debug12 "not found: directory $line" ; fi
+        else debug8 "not found: directory $line" ; fi
     done < "$2"
-    debug8 END loadPath
+    debug4 END loadPath
 }
 
 # setupPath sets the path
 function setupPath() {
-    debug4 START setupPath
+    debug START setupPath
     [ $UID = 0 ] && debug4 root PATH initialisation &&  PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin
     [ $UID != 0 ] && debug4 normal user PATH init &&    PATH=./bin:/usr/local/bin:/sbin:/usr/sbin:/bin:/usr/bin
     # add directories if existing for all platforms
@@ -38,7 +38,7 @@ function setupPath() {
     loadPath append "$PROFILES_CONFIG_DIR/ShellPaths/path.$(uname).append.txt"
     # 6
     loadPath append "$PROFILES_CONFIG_DIR/ShellPaths/path.$(uname).$(uname -m).append.txt"
-    debug4 END setupPath
+    debug END setupPath
 }
 
 function loadLibs() {
@@ -64,11 +64,13 @@ if [ ! -d /opt/ConfigShell/. ] ; then
     return
 fi
 loadLibs
+# debugSet # can be called of libs are loaded
 [ "$errorSet" = 1 ] && echo error loading libary && return
-debug default lib loaded
+debug zshenv: default lib loaded
 
-[ -z "$NO_setupPath" ] && setupPath
-[ -n "$NO_setupPath" ] && echo setupPath disabled
+# omz destroys path, now done after omz
+
+debug zshenv setting environment variables
 
 export ZSH_DISABLE_COMPFIX=true
 export LESS='-iR'    # -i := searches are case insensitive; -R := Like -r, but only ANSI "color" escape sequences are output in "raw" form. The default is to display control characters using the caret notation.
@@ -82,6 +84,8 @@ export VISUAL=vim
 export EDITOR="$VISUAL"    # bsroot has no notion about VISUAL
 export BLOCKSIZE=1K
 export LC_ALL=en_US.UTF-8       # for ansible-vault which is required for git gee
+
+export ZSHENV_LOADED=1
 
 debug END dot.zshenv
 # EOF
