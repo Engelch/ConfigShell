@@ -2,4 +2,6 @@
 
 ~/go/bin
 
+~/.cargo/bin
+
 # EOF
