@@ -7,6 +7,7 @@ fuunction interactiveShell() {
    export ZSH="$HOME/.oh-my-zsh"
    if [ ! -d "$ZSH/." -o -n "$ownPrompt" ] ; then
       echo non oh-my-zsh
+      export ownPrompt=1
    else
       # Set name of the theme to load --- if set to "random", it will  load a random theme each time oh-my-zsh is loaded, in which case,
       # to know which specific one was loaded, run: echo $RANDOM_THEME  See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
@@ -50,6 +51,7 @@ fuunction interactiveShell() {
 }
 
 function loadAliases() {
+   debug4 loading aliases
    alias .2='cd ../..'
    alias .3='cd ../../..'
    alias .4='cd ../../../..'
@@ -92,6 +94,7 @@ function loadAliases() {
    alias -s php="$VISUAL"
    alias -s go="$VISUAL"
    alias -s rs="$VISUAL"
+   debug4 end loading aliases
 }
 
 
@@ -113,6 +116,15 @@ function main() {
          setupPath
          NEWLINE=$'\n'
          if [ -n "$ownPrompt" ] ; then
+               # gitContents is integrated here as it is required by setPrompt().
+               # Helper for PS1, git bash prompt like, but much shorter and also working for darwin.
+               function gitContents() {
+                  if [[ $(git rev-parse --is-inside-work-tree 2>&1 | grep fatal | wc -l) -eq 0  ]] ; then
+                           _gitBranch=$(git status -s -b | head -1 | sed 's/^##.//')
+                           _gitStatus=$(git status -s -b | tail -n +2 | sed 's/^\(..\).*/\1/' | sort | uniq | tr "\n" " " | sed -e 's/ //g' -e 's/??/?/' -e 's/^[ ]*//')
+                           echo $_gitStatus $_gitBranch
+                  fi
+               }
                setopt PROMPT_SUBST
                echo setting own prompt
                autoload -U colors
@@ -125,12 +137,6 @@ function main() {
          # bindkey '^[^[[D' emacs-backward-word
          # realUserForHadm
          autoload -U +X bashcompinit && bashcompinit
-
-
-         #THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
-         export SDKMAN_DIR="$HOME/.sdkman"
-         [[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
-
 
          powertheme=/opt/homebrew/opt/powerlevel9k/powerlevel9k.zsh-theme
          [ -f "$powertheme" ] && source "$powertheme"
