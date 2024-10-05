@@ -18,14 +18,6 @@
 # 4. Neither the name of the <organization> nor the
 #    names of its contributors may be used to endorse or promote products
 #    derived from this software without specific prior written permission.
-
-#########################################################################################
-# ConfigShell lib 1.1 (codebase 1.0.0)
-bashLib="/opt/ConfigShell/lib/bashlib.sh"
-[ ! -f "$bashLib" ] && 1>&2 echo "bash-library $bashLib not found" && exit 127
-# shellcheck source=/opt/ConfigShell/lib/bashlib.sh
-source "$bashLib"
-unset bashLib
 #########################################################################################
 
 # debug "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '...............................................'
@@ -34,6 +26,14 @@ unset bashLib
 # =========================================================================================
 # === normal use-case related functions ===================================================
 # =========================================================================================
+
+function loadLibs() {
+    bashLib="/opt/ConfigShell/lib/bashlib.sh"
+    [ ! -f "$bashLib" ] && 1>&2 echo "bash-library $bashLib not found" && return 1
+    source "$bashLib"
+    unset bashLib
+    return 0
+}
 
 # user-specific pre/post/... configuration
 function loadSource() {
@@ -210,6 +210,7 @@ function loadCompletions() {
      [ -r "$file" ] && debug8 sourcing "$file" && . "$file"
      [ ! -r "$file" ] && debug8 cannot source "$file" 
    done
+   which terraform > /dev/null 2>&1 && debug8 loading terraform completion && complete -C /usr/bin/terraform terraform
    #debugUnset
 }
 
@@ -218,12 +219,12 @@ function loadCompletions() {
 ############################################################################
 
 function main() {
-   debug4 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '...............................................'
-   umask 022
-
    case $- in
       *i*) #  "This shell is interactive"
          # source .bash_profile if it was not done before
+         loadLibs # load the library
+         [ "$?" -ne 0 ] && 1>&2 echo could not load library && return 1
+         umask 022
          # shellcheck source=/dev/null
          [ -z "$BASH_ENV" ] && [ -r ~/.bash_profile ] && source ~/.bash_profile && return
          loadSource pre
@@ -273,13 +274,6 @@ function main() {
    debug4 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'
 }
 
-debug "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '...............................................'
 main "$@"
-debug "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'
-
-export SDKMAN_DIR="$HOME/.sdkman" #THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
-[[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
 
 #################### EOF
-
-complete -C /usr/bin/terraform terraform

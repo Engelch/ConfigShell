@@ -2,16 +2,17 @@
 # shellcheck disable=SC2155 disable=SC2012 disable=SC2153
 
 function loadLibs() {
-    bashLib="$PROFILES_CONFIG_DIR/lib/bashlib.sh"
-    [ ! -f "$bashLib" ] && 1>&2 echo "bash-library $bashLib not found" && export errorSet=1
+    bashLib="/opt/ConfigShell/lib/bashlib.sh"
+    [ ! -f "$bashLib" ] && 1>&2 echo "bash-library $bashLib not found" && return 1
     source "$bashLib"
     unset bashLib
+    return 0
 }
 
 # helper for setupPath
-function loadPath() {
-    debug8 START loadPath
-    [ ! -r "$2" ] && error12 "loadPath: file not found: $2" && return
+function addPath() {
+    debug8 START addPath
+    [ ! -r "$2" ] && error12 "addPath: file not found: $2" && return
     [   -r "$2" ] && while IFS= read -r line; do
         line=$(echo "$line" | sed -e "s,^~,$HOME," | sed -e "s,^\$HOME,$HOME," | xargs)
         if [ -d "$line" ] ; then 
@@ -19,11 +20,11 @@ function loadPath() {
             case "$1" in
                 prepend) PATH="$line:$PATH" ;;
                 append)  PATH="$PATH:$line" ;;
-                *) error12 "loadPath: unknown mode $1 for path $2" && return ;;
+                *) error12 "addPath: unknown mode $1 for path $2" && return ;;
             esac
         else debug12 "not found: directory $line" ; fi
     done < "$2"
-    debug8 END loadPath
+    debug8 END addPath
 }
 
 # setupPath sets the path
@@ -34,17 +35,17 @@ function setupPath2() {
     # add directories if existing for all platforms
 
     # 1
-    loadPath prepend "$PROFILES_CONFIG_DIR/ShellPaths/path.prepend.txt"
+    addPath prepend "$PROFILES_CONFIG_DIR/ShellPaths/path.prepend.txt"
     # 2
-    loadPath prepend "$PROFILES_CONFIG_DIR/ShellPaths/path.$(uname).prepend.txt"
+    addPath prepend "$PROFILES_CONFIG_DIR/ShellPaths/path.$(uname).prepend.txt"
     # 3
-    loadPath prepend "$PROFILES_CONFIG_DIR/ShellPaths/path.$(uname).$(uname -m).prepend.txt"
+    addPath prepend "$PROFILES_CONFIG_DIR/ShellPaths/path.$(uname).$(uname -m).prepend.txt"
     # 4
-    loadPath append "$PROFILES_CONFIG_DIR/ShellPaths/path.append.txt"
+    addPath append "$PROFILES_CONFIG_DIR/ShellPaths/path.append.txt"
     # 5
-    loadPath append "$PROFILES_CONFIG_DIR/ShellPaths/path.$(uname).append.txt"
+    addPath append "$PROFILES_CONFIG_DIR/ShellPaths/path.$(uname).append.txt"
     # 6
-    loadPath append "$PROFILES_CONFIG_DIR/ShellPaths/path.$(uname).$(uname -m).append.txt"
+    addPath append "$PROFILES_CONFIG_DIR/ShellPaths/path.$(uname).$(uname -m).append.txt"
     debug4 END setupPath
 }
 
@@ -112,10 +113,16 @@ function envVars() {
 
     export PROFILES_CONFIG_DIR=$(ls -l "$HOME/.bashrc" | awk '{ print $NF }' | xargs dirname)
     [ -z "$PROFILES_CONFIG_DIR" ] && error PROFILES_CONFIG_DIR not set
+
+
+
     debug8 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'
 }
 
 function main() {
+    loadLibs
+    [ "$?" != 0 ] && echo error loading libary && return
+    debug default lib loaded
     debug4 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '...............................................'
 
     # seem to be inherited to sub-shells
@@ -128,9 +135,6 @@ function main() {
       echo 1>&2 "   Default PROFILES_CONFIG_DIR=/opt/ConfigShell not fullfilled, stopping.."
       return
    fi
-   loadLibs
-   [ "$errorSet" = 1 ] && echo error loading libary && return
-   debug default lib loaded
 
    envVars     # load environment variables (above), required for PROFILES_CONFIG_DIR below, must be done after PATH setup
    setupPath1
@@ -148,8 +152,6 @@ function main() {
 }
 
 # debugSet
-debug "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '...............................................'
 main "$@"
-debug "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'
 
 # EOF

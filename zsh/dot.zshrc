@@ -45,6 +45,7 @@ fuunction interactiveShell() {
       plugins=(z golang) # ruby rails git
 
       source $ZSH/oh-my-zsh.sh
+      omz update
    fi
 }
 
@@ -104,7 +105,8 @@ function main() {
    umask 022
 
    case $- in
-      *i*) #  "This shell is interactive"
+      *i*) 
+         # echo  "This shell is interactive"
          debug START zshrc interactive
          [ "$ZSHENV_LOADED" != 1 ] && debug loading zshenv && source /opt/ConfigShell/zsh/dot.zshenv
          interactiveShell # deletes $PATH
