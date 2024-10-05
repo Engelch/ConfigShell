@@ -188,7 +188,7 @@ function main() {
     echo Creating vim directories ' ~/.vim/backup ~/.vim/swap ~/.vim/undo ~/.vim/autoload ~/.vim/plugged'
     mkdir -p ~/.vim/backup ~/.vim/swap ~/.vim/undo ~/.vim/autoload ~/.vim/plugged
 
-    autoUpdateConfigShell
+    # autoUpdateConfigShell # only to be done if the user is the same as the one owning ConfigShell
     /opt/ConfigShell/bin/gitInit
 }
 
