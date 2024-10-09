@@ -226,9 +226,10 @@ function main() {
          [ "$?" -ne 0 ] && 1>&2 echo could not load library && return 1
          umask 022
          # shellcheck source=/dev/null
-         [ -z "$BASH_ENV" ] && [ -r ~/.bash_profile ] && source ~/.bash_profile && return
+         [ -z "$BASHPROFILE" ] && [ -r ~/.bash_profile ] && source ~/.bash_profile && return
          loadSource pre
          loadCompletions
+         export BASHRC=TRUE # do not load again from bash_profile
          export USER=${USER:-root} # fix for docker
          export SHELL=${SHELL:-$(ps a | grep $$ | sed -n "/^ *$$/p" | awk '{ print $NF }')} # fix for docker
          setHistFileUserShell                      # history file permission, ownership, settings

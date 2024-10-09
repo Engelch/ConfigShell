@@ -82,7 +82,7 @@ function setupPath1() {
 function envVars() {
     debug8 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '...............................................'
     export SHELL=$(which bash || errorExit 1 "bash could not be found")       # fix for docker
-    export BASH_ENV=TRUE    # tells bashrc that bash_profile was loaded
+    export BASHPROFILE=TRUE    # tells bashrc that bash_profile was loaded
     export LESS='-iR'       # -i := searches are case insensitive;
                             # -R := Like -r, but only ANSI "color" escape sequences are output in "raw" form.
                             # The default is to display control characters using the caret notation.
@@ -140,7 +140,7 @@ function main() {
    setupPath1
 
     # shellcheck source=/dev/null
-    # [ -z "$NO_bashrc" ] && [ -f "$HOME/.bashrc" ] && source "$HOME/.bashrc"    # start all the normal files
+    [ -z "$BASHRC" ] && [ -f "$HOME/.bashrc" ] && source "$HOME/.bashrc"    # start all the normal files
 
     # iterm @OSX
     # shellcheck source=/dev/null
