@@ -140,7 +140,7 @@ function main() {
    setupPath1
 
     # shellcheck source=/dev/null
-    [ -z "$NO_bashrc" ] && [ -f "$HOME/.bashrc" ] && source "$HOME/.bashrc"    # start all the normal files
+    # [ -z "$NO_bashrc" ] && [ -f "$HOME/.bashrc" ] && source "$HOME/.bashrc"    # start all the normal files
 
     # iterm @OSX
     # shellcheck source=/dev/null

@@ -85,7 +85,7 @@ function setAliases() {
    alias mv='mv -i'
    alias po=popd
    alias pu=pushd
-   alias rl="source ~/.bash_profile"
+   alias rl="source ~/.bash_profile ; source ~/.bashrc"
    alias rlDebug="debugSet; source ~/.bash_profile; debugUnset"
    alias rlFull=rlDebug            # backward compatibility
    alias rm='rm -i'           # life assurance
@@ -208,7 +208,7 @@ function loadCompletions() {
    [ -d "$completionDir" ] && for file in "$completionDir/"* ; do
      [ -d "$file" ] && debug8 directory, skipping && continue
      [ -r "$file" ] && debug8 sourcing "$file" && . "$file"
-     [ ! -r "$file" ] && debug8 cannot source "$file" 
+     [ ! -r "$file" ] && debug8 cannot source "$file"
    done
    which terraform > /dev/null 2>&1 && debug8 loading terraform completion && complete -C /usr/bin/terraform terraform
    #debugUnset
@@ -268,10 +268,8 @@ function main() {
          done
          ;;
       *) #echo "This is a script";;
-         debug non-interactive shell
          ;;
    esac
-   debug4 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'
 }
 
 main "$@"
