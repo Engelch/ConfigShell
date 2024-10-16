@@ -34,6 +34,6 @@ if [ "$1" = '-p' ] ; then
 fi
 
 #find -L  ~/.ssh/  -name \*.config -type f | grep -v \.old | xargs grep -ri 'host ' | grep -v ':#' | sed -E 's/^.*\.config:[[:space:]]*[Hh]ost //' | tr " " "\n"
-find -L  ~/.ssh/  -name \*.config -type f | grep -v \.old | xargs grep -ri 'host ' | egrep -v '[[:space:]]*#' | sed -E 's/^.*\.config:[[:space:]]*[Hh]ost //'  | tr " " "\n" | egrep -v '^[[:space:]]*$' | sort >| "$output"
+find -L  ~/.ssh/  -name \*.config -type f | grep -v \.old | xargs grep -ri 'host ' | grep -Ev '[[:space:]]*#' | sed -E 's/^.*\.config:[[:space:]]*[Hh]ost //'  | tr " " "\n" | grep -vE '^[[:space:]]*$' | sort >| "$output"
 # | sed -E 's/^.*\.config:[Hh]ost //' | tr " " "\n" 
 # egrep -iR '^host ' $HOME/.ssh/. 2>/dev/null | fgrep .config: | fgrep -v '*' | sed -E 's/^.*\.config:[Hh]ost //' | tr " " "\n" | sort >| $HOME/.ssh/completion.lst
