@@ -2,7 +2,7 @@
 # install oh-my-zsh
 # sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 
-fuunction interactiveShell() {
+fuunction loadOMZ() {
    # Path to your oh-my-zsh installation.
    export ZSH="$HOME/.oh-my-zsh"
    if [ ! -d "$ZSH/." -o -n "$ownPrompt" ] ; then
@@ -103,19 +103,30 @@ function rl() {
    source /opt/ConfigShell/dot.zshrc
 }
 
+# toggle the ZSH prompt from an own prompt defined here and an OMZ prompt/theme
+function togglePrompt {
+   if [ -f "$ownPromptPath" ] ; then
+      /bin/rm -f "$ownPromptPath"
+   else
+      touch "$ownPromptPath"
+   fi
+}
+
 function main() {
    local files
    umask 022
 
    case $- in
       *i*) 
-         # echo  "This shell is interactive"
-         debug START zshrc interactive
-         [ "$ZSHENV_LOADED" != 1 ] && debug loading zshenv && source /opt/ConfigShell/zsh/dot.zshenv
-         interactiveShell # deletes $PATH
-         setupPath
          NEWLINE=$'\n'
-         if [ -n "$ownPrompt" ] ; then
+         ownPromptPath="$HOME/.ownPrompt"
+         if [ -n "$INTELLIJ_ENVIRONMENT_READER" ]; then
+            setupPath
+            return
+         fi
+         [ "$ZSHENV_LOADED" != 1 ] && source /opt/ConfigShell/zsh/dot.zshenv && debug loading zshenv # after source .zshenv, debug is available
+         debug START dot.zshrc interactive
+         if [ -f "$ownPromptPath" ] ; then
                # gitContents is integrated here as it is required by setPrompt().
                # Helper for PS1, git bash prompt like, but much shorter and also working for darwin.
                function gitContents() {
@@ -128,9 +139,14 @@ function main() {
                setopt PROMPT_SUBST
                echo setting own prompt
                autoload -U colors
+               autoload -Uz compinit   # required for compdef,..., otherwise loaded by omz
+               compinit
                PROMPT='%(?..%F{red}%?$reset_color • )%F{green}%n@%m$reset_color • %* • %F{yellow}$(gitContents)$reset_color • %F{red}$AWS_PROFILE$reset_color • %{%F{cyan}%c%{$reset_color%}'$reset_color${NEWLINE}
                RPROMPT=
+         else
+            loadOMZ # deletes $PATH, so we set up path after this function   
          fi
+         setupPath
          bindkey '^R' history-incremental-pattern-search-backward # history-incremental-search-backward
          bindkey -e # emacs mode
          # bindkey '^[[1;5C' emacs-forward-word
@@ -153,7 +169,6 @@ function main() {
 
          # terraform completion
          if [ -f /opt/homebrew/bin/terraform ] ; then
-            autoload -U +X bashcompinit && bashcompinit
             complete -o nospace -C /opt/homebrew/bin/terraform terraform
          fi   
       
