@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env -S bash --norc --noprofile
 # vim: set expandtab: ts=3: sw=3
 # shellcheck disable=SC2155
 #

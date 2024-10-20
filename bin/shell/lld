@@ -1,3 +1,7 @@
 #!/usr/bin/env sh
 
-exec ls -ldF "$LS_COLOUR" "$@"
+if [ -z "$LS_COLOUR" ] ; then
+   exec ls -ldF "$@"
+else
+   exec ls -ldFG "$@"
+fi

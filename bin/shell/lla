@@ -1,3 +1,9 @@
 #!/usr/bin/env -S bash --norc --noprofile
 
-exec ls -alF "$LS_COLOUR" "$@"
+if [ -z "$LS_COLOUR" ] ; then
+   ls -alF "$@"
+else
+   ls -alFG "$@"
+fi
+
+
