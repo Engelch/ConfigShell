@@ -20,7 +20,6 @@ fuunction loadOMZ() {
       # DISABLE_MAGIC_FUNCTIONS="true" # Uncomment the following line if pasting URLs and other text is messed up.
       # DISABLE_LS_COLORS="true"      # Uncomment the following line to disable colors in ls.
       # DISABLE_AUTO_TITLE="true"      # Uncomment the following line to disable auto-setting terminal title.
-
       ENABLE_CORRECTION="false"      # Uncomment the following line to enable command auto-correction.
 
       # Uncomment the following line to display red dots whilst waiting for completion.
@@ -46,7 +45,19 @@ fuunction loadOMZ() {
       plugins=(z golang) # ruby rails git
 
       source $ZSH/oh-my-zsh.sh
-      omz update
+      omzUpdateFlagFile="$HOME/.omzUpdate"
+      if [[ $(find "$omzUpdateFlagFile" -mtime +1 -print) ]]; then
+         debug "omz update flag file found, older than 1 day, tryting to update" 
+         omz update
+         touch "$omzUpdateFlagFile"
+      elif [ ! -f  "$omzUpdateFlagFile" ] ; then
+         debug "omz update flag file not found, creating it, and running omz update"
+         omz update
+         touch "$omzUpdateFlagFile"
+      else
+         debug "omz update flag file found, younger than 1 day, not updating"
+      fi
+      unset omzUpdateFlagFile
    fi
 }
 
@@ -86,7 +97,7 @@ function loadAliases() {
    alias po=popd
    alias pu=pushd
    alias rm='rm -i'
-   alias rm~=rmbak
+   alias rm~='rmbak'
    alias wh=which
    # suffix aliases
    alias -s c="$VISUAL"

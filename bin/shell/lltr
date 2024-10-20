@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env -S bash --norc --noprofile
 
 if which eza &>/dev/null ; then
     eza -lrt mod "$@"

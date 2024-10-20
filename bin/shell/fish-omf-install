@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env -S bash --norc --noprofile
 #
 # Install omf (oh-my-fish) and the themes bobthefish and bang-bang (!$ support).
 # It stops, it a previous installation is detected, unless '-f' is supplied as an option
