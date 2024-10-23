@@ -1,4 +1,4 @@
-" = READ ONLY MODE ======================================================= 
+" = READ ONLY MODE =======================================================
 " vi -R <<file>>  open the file in RO-mode
 
 " = SHOW/REMOVE TABS ======================================================= 
@@ -15,12 +15,6 @@
 " (copy clipboard).
 "
 " = PARAGRAPH FORMATTING ======================================================= 
-" par as formatting tool
-"  brew/par  install par
-"  :set formatprg=par\ -w78
-"
-"  Commands below also work w/out par. By executing the above
-"  formatprg, they work w/ par
 "
 " gwip      format current paragraph
 " gwG       format document from current line to EOF
@@ -29,6 +23,9 @@
 " = RELOAD VIMRC WITHOUT STOPPING VI ======================================================= 
 " reload .vimrc if file is in the active buffer:  :so %
 " 
+" surround plugin: yss to impact a full line.
+"                  ysip to impact a paragraph
+"                  ysi) to impact a sentence
 " iw, aw :- inside/around word
 " is, as :- inside/around sentence
 " ip, ap :- inside/around paragraph
@@ -41,24 +38,14 @@
 " :ls list buffer
 " :b1..n change to buffer n
 
-" PLUGINS ---------------------------------------------------------------- {{{
-" load the mgr by:
-"     curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-" or (PowerShell)
-"     iwr -useb https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim | ni $HOME/vimfiles/autoload/plug.vim -Force
-" After downloading the plugin manager and enabling plugins below, you can
-" load the plugins using:
-"     :PlugInstall 
+" PLUGINS ---------------------------------------------------------------- 
+" removed as plugins are directly install using the vim-internal package
+" manager. Packages are in the directory ~/.vim/pack/<name>/{start,opt}/<plugin>
+" If the parent directory is called start, then the plugin is loaded
+" automatically. If it is called opt, then the plugin is loaded only when
+" called with :packadd <plugin-name>.
 
-" call plug#begin('~/.vim/plugged')
-"  Plug 'dense-analysis/ale'     " linters for many programming languages
-"  Plug 'preservim/nerdtree'     " directory tree manager
-
-" call plug#end()
-
-" }}}
-
-" MAPPINGS --------------------------------------------------------------- {{{
+" MAPPINGS --------------------------------------------------------------- 
 " 3 different ways to change keyboard mappings
 "     nnoremap – Allows you to map keys in normal mode.
 "     inoremap – Allows you to map keys in insert mode.
@@ -182,9 +169,9 @@ autocmd FileType yaml setlocal ts=2 sts=2 sw=2 expandtab
 :set mouse=a      " allow mouse to change cursor position"
 :set showmatch    " briefly jump to matching brackets"
 
-:set number
-:set expandtab
-" :set noswapfile   " disable the swap file as required for some docker directories
+:set number       " show line numbers"
+:set expandtab    " replace tabs with spaces"
+" :set noswapfile " disable the swap file as required for some docker directories
 
 " *               - search for word currently under cursor"
 " g*              - search for partial word under cursor "
@@ -192,6 +179,7 @@ autocmd FileType yaml setlocal ts=2 sts=2 sw=2 expandtab
 " ctrl-o, ctrl-i  - go through jump locations"
 " [I              - show lines with matching word under cursor"
 
+set spelllang=en_gb
 if has("spell")
   " turn spelling on by default
   "set spell
