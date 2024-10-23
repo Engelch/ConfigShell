@@ -86,6 +86,9 @@ set lcs+=space:·
 silent! helptags ALL
 let g:ale_completion_enabled = 1
 
+" nerdtree show number of lines per file
+let g:NERDTreeFileLines = 1
+
 " ==========================================================
 filetype plugin indent on
 

@@ -21,6 +21,7 @@ cdOrExit ~/.vim/pack
 #
 # 1. ALE
 
+cdOrExit ~/.vim/pack 
 if [ -d ale ] ; then
    if [ -d ale/start/ale ] ; then 
       cdOrExit ale/start/ale 
@@ -36,29 +37,36 @@ else
    cdOrExit -
 fi
 
-# 2. Copilot
+# 2. Copilot - default installation: optional
 
+cdOrExit ~/.vim/pack 
 if [ -d copilot ] ; then
-   if [ -d copilot/start/copilot ] ; then 
-      cdOrExit copilot/start/copilot 
-      echo copilot found, updating it.
+   if [ -d copilot/start/copilot.vim ] ; then 
+      cdOrExit copilot/start/copilot.vim 
+      echo start/copilot found, updating it.
+      git pull
+      cdOrExit -
+   elif [ -d copilot/opt/copilot.vim ] ; then 
+      cdOrExit copilot/opt/copilot.vim
+      echo opt/copilot found, updating it.
       git pull
       cdOrExit -
    else
       echo copilot existing but no default installation, not touching it.
    fi
 else
-   echo copilot not found, installing it.
-   mkCdOrExit copilot/start && git clone https://github.com/github/copilot.vim.git
+   echo copilot not found, installing it as an optional package.
+   mkCdOrExit copilot/opt && git clone https://github.com/github/copilot.vim.git
    cdOrExit -
 fi
 
 # 3. vim-go
 
+cdOrExit ~/.vim/pack 
 if [ -d go ] ; then
    if [ -d go/start/vim-go ] ; then 
       cdOrExit go/start/vim-go 
-      echo copilot found, updating it.
+      echo vim-go found, updating it.
       git pull
       cdOrExit -
    else
@@ -72,6 +80,7 @@ fi
 
 # 4. surround
 
+cdOrExit ~/.vim/pack 
 if [ -d parentheses ] ; then
    if [ -d parentheses/start/surround ] ; then 
       cdOrExit parentheses/start/surround 
@@ -89,6 +98,7 @@ fi
 
 # 5. vim-airline status line
 
+cdOrExit ~/.vim/pack 
 if [ -d statusline ] ; then
    if [ -d statusline/start/vim-airline ] ; then 
       cdOrExit statusline/start/vim-airline 
@@ -106,17 +116,18 @@ fi
 
 # 6. versionCtrl
 
+cdOrExit ~/.vim/pack 
 if [ -d versionCtrl ] ; then
-   if [ -d versionCtrl/start/vim-fugitive ] ; then 
-      cdOrExit versionCtrl/start/vim-fugitive 
-      echo vim-fugitive found, updating it.
+   if [ -d versionCtrl/start/fugitive ] ; then 
+      cdOrExit versionCtrl/start/fugitive 
+      echo fugitive found, updating it.
       git pull
       cdOrExit -
    else
-      echo vim-fugitive existing but no default installation, not touching it.
+      echo fugitive existing but no default installation, not touching it.
    fi
 else
-   echo vim-fugitive not found, installing it.
+   echo fugitive not found, installing it.
    mkCdOrExit versionCtrl/start && git clone https://tpope.io/vim/fugitive.git
    cdOrExit -
 fi
@@ -124,6 +135,7 @@ fi
 # 7. vim-markdown
 # This is a markdown syntax highlighter
 
+cdOrExit ~/.vim/pack 
 if [ -d markdown ] ; then
    if [ -d markdown/start/vim-markdown ] ; then 
       cdOrExit markdown/start/vim-markdown 
@@ -139,4 +151,23 @@ else
    cdOrExit -
 fi
 
+# 8. nerdtree file mgr
+#
+cdOrExit ~/.vim/pack 
+if [ -d fileMgr ] ; then
+   if [ -d fileMgr/start/nerdtree ] ; then 
+      cdOrExit fileMgr/start/nerdtree 
+      echo nerdtree found, updating it.
+      git pull
+      cdOrExit -
+   else
+      echo nerdtree existing but no default installation, not touching it.
+   fi
+else
+   echo nerdtree not found, installing it.
+   mkCdOrExit fileMgr/start && git clone https://github.com/preservim/nerdtree.git
+   cdOrExit -
+fi
+
 # EOF
+
