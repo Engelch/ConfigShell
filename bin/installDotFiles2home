@@ -185,10 +185,13 @@ function main() {
 
     mkdir -p ~/.sh.d    # add common shell directory for *.sh commands to be run as a sub-shell
 
-    echo Creating vim directories ' ~/.vim/backup ~/.vim/swap ~/.vim/undo ~/.vim/autoload ~/.vim/plugged'
-    mkdir -p ~/.vim/backup ~/.vim/swap ~/.vim/undo ~/.vim/autoload ~/.vim/plugged
+    echo Creating vim directories  '~/.vim/backup ~/.vim/swap ~/.vim/undo ~/.vim/pack' 
+    mkdir -p ~/.vim/backup ~/.vim/swap ~/.vim/undo  ~/.vim/pack
 
     # autoUpdateConfigShell # only to be done if the user is the same as the one owning ConfigShell
+    # Now to be done by the cpkg update alias cpu programme.
+    
+    # gitInit does not change ~/.gitignore
     /opt/ConfigShell/bin/gitInit
 }
 

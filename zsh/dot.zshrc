@@ -37,12 +37,15 @@ fuunction loadOMZ() {
       # or set a custom format using the strftime function format specifications,  see 'man strftime' for details.  HIST_STAMPS="mm/dd/yyyy"
       HIST_STAMPS="yyyy-mm-dd"
 
+      # Uncomment the following line to disable bi-weekly auto-update checks.
+      DISABLE_AUTO_UPDATE="true"
+
       # ZSH_CUSTOM=/path/to/new-custom-folder      # Would you like to use another custom folder than $ZSH/custom?
 
       # Which plugins would you like to load?   Standard plugins can be found in $ZSH/plugins/
       # Custom plugins may be added to $ZSH_CUSTOM/plugins/  Example format: plugins=(rails git textmate ruby lighthouse)
       # Add wisely, as too many plugins slow down shell startup.
-      plugins=(z golang) # ruby rails git
+      plugins=(z golang sudo zsh-syntax-highlighting) # ruby rails git
 
       source $ZSH/oh-my-zsh.sh
       omzUpdateFlagFile="$HOME/.omzUpdate"
