@@ -4,6 +4,7 @@
 /usr/local/homebrew/sbin
 
 /opt/ConfigShell/ConfigDarwin/bin/
+/opt/homebrew/opt/ruby/bin
 
 /opt/homebrew/opt/openssl@1.1/bin
 /usr/local/opt/openssl@1.1/bin
