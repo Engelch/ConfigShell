@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env bash --norc --noprofile
 
 # Synopsis
 #   gisw <<branch>> | -V | --version
@@ -23,6 +23,15 @@ git switch "$1" && git pull
 declare -gr gitroot="$(git rev-parse --show-toplevel)"
 
 # run git gee decrypt if git gee is used and some file has the status modified.
-[ -f "$gitroot/.git/gee" ] && echo && echo "git gee status:" && git gee s || git gee de
+if [ -f "$gitroot/.git/gee" ] ; then
+   echo
+   echo -n "git gee detected, status: " 
+   if $(git gee s) ; then
+        echo "✔︎ (ok)"
+   else
+        echo "❌ dirty, decrypting..."
+        git gee de
+   fi
+fi
 
 # EOF
