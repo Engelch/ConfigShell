@@ -85,6 +85,7 @@ export VISUAL=vim
 export EDITOR="$VISUAL"    # bsroot has no notion about VISUAL
 export BLOCKSIZE=1K
 export LC_ALL=en_US.UTF-8       # for ansible-vault which is required for git gee
+export KUBECTL=kubectl  # default setting for kubectl, can be overwritte for other K8s-configurations
 
 export ZSHENV_LOADED=1
 
