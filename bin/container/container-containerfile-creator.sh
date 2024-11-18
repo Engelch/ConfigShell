@@ -1,29 +1,9 @@
-#!/usr/bin/env bash
-#
-# j2
-# abouit: jinja2 for the CLI
-# installation:
-#     pip install j2cli
-#     source: https://github.com/kolypto/j2cli
-# binary: j2
-# Alternative: brew install jinja2-cli
-#
+#!/usr/bin/env -S bash --noprofile --norc
 
-[ ! -f Containerfile.j2 ] && 1>&2 echo "Containerfile.j2 not found" && exit 1
+1>&2 echo -e '\033[33;7mERROR *****************************************************\033[0m'
+1>&2 echo container-containerfile-creator.sh is replaced by either
+1>&2 echo   - container-containerfile-creator-jinja.sh 
+1>&2 echo   - container-containerfile-creator-j2.sh 
+1>&2 echo Use the equivalent one depending on your OS installation.
 
-export yearShort="$(date +%y)"
-export monthNumber="$(date +%m)"
-if [ "$(pwd | xargs dirname | xargs basename)" = src ] ; then
-   export APP="$(pwd | xargs dirname | xargs dirname | xargs basename)"
-else
-   export APP="$(pwd | xargs dirname | xargs basename)"
-fi
-
-if [ "$1" = -n ] ; then # dry-run
-   echo yearShort: "$yearShort"
-   echo monthNumber "$monthNumber"
-   echo APP "$APP"
- echo j2 -e '' Containerfile.j2 > Containerfile
-else
-   j2 -e '' Containerfile.j2 > Containerfile
-fi
+exit 42

@@ -1,13 +1,18 @@
-#!/usr/bin/env bash
+#!/usr/bin/env -S bash --noprofile --norc
 
 if [ "$1" = -V ] || [ "$1" = '--version' ] ; then
-    cd "$PROFILES_CONFIG_DIR/bin/git" || { 1>&2 echo ERROR, unusual ConfigShell installation ; exit 10 ; }
-    [ ! -f ./version.txt ] && { 1>&2 echo ERROR, version of git tools cannot be determined. ; exit 11 ; }
+    cd "$PROFILES_CONFIG_DIR/bin/git" || { 1>&2 echo ERROR, unusual ConfigShell installation ; exit 2 ; }
+    [ ! -f ./version.txt ] && { 1>&2 echo ERROR, version of git tools cannot be determined. ; exit 3 ; }
     version.sh
-    exit 0
+    exit 1
 fi
 
-git status -u --show-stash $* ; res=$? # --ignore-submodules
+if [ $# != 0 ] ; then
+   1>&2 echo gist only allows the arguments -V or --version
+   exit 10
+fi
+
+git status -u --show-stash ; res=$? # --ignore-submodules
 
 git rev-parse --show-toplevel &>/dev/null || exit "$res" 
 
