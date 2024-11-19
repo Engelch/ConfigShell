@@ -2,7 +2,6 @@
 cover.out
 coverage.out
 .touchfile
-*.tfstate
 .terraform
 *.backup
 *~
