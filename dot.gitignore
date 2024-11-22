@@ -8,3 +8,4 @@ coverage.out
 *.bak
 
 .fake
+build/
