@@ -26,9 +26,9 @@ shallow=
 [ -f "$gitroot/.git/shallow" ] && shallow="--depth 1"
 
 $dry git pull --tags $shallow --autostash "$@"
+res=$?
 
-
- [ -f "$gitroot/.git/gee" ] && echo "Running git gee decrypt:" && $dry git gee de
+ [ "$res" -eq 0 ] && [ -f "$gitroot/.git/gee" ] && echo "Running git gee decrypt:" && $dry git gee de
 
 umask $orig_umask
 
