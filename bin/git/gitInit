@@ -1,87 +1,144 @@
-#!/usr/bin/env bash
+#!/usr/bin/env -S bash --noprofile --norc
 
 # ABOUT
 # - initialise git variables
 #
 # CHANGELOG
 #
+# 1.2
+# - debug now -D instead of -d
+# - introduced of debug function
+# - script loaded with --noprofile --norc
+# - -b for batch mode
+# - -h | --help added
+# 
 # 1.1.0 --2022-05-03
 # - engelch: added init.defaultBranch setup
 
 function error() {
-    echo ERROR $* > /dev/stderr
+    echo ERROR "$@" > /dev/stderr
+    return 0
+}
+
+function debug() {
+    [ ! -z $_debug ] && echo DEBUG "$@" > /dev/stderr
+    return 0
+}
+
+function usage() {
+    echo 1>&2 "Usage: $(basename $0) [option]"
+    echo 1>&2 "  -D                  debug mode"
+    echo 1>&2 "  -b                  batch mode"
+    echo 1>&2 "  -V | --version      version, exit code 1"
+    echo 1>&2 "  -h | --help         help, exit code 2"
 }
 
 if [ "$1" = -V ] || [ "$1" = '--version' ] ; then
     cd "$PROFILES_CONFIG_DIR/bin/git" || { 1>&2 echo ERROR, unusual ConfigShell installation ; exit 10 ; }
     [ ! -f ./version.txt ] && { 1>&2 echo ERROR, version of git tools cannot be determined. ; exit 11 ; }
     version.sh
-    exit 0
+    exit 1
+fi
+
+if [ "$1" = -h ] || [ "$1" = '--help' ] ; then
+    usage
+    exit 2
 fi
 
 [ -f "$HOME/.gitinit" ] && echo "git Init was run before as $HOME/.gitinit is existing, Exiting." && exit 0
 
 # initialise the git variables
 
-[ "$1" = -d ] && _debug=True
+[ "$1" = '-D' ] && _debug=true && shift && debug enabled
+
+[ "$1" = -b ] && _batchMode=true && shift
+
+# user.name ==================================================================
+
 _fullName=$(git config --global user.name)
 if [ "$_fullName" = "" ] ; then
     _userName=$(id -un)     # get current potential user-name
-    _fullName=$(getent passwd | egrep ^$_userName | awk -F: '{print $5}')
+    _fullName=$(id -F)
 fi
+
 /bin/echo Current git username for commits: $_fullName
-/bin/echo -n 'ENTER to keep current user name or:' ;  read  _gitUsername
-[ -z $_gitUsername ] && _gitUsername=$_fullName
-[ -z $_debug ] && git config --global user.name "$_gitUsername"
-[ ! -z $_debug ] && /bin/echo WOULD: git config --global user.name "$_gitUsername"
+if [ -z "$_batchMode" ] ; then 
+    /bin/echo -n 'ENTER to keep current user name or:' ;  read _gitUsername
+    [ -z $_gitUsername ] && _gitUsername=$_fullName
+else
+    _gitUsername=$_fullName
+fi
+
+debug git config --global user.name "$_gitUsername"
+git config --global user.name "$_gitUsername"
+
+# user.email ==================================================================
 
 _gitMailAddr=$(git config --global user.email)
 /bin/echo Current git email name: $_gitMailAddr
-/bin/echo -n  'ENTER to keep current email address or:'; read _tmp
-[ ! -z $_tmp ] && _gitMailAddr=$_tmp
-[ -z $_debug ] && git config --global user.email "$_gitMailAddr"
-[ ! -z $_debug ] && /bin/echo WOULD: git config --global user.email "$_gitMailAddr"
 
-[ -z $_debug ] && git config --global alias.last 'log -1 HEAD'
-[ ! -z $_debug ] && /bin/echo WOULD: git config --global alias.last 'log -1 HEAD'
+if [ -z "$_batchMode" ] ; then 
+    /bin/echo -n  'ENTER to keep current email address or:'; read _tmp
+    [ ! -z $_tmp ] && _gitMailAddr=$_tmp
+    debug git config --global user.email "$_gitMailAddr"
+    git config --global user.email "$_gitMailAddr"
+fi 
 
-[ -z $_debug ] && git config --global pull.rebase true # use rebase
-[ ! -z $_debug ] && /bin/echo WOULD: git config --global pull.rebase true # use rebase
+# alias.last ==================================================================
 
-[ -z $_debug ] && git config --global pager.branch false # no pager for gibr
-[ ! -z $_debug ] && /bin/echo WOULD: git config --global pager.branch false # no pager for gibr
+debug git config --global alias.last 'log -1 HEAD'
+git config --global alias.last 'log -1 HEAD'
 
+# pull.rebase ==================================================================
+
+debug git config --global pull.rebase true # use rebase
+git config --global pull.rebase true # use rebase
+
+# pager.branch ==================================================================
+
+debug git config --global pager.branch false # no pager for gibr
+git config --global pager.branch false # no pager for gibr
+
+# init.defaultBranch ==================================================================
+
+debug git config --global init.defaultBranch master
 git config --global init.defaultBranch master
 
+# diff.ignoreSubmodules ==================================================================
+
+debug git config --global diff.ignoreSubmodules all
 git config --global diff.ignoreSubmodules all
 
+# core.editor ==================================================================
 
 # preference of vi before emacs and nano
-for _editor in vi vim emacs uemacs nano ; do
+for _editor in nvim vim vi emacs uemacs nano ; do
     if $(command -v $_editor >/dev/null 2>&1) ; then
-        [ -z $_debug ] && git config --global core.editor $_editor
-        [ ! -z $_debug ] && /bin/echo WOULD: git config --global core.editor $_editor
+        debug git config --global core.editor $_editor
+        git config --global core.editor $_editor
         /bin/echo Editor set to $_editor
         break
     fi
 done
 
+# credential.helper ==================================================================
+
 # set credential helpers for WSL, Linux, Darwin
 case $(uname) in
 Linux)
-    [[ $(uname -r ) =~ Microsoft ]] && [ -z $_debug ] && git config --global credential.helper manager    # WSL support
-    [[ $(uname -r ) =~ Microsoft ]] && [ ! -z $_debug ] && /bin/echo WOULD: git config --global credential.helper manager    # WSL support
+    [[ $(uname -r ) =~ Microsoft ]] &&       git config --global credential.helper manager    # WSL support
+    [[ $(uname -r ) =~ Microsoft ]] && debug git config --global credential.helper manager    # WSL support
 
-    [[ ! $(uname -r ) =~ Microsoft ]] && [ -z $_debug ] && git config --global credential.helper store    # classical Linux
-    [[ ! $(uname -r ) =~ Microsoft ]] && [ ! -z $_debug ] && /bin/echo WOULD:git config --global credential.helper store    # classical Linux
-    touch $HOME/.gitinit
+    [[ ! $(uname -r ) =~ Microsoft ]] &&       git config --global credential.helper store    # classical Linux
+    [[ ! $(uname -r ) =~ Microsoft ]] && debug git config --global credential.helper store    # classical Linux
     ;;
 Darwin)
-    [ -z $_debug ] && git config --global credential.helper osxkeychain
-    [ ! -z $_debug ] && /bin/echo WOULD: git config --global credential.helper osxkeychain
-    touch $HOME/.gitinit
+          git config --global credential.helper osxkeychain
+    debug git config --global credential.helper osxkeychain
     ;;
 *) error OS not supported to set the credential.helper variable. ;  exit 1
 esac
+touch $HOME/.gitinit
+echo "gitInit done, variables set in $HOME/.gitconfig. $HOME/.gitinit created as flag-file."
 
 # EOF
