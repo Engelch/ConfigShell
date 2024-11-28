@@ -46,6 +46,7 @@ function usage()
     err4 '-V                    ::= show version number and exit 11'
     err4 '-h                    ::= show usage message and exit with exit code 1'
     err4 '-f <<cfgFile>>        ::= load the configuration froma cfg file'
+    erre '-x                    ::= show expanded output (PSQL only)'
     err4 todo -f not yet implemented
 }
 
@@ -55,7 +56,7 @@ function usage()
 # EXIT 11   version
 function parseCLI() {
     declare -g credentialsFile=''
-    while getopts "DVf:nh" options; do         # Loop: Get the next option;
+    while getopts "DVf:nhx" options; do         # Loop: Get the next option;
         case "${options}" in                    # TIMES=${OPTARG}
             D)  debugSet ; debug debug enabled
                 ;;
@@ -70,6 +71,8 @@ function parseCLI() {
             h)  usage ; exit 1
                 ;;
             n)  dry="echo" ; echo 1>&2 dry-mode in on
+                ;;
+            x)  xoutput='--expanded'
                 ;;
             *)
                 err Help with "$App" -h
@@ -223,8 +226,8 @@ function callDB() {
     debug in "${FUNCNAME[0]}"
     exitIfBinariesNotFound "$db_caller"
     case "$db_caller" in
-    psql)       [ -z "$*" ] && debug no command && $dry psql postgresql://"$db_user":"$db_pw"@"$db_host":"$db_port"/"$db_db"
-                [ -n "$*" ] && debug command supplied && $dry psql -c "$*" postgresql://"$db_user":"$db_pw"@"$db_host":"$db_port"/"$db_db"
+    psql)       [ -z "$*" ] && debug no command && $dry psql $xoutput postgresql://"$db_user":"$db_pw"@"$db_host":"$db_port"/"$db_db"
+                [ -n "$*" ] && debug command supplied && $dry psql $xoutput -c "$*" postgresql://"$db_user":"$db_pw"@"$db_host":"$db_port"/"$db_db"
                 ;;
     mysql)      [ -z "$*" ] && debug no command && $dry mysql -h "$db_host" -P "$db_port" -u "$db_user" --password="$db_pw" "$db_db"
                 [ -n "$*" ] && debug command supplied && echo "$*" | $dry mysql -h "$db_host" -P "$db_port" -u "$db_user" --password="$db_pw" "$db_db"
@@ -239,7 +242,7 @@ function main() {
     declare -r App=$(basename "${0}")
     #declare -r AppDir=$(dirname "$0")
     # declare -r _AbsoluteAppDir=$(cd "$_appDir" || exit 99 ; /bin/pwd)
-    declare -r AppVersion="1.1.1"      # use semantic versioning
+    declare -r AppVersion="1.2.0"      # use semantic versioning
     dry=
     parseCLI "$@"
     shift "$(( OPTIND - 1 ))"  # not working inside parseCLI
