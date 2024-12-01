@@ -126,6 +126,13 @@ function togglePrompt {
    fi
 }
 
+function loadSshCompletionSpeedUp() {
+   typeset -rl _completion=~/.ssh/completion.lst
+   [ ! -f $_completion ] && { 1>&2 echo SSH completion list not found, please consider running ssh-createCompletionList. ; return ; }
+   host_list=($(cat $_completion))
+   zstyle ':completion:*:(ssh|scp|sftp|rsync):*' hosts $host_list
+}
+
 function main() {
    local files
    umask 022
@@ -166,6 +173,7 @@ function main() {
          # bindkey '^[[1;5C' emacs-forward-word
          # bindkey '^[^[[D' emacs-backward-word
          # realUserForHadm
+         loadSshCompletionSpeedUp
          autoload -U +X bashcompinit && bashcompinit
 
          powertheme=/opt/homebrew/opt/powerlevel9k/powerlevel9k.zsh-theme
