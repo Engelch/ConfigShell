@@ -21,7 +21,7 @@
 
 APP=$(basename $0)
 #APP_DIR=$(dirname $0)
-APP_VERSION="1.1.0"
+APP_VERSION="1.2.0"
 # all entries done by this script should easily be identifiable by the special TTL value 301
 JSON_CMD='{ "Changes": [ { "Action": "<ACTION>", "ResourceRecordSet": { "Name": "<NAME>", "Type": "<TYPE>", "TTL": 301, "ResourceRecords": [ <<VALUE>> ] } } ] }'
 DEBUG_ENABLED=
@@ -42,13 +42,14 @@ function usage()
     err "-   $APP [ -D ] version|-V                                                        # app-name:versionNumber"
     err "-   $APP [ -D ] help|-h                                                           # show this message"
     err "-   $APP [ -D ] domains                                                           # list domains hosted by current AWS account"
-    err "-   $APP [ -D ] domainlist|listdomain <domain>                                    # list A and CNAME records of a domain"
+    err "-   $APP [ -D ] domainlist|listdomain <domain>                                    # list A, AAAA, and CNAME records of a domain"
     err "-   $APP [ -D ] listA|lista <domain>                                              # list A records of a domain"
+    err "-   $APP [ -D ] listaaaa|listAAAA|list4a|list4A                                   # list AAAA records of a domain"
     err "-   $APP [ -D ] listcname|listCname|listCNAME <domain>                            # list CNAME records of a domain"
-    err "-   $APP [ -D ] search <domain> <searchRegExpr>                                   # search the domain for CNAME and A records"
-    err "-   $APP [ -D ] create <FQDN> <IPaddr> ... | <destFQDN>                           # add the A|CNAME record to the domain if not existing"
-    err "-   $APP [ -D ] upsert <FQDN> <IPaddr> ... | <destFQDN>                           # update or insert the A|CNAME record to the domain if not existing"
-    err "-   $APP [ -D ] delete <FQDN> <IPaddr> ... | <destFQDN>                           # delete an A|CNAME record"
+    err "-   $APP [ -D ] search <domain> <searchRegExpr>                                   # search the domain for CNAME, A, and AAAA records. The regExpr can be a substring"
+    err "-   $APP [ -D ] create <FQDN> <IPaddr> ... | <destFQDN>                           # add the A|AAAA|CNAME record to the domain if not existing"
+    err "-   $APP [ -D ] upsert <FQDN> <IPaddr> ... | <destFQDN>                           # update or insert the A|AAAA|CNAME record to the domain if not existing"
+    err "-   $APP [ -D ] delete <FQDN> <IPaddr> ... | <destFQDN>                           # delete an A|AAAA|CNAME record"
     err "-   $APP [ -D ] hostedzoneID|hostedZoneID|hostedzoneid|zoneID|zoneid <domain>     # list hostedzoneID"
     err
     err "It is an error to update an A record with a CNAME or vice-versa."
@@ -69,6 +70,33 @@ function validIPv4()
         return $?
     fi
     return 1
+}
+
+function validIPv6()
+{
+    regex='^(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|'\
+'([0-9a-fA-F]{1,4}:){1,7}:|'\
+'([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|'\
+'([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|'\
+'([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|'\
+'([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|'\
+'([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|'\
+'[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|'\
+':((:[0-9a-fA-F]{1,4}){1,7}|:)|'\
+'fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|'\
+'::(ffff(:0{1,4}){0,1}:){0,1}(([0-9]{1,3}\.){3}[0-9]{1,3})|'\
+'([0-9a-fA-F]{1,4}:){1,4}:(([0-9]{1,3}\.){3}[0-9]{1,3}))$'
+
+    local _debug=
+    [ "$1" = '-D' ] && _debug=TRUE && shift
+    var="$1"
+    if [[ $var =~ $regex ]] ; then
+        [ -n "$_debug" ] && 1>&2 echo ok IPv6 $var
+        return 0
+     else
+        [ -n "$_debug" ] && 1>&2 echo not ok IPv6 $var
+        return 1
+    fi
 }
 
 function validDomain()
@@ -123,7 +151,7 @@ function main()
         [ $# -ne 2 ] && err ERROR: wrong number of arguments $# && usage && exit 4
         hostID=$(hostedzoneID $2)
         [ -z "$hostID" ] && err ERROR: hostID could not be determined && exit 10
-        echo $(listDomainType $hostID CNAME) $(listDomainType $hostID A) | tr ' ' '\n' | sort
+        echo $(listDomainType $hostID CNAME) $(listDomainType $hostID A) $(listDomainType $hostID AAAA) | tr ' ' '\n' | sort | sed 's/:/ /'
         ;;
     domains)    
         aws route53 list-hosted-zones  | jq '.HostedZones[].Name' | sed 's/\"//g' | sort
@@ -139,22 +167,27 @@ function main()
         [ $# -ne 2 ] && err ERROR: wrong number of arguments $# && usage && exit 4
         hostID=$(hostedzoneID $2)
         [ -z "$hostID" ] && err ERROR: hostID could not be determined && exit 10
-        echo $(listDomainType $hostID A) | tr ' ' '\n' | sort
+        echo $(listDomainType $hostID A) | tr ' ' '\n' | sort | sed 's/:/ /'
+        ;;
+    listaaaa|listAAAA|list4a|list4A)
+        [ $# -ne 2 ] && err ERROR: wrong number of arguments $# && usage && exit 4
+        hostID=$(hostedzoneID $2)
+        [ -z "$hostID" ] && err ERROR: hostID could not be determined && exit 10
+        echo $(listDomainType $hostID AAAA) | tr ' ' '\n' | sort | sed 's/:/ /'
         ;;
     listcname|listCname|listCNAME)
         [ $# -ne 2 ] && err ERROR: wrong number of arguments $# && usage && exit 4
         hostID=$(hostedzoneID $2)
         [ -z "$hostID" ] && err ERROR: hostID could not be determined && exit 10
-        echo $(listDomainType $hostID CNAME) | tr ' ' '\n' | sort
+        echo $(listDomainType $hostID CNAME) | tr ' ' '\n' | sort | sed 's/:/ /'
         ;;
     search)
         [ $# -ne 3 ] && err ERROR: wrong number of arguments $# && usage && exit 4
         hostID=$(hostedzoneID $2)
         [ -z "$hostID" ] && err ERROR: hostID could not be determined && exit 10
-        echo $(listDomainType $hostID CNAME) $(listDomainType $hostID A) | tr ' ' '\n' | sort | egrep "$3"
+        echo $(listDomainType $hostID CNAME) $(listDomainType $hostID A) $(listDomainType $hostID AAAA) | tr ' ' '\n' | sort | egrep "$3"
         ;;
     create|upsert|delete)
-        debug 'we are in create|upsert|delete'
         [ $# -lt 3 ] && err ERROR: wrong number of arguments $# && usage && exit 4
         _CMD="$1"
         _FQDN="$2"
@@ -163,6 +196,9 @@ function main()
         if validIPv4 "${1:-}"  ; then
           echo > /dev/null
           _mode=IP
+        elif validIPv6 "${1:-}" ; then
+            echo > /dev/null
+            _mode=IPv6
         elif validDomain "${1:-}" ; then
           _mode=FQDN
         else
@@ -202,6 +238,7 @@ function main()
         esac
         # fix for CNAME
         [ "$_mode" = 'FQDN' ] && JSON_CMD=$(echo $JSON_CMD | sed -e 's/"Type": "A"/"Type": "CNAME"/')
+        [ "$_mode" = 'IPv6' ] && JSON_CMD=$(echo $JSON_CMD | sed -e 's/"Type": "A"/"Type": "AAAA"/')
         debug JSON_CMD: ""$JSON_CMD""
         aws route53 change-resource-record-sets --hosted-zone-id $hostID --change-batch "$JSON_CMD" | cat
         ;;
