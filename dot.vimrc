@@ -216,3 +216,4 @@ endif
 
 "  :spellr  - repeat last spell replacement for all words in window
 
+set guifont=Source\ Code\ Pro\ for\ Powerline\ 16
