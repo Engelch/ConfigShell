@@ -1,4 +1,4 @@
-#!/usr/bin/env bash --norc --noprofile
+#!/usr/bin/env -S bash --norc --noprofile
 
 # Synopsis
 #   gisw <<branch>> | -V | --version
