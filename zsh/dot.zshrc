@@ -189,6 +189,7 @@ function main() {
             [ ! -f "$file" ] && echo found $file but it is not a plain file
          done
 
+         eval $(thefuck --alias)
          # terraform completion
          if [ -f /opt/homebrew/bin/terraform ] ; then
             complete -o nospace -C /opt/homebrew/bin/terraform terraform
