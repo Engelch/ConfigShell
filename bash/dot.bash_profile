@@ -108,7 +108,7 @@ function envVars() {
         alias docker=podman
     fi
     export BASH_SILENCE_DEPRECATION_WARNING=1   # OSX suppress bash warning
-    export LS_COLOUR='-G'
+    export LS_COLOUR='--color=auto'
     export LSCOLORS=Exfxcxdxbxegedabagacad # change directory colour 1st letter; see man ls(1)
 
     export PROFILES_CONFIG_DIR=$(ls -l "$HOME/.bashrc" | awk '{ print $NF }' | xargs dirname)
