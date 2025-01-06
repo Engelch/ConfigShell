@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # verified with shellcheck
-# © 2024 Christian ENGEL engel-ch@outlook.com
+# © 2025 Christian ENGEL engel-ch@outlook.com
 # LICENSE: MIT
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software 
@@ -20,6 +20,9 @@
 #
 # -----------------------------------------------
 # CHANGELOG
+# 1.4
+# - individual rules for established connection are only created if allow_all_established connections 
+#   is not set
 # 1.3
 # - more limited exposure of DNS and NTP as problems with iptable-kernel tables seems to be fixed
 # - shellcheck_ok: true
@@ -59,9 +62,8 @@ readonly _allow_loopback="${IPT_ALLOW_LOOPBACK:-TRUE}"                          
 readonly _allow_established_connections="${IPT_ALLOW_ESTABLISHED_CONNECTIONS:-TRUE}"    # depends
 readonly _udp_incoming="${IPT_UDP_INCOMING:-}"                                          # usually empty
 readonly _udp_outgoing="${IPT_UDP_OUTGOING:-53 123}"                                    # at least DNS, NTP
-readonly _tcp_incoming="${IPT_TCP_INCOMING:-22}"                                        # ALL, or usually at least 22. ALL might be required for some debugging
-readonly _tcp_outgoing="${IPT_TCP_OUTGOING:-ALL}"                                       # or ALL. Some ports might be required for OS upgrades,...
-# _tcp_outgoing="ALL"
+readonly _tcp_incoming="${IPT_TCP_INCOMING:-22 1222}"                                        # ALL, or usually at least 22. ALL might be required for some debugging
+readonly _tcp_outgoing="${IPT_TCP_OUTGOING:-22 80 443}"                                       # or ALL. Some ports might be required for OS upgrades,...
 
 # OS default := all open, no rules is
 # _flush_existing_rules="TRUE"           # normally TRUE, also resetting counters,...
@@ -85,7 +87,7 @@ function verbose()
 [ "$1" = "-v" ]         && shift && VERBOSE_FLAG=TRUE
 [ "$1" = "--verbose" ]  && shift && VERBOSE_FLAG=TRUE
 
-readonly VERSION="1.3.2"
+readonly VERSION="1.4.0"
 [ "$1" = "-V" ] && 1>&2 echo "$VERSION" && exit 1
 [ "$1" = "--version" ] && 1>&2 echo "$VERSION" && exit 1
 
@@ -146,9 +148,11 @@ for port in $_udp_incoming ; do
     # currently, only allowing requests from unprivileged ports
     verbose allow UDP incoming on "p$port"
     sudo iptables -A INPUT   -p udp --sport 1024:65535 --dport "$port"    -m state --state NEW,ESTABLISHED   -j ACCEPT
-    sudo iptables -A OUTPUT  -p udp --sport "$port"    --dport 1024:65535 -m state --state ESTABLISHED       -j ACCEPT
     sudo iptables -A INPUT   -p udp --sport "$port"    --dport "$port"    -m state --state NEW,ESTABLISHED   -j ACCEPT
-    sudo iptables -A OUTPUT  -p udp --sport "$port"    --dport "$port"    -m state --state ESTABLISHED       -j ACCEPT
+    if [ "$_allow_established_connections" != TRUE ] ; then
+       sudo iptables -A OUTPUT  -p udp --sport "$port"    --dport 1024:65535 -m state --state ESTABLISHED       -j ACCEPT
+       sudo iptables -A OUTPUT  -p udp --sport "$port"    --dport "$port"    -m state --state ESTABLISHED       -j ACCEPT
+    fi
 done
 [ -z "$_udp_incoming" ] && verbose NO UDP incoming
 
@@ -156,9 +160,11 @@ done
 for port in $_udp_outgoing ; do 
     verbose allow UDP outgoing on "p$port"
     sudo iptables -A OUTPUT -p udp --sport 1024:65535 --dport "$port" -m state --state NEW,ESTABLISHED -j ACCEPT
-    sudo iptables -A INPUT  -p udp --sport 1024:65535 --dport "$port" -m state --state ESTABLISHED -j ACCEPT
     sudo iptables -A OUTPUT -p udp --sport "$port"    --dport "$port" -m state --state NEW,ESTABLISHED -j ACCEPT
-    sudo iptables -A INPUT  -p udp --sport "$port"    --dport "$port" -m state --state ESTABLISHED -j ACCEPT
+    if [ "$_allow_established_connections" != TRUE ] ; then
+      sudo iptables -A INPUT  -p udp --sport 1024:65535 --dport "$port" -m state --state ESTABLISHED -j ACCEPT
+      sudo iptables -A INPUT  -p udp --sport "$port"    --dport "$port" -m state --state ESTABLISHED -j ACCEPT
+    fi
 done    
 [ -z "$_udp_outgoing" ] && verbose NO UDP outgoing
 
@@ -166,12 +172,16 @@ done
 if [ "$_tcp_incoming" = ALL ] ; then
     verbose Allow all TCP outgoing 
     sudo iptables -A INPUT  -p tcp -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
-    sudo iptables -A OUTPUT -p tcp -m conntrack --ctstate ESTABLISHED -j ACCEPT
+    if [ "$_allow_established_connections" != TRUE ] ; then
+      sudo iptables -A OUTPUT -p tcp -m conntrack --ctstate ESTABLISHED -j ACCEPT
+    fi
 else 
     for port in $_tcp_incoming ; do
         verbose allow TCP incoming on "p$port"
         sudo iptables -A INPUT  -p tcp --dport "$port" -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
-        sudo iptables -A OUTPUT -p tcp --sport "$port" -m conntrack --ctstate ESTABLISHED -j ACCEPT
+        if [ "$_allow_established_connections" != TRUE ] ; then
+         sudo iptables -A OUTPUT -p tcp --sport "$port" -m conntrack --ctstate ESTABLISHED -j ACCEPT
+        fi
     done
     [ -z "$_tcp_incoming" ] && verbose NO TCP incoming
 fi
@@ -180,12 +190,16 @@ fi
 if [ "$_tcp_outgoing" = ALL ] ; then
     verbose Allow all TCP outgoing 
     sudo iptables -A OUTPUT -p tcp -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
-    sudo iptables -A INPUT -p tcp  -m conntrack --ctstate ESTABLISHED -j ACCEPT
+    if [ "$_allow_established_connections" != TRUE ] ; then
+      sudo iptables -A INPUT -p tcp  -m conntrack --ctstate ESTABLISHED -j ACCEPT
+    fi
 else
     for port in $_tcp_outgoing ; do 
         verbose allow TCP outgoing on "p$port"
         sudo iptables -A OUTPUT -p tcp --dport "$port" -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
-        sudo iptables -A INPUT  -p tcp --sport "$port" -m conntrack --ctstate ESTABLISHED -j ACCEPT
+        if [ "$_allow_established_connections" != TRUE ] ; then
+           sudo iptables -A INPUT  -p tcp --sport "$port" -m conntrack --ctstate ESTABLISHED -j ACCEPT
+        fi
     done    
     [ -z "$_tcp_outgoing" ] && verbose NO TCP outgoing
 fi
