@@ -62,7 +62,7 @@ readonly _allow_loopback="${IPT_ALLOW_LOOPBACK:-TRUE}"                          
 readonly _allow_established_connections="${IPT_ALLOW_ESTABLISHED_CONNECTIONS:-TRUE}"    # depends
 readonly _udp_incoming="${IPT_UDP_INCOMING:-}"                                          # usually empty
 readonly _udp_outgoing="${IPT_UDP_OUTGOING:-53 123}"                                    # at least DNS, NTP
-readonly _tcp_incoming="${IPT_TCP_INCOMING:-22 1222}"                                        # ALL, or usually at least 22. ALL might be required for some debugging
+readonly _tcp_incoming="${IPT_TCP_INCOMING:-22}"                                        # ALL, or usually at least 22. ALL might be required for some debugging
 readonly _tcp_outgoing="${IPT_TCP_OUTGOING:-22 80 443}"                                       # or ALL. Some ports might be required for OS upgrades,...
 
 # OS default := all open, no rules is
