@@ -229,7 +229,7 @@ function parseCLI() {
     [ -z "$extTargetEnv" ] && extTargetEnv="$defaultTargetEnv"  # set amd64 if no architecture was set
 }
 
-function exitIfNotInContainer() {
+function exitIfNotInContainerDir() {
     local dirLeave=$(basename "$(pwd)")
     [ "$dirLeave" != 'Container' ] && errorExit 22 container-image-build.sh is supposed to be started from a directory named Container.
 }
@@ -240,7 +240,7 @@ function main() {
     [ "$(uname)" = Darwin ]  && exitIfBinariesNotFound gtar
     set -u
     declare -g app="$(basename $0)"
-    declare -gr appVersion='2.4.0'
+    declare -gr appVersion='2.5.0'
     declare -g containerCmd=''
     declare -g containerFile=''
     declare -g containerName=''
@@ -248,7 +248,7 @@ function main() {
     parseCLI "$@"
     shift $(( OPTIND - 1 ))  # not working inside parseCLI
 
-    exitIfNotInContainer
+    exitIfNotInContainerDir
 
     setContainerCmd
     setContainerFile
@@ -259,9 +259,14 @@ function main() {
     optionallyCreateGoSetup
     unset _version
     if [ -d ContainerBuild ] ; then
+        debug "ContainerBuild directory found, determining version using version.sh ContainerBuild"
         _version="$(version.sh ContainerBuild)"
+    elif [ ! -f version.txt ] ; then
+        debug calling version.sh ..
+        _version="$(version.sh ..)"
     else
-        _version="$(version.sh)"
+        debug calling version.sh .
+        _version="$(version.sh .)"
     fi
     [ -z "$_version" ] && errorExit 20 "Could not detect version using version.sh"
     debug "Version is: $_version"

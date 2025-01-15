@@ -42,6 +42,7 @@ function setContainerFile() {
     [ -f Containerfile.j2 ] && [ Containerfile.j2 -nt "$containerFile" ] && \
         if [ "${skipTestContainerfileJ2:-}" = TRUE ] ; then echo "Notice: Containerfile.j2 newer than $containerFile"1>&2 ; else \
           echo "Stopping: Containerfile.j2 is newer than $containerFile" && exit 13 ; fi
+    debug "ok $containerFile"
 }
 
 
