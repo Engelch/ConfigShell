@@ -4,4 +4,7 @@
 
 ~/.cargo/bin
 
+~/.ghcup/bin
+~/.cabal/bin
+
 # EOF
