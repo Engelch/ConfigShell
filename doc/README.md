@@ -1,6 +1,6 @@
 # Welcome to ConfigShell
 
-April 2024
+January 2025
 
 ## Contents
 
@@ -62,7 +62,7 @@ parts are realised using git submodules:
 3. A special git sub-module for OSX-specifics called *ConfigDarwin*
 4. A git sub-module called *PowerlineFonts*
 
-Again, the basic ConfigShell can be used without the sub-modules.
+Again, the basic ConfigShell can be used without the sub-modules. These sub-modules may also contain binaries.
 
 ## Benefits of ConfigShell
 
@@ -92,9 +92,9 @@ Again, the basic ConfigShell can be used without the sub-modules.
    2. git abbreviations
 3. Development-specific support
    1. Utilities for go programming
-   2. Script for creating container images
-   3. Kubernetes (K8s) and EKS (AWS K8s) utilities
-   4. Versioning support (based on bumpversion)
+   2. Script for creating container images and EKS (AWS K8s) support
+   3. [Kubernetes (K8s) utilities](./doc/k8s-helpers.md)
+   4. git utilities such as [git gee](./doc/git-gee.md) and overall versioning support (based on bumpversion)
 4. Connectivity and generic shell scripts
    1. tmux scripts
    2. route53 (AWS DNS) utility
