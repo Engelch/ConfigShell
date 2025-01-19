@@ -13,7 +13,7 @@ titlepage: true
 
 ## Version
 
-0.1.0 describing git gee version 3.3.1.
+0.2.0 describing git gee version 3.3.1.
 
 ## About
 
@@ -218,3 +218,14 @@ git gee enabled
 ``` bash
 git gee h       # or git gee help
 ```
+
+## Other Commands using git gee
+
+### gipl
+
+`gipl` is a script of ConfigShell. It is a `git pull` replacement. It pulls from a remote repository, also fetches all tags, and additionally decrypts all git-gee encrypted files. `git-pl` is an alias for this script with the same functionality.
+
+### gisw
+
+`gisw` is the `git switch` replacement of ConfigShell. It switches to the specified branch, pulls and jumps to the latest version of the branch and decrypts all git-gee encrypted files. `git-sw` is an alias for this script with the same functionality. 
+
