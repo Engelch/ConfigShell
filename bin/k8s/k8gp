@@ -1,1 +1,5 @@
-k8pg
+#!/usr/bin/env bash
+
+[ -z "$KUBECTL" ] && echo >&2 "KUBECTL environment variable is not set, exiting" && exit 1
+
+$KUBECTL get pods -o wide --show-labels "$@"

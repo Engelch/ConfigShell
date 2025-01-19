@@ -3,4 +3,4 @@
 [ -z "$KUBECTL" ] && echo >&2 "KUBECTL environment variable is not set, exiting" && exit 1
 
 set -x
-$KUBECTL get deploy -o wide "$@"
+$KUBECTL get deploy -o wide --show-labels "$@" 

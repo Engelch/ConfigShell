@@ -2,4 +2,4 @@
 
 [ -z "$KUBECTL" ] && echo >&2 "KUBECTL environment variable is not set, exiting" && exit 1
 
-$KUBECTL get services -o wide -A "$@"
+$KUBECTL get services -o wide -A --show-labels "$@"

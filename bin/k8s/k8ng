@@ -2,4 +2,4 @@
 
 [ -z "$KUBECTL" ] && echo >&2 "KUBECTL environment variable is not set, exiting" && exit 1
 
-$KUBECTL get nodes -o wide "$@"
+$KUBECTL get nodes -o wide --show-labels "$@"
