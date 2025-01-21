@@ -13,7 +13,7 @@ titlepage: true
 
 ## Version
 
-0.2.0 describing git gee version 3.3.1.
+0.2.1 describing git gee version 3.3.1.
 
 ## About
 
@@ -47,7 +47,7 @@ By default, `git gee` requires ansible-vault.
 
 ### Putting a git Repository under git-gee
 
-Image that you want to put the repository  `./git-repo` under git gee. As the first step, create an encyrption password.  `git gee` uses symmetric encryption. This allows you to add users at any time to the repository. Create a file with the name of the repository and the suffix `.gee.pw`. 
+Image that you want to put the repository  `./git-repo` under git gee. As the first step, create an encryrption password.  `git gee` uses symmetric encryption. This allows you to add users at any time to the repository. Create a file with the name of the repository and the suffix `.gee.pw`. 
 
 ``` shell
 ./git-repo/README.md
@@ -55,7 +55,7 @@ Image that you want to put the repository  `./git-repo` under git gee. As the fi
 ./git-repo.gee.pw
 ```
 
-The file `fileWithSecretData.txt` is not yet committed to the repository. The .gee.pw file contains a one-liner like:
+The file `secrets.txt` is not yet committed to the repository. The .gee.pw file contains a one-liner like:
 
 ``` shell
 jdlsakj0jlj_jdljsi39j90jeh280he902eegedh0hjgh2ejdkjdhjs
@@ -84,7 +84,7 @@ $ git gee add secrets.txt
 Whenever possible, you can limit the sub-command name to one or a few letters. The sub-command name must be identifiable uniquely.
 
 ``` shell
-$ git gee a fileWithSecretData.txt
+$ git gee a secrets.txt
 Processing file secrets.txt ->Encryption successful
 
 $ ls
@@ -100,11 +100,11 @@ Changes to be committed:
   new file:   secrets.txt.gee
 ```
 
-You can also see that a file with the suffix `.gee` was produced. This is the encrypted version of the unencrypted file. Furthermore, the file `fileWithSecretData.txt` was added to the `.gitignore` file.  You can commit the project now. The gee version of the file, the `README.md`, and the `.gitignore` file will be committed.
+You can also see that a file with the suffix `.gee` was produced. This is the encrypted version of the unencrypted file. Furthermore, the file `secrets.txt` was added to the `.gitignore` file.  You can commit the project now. The gee version of the file, the `README.md`, and the `.gitignore` file will be committed.
 
 ### Changing the secret file - welcome to gist
 
-Now, please edit the file `fileWithSecretData.txt` . If you do a `git status` , you will not see a potential change, but you can use `git gee status` or `gist` by ConfigShell.
+Now, please edit the file `secrets.txt` . If you do a `git status` , you will not see a potential change, but you can use `git gee status` or `gist` by ConfigShell.
 
 ``` bash
 $ git status                                                                                 
