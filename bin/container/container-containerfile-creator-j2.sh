@@ -25,5 +25,6 @@ if [ "$1" = -n ] ; then # dry-run
    echo APP "$APP"
  echo j2 -e '' Containerfile.j2 > Containerfile
 else
-   j2 -e '' Containerfile.j2 > Containerfile
+   [ ! -r template.json ] && 1>&2 echo template.json not existing && exit 1
+   j2 Containerfile.j2 template.json > Containerfile
 fi
