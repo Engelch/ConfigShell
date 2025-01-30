@@ -88,6 +88,7 @@ function main() {
                 echo $_gitStatus $_gitBranch
             fi
          }
+         set autocd # enter dir with just specifying it, no cd required
          setopt PROMPT_SUBST
          autoload -Uz compinit   # required for compdef,..., otherwise loaded by omz
          compinit
@@ -98,6 +99,8 @@ function main() {
          bindkey -e # emacs mode
          loadSshCompletionSpeedUp
          autoload -U +X bashcompinit && bashcompinit
+         zstyle ':completion:*' matcher-list '' 'm:{a-zA-Z}={A-Za-z}' 'r:|=*' 'l:|=* r:|=*'  # allow case-insensitive completion
+         autoload -Uz compinit && compinit
 
          loadAliases
          for file in $HOME/.sh.d/*.sh(N) $HOME/.zshrc.d/*.sh(N) ; do
