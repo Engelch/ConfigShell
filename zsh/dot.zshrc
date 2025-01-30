@@ -61,6 +61,11 @@ function loadSshCompletionSpeedUp() {
    zstyle ':completion:*:(ssh|scp|sftp|rsync):*' hosts $host_list
 }
 
+function chpwd () {
+   [ -f 00DIR.txt ] && cat 00DIR.txt
+   [ -r 00DIR.sh ] && /usr/bin/env zsh 00DIR.sh
+}
+
 function main() {
    local files
    umask 022
