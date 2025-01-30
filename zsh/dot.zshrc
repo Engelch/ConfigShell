@@ -86,7 +86,7 @@ function main() {
          setopt PROMPT_SUBST
          autoload -Uz compinit   # required for compdef,..., otherwise loaded by omz
          compinit
-         PROMPT='%(?.√.%?) %n@%m [$AWS_PROFILE] ($(eval gitContents)) %~ %# ${NEWLINE}'
+         PROMPT='%(?.√.%K{red}%?%k) %n@%m [$AWS_PROFILE] ($(eval gitContents)) %~ %# ${NEWLINE}'
          unset RPROMPT
          setupPath
          bindkey '^R' history-incremental-pattern-search-backward # history-incremental-search-backward
@@ -105,6 +105,9 @@ function main() {
          done
 
          which thefuck &>/dev/null && debug loading thefuck && eval $(thefuck --alias)
+         which atuin &>/dev/null && debug loading atuin && source /opt/ConfigShell/zsh/atuin.rc &&
+            atuin import auto &&
+            atuin sync
       
          debug end zshrc interactive
          ;;
