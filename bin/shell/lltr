@@ -1,7 +1,9 @@
 #!/usr/bin/env -S bash --norc --noprofile
 
-if which eza &>/dev/null ; then
-    eza -lrt mod "$@"
+if [ "$(uname)" = Darwin ] ; then
+    ls -ltrFG "$@"
+elif [ "$(uname)" = Linux ] ; then
+    ls -ltrF --color=auto "$@"
 else
-    ls -ltr "$@"
+    ls -ltrF "$@"
 fi

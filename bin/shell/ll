@@ -1,3 +1,10 @@
 #!/usr/bin/env sh
 
-exec ls -lhF "$LS_COLOUR" "$@"
+if [ "$(uname)" = Darwin ] ; then
+    ls -lFG "$@"
+elif [ "$(uname)" = Linux ] ; then
+    ls -lF --color=auto "$@"
+else
+    ls -lF "$@"
+fi
+

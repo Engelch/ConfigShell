@@ -1,9 +1,11 @@
-#!/usr/bin/env -S bash --norc --noprofile
+#!/usr/bin/env sh
 
-if [ -z "$LS_COLOUR" ] ; then
-   ls -alF "$@"
+if [ "$(uname)" = Darwin ] ; then
+    ls -alFG "$@"
+elif [ "$(uname)" = Linux ] ; then
+    ls -alF --color=auto "$@"
 else
-   ls -alFG "$@"
+    ls -alF "$@"
 fi
 
 
