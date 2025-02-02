@@ -19,7 +19,8 @@ set -u
 readonly _appVersion="cpkg-includeCfgShell.sh v0.0.1"
 upgradeScriptDir=~/.cpkg.d/upgrade
 readonly _app=$(basename "$0")
-systemInst= 
+systemInst=
+upgradeScriptFilename=upgradeConfigshell.sh
 
 function usage() {
     err SYNOPSIS:
@@ -48,12 +49,13 @@ fi
 
 cd "$upgradeScriptDir" || errorExit 2 "Cannot chdir to "$upgradeScriptDir""
 
-if [ -e upgradeConfigshell.sh ] ; then
-    /bin/rm -f ./upgradeConfigshell.sh || errorExit 3 "Cannot delete upgradeConfigshell.sh"
+if [ -e "$upgradeScriptFilename" ] ; then
+    /bin/rm -f "$upgradeScriptFilename" || errorExit 3 "Cannot delete $upgradeScriptFilename"
 fi
 
 if [ -z "$systemInst" ] ; then
-    ln -sv /opt/ConfigShell/bin/upgradeConfigshell.sh . || errorExit 4 "Cannot create symlink to /opt/ConfigShell/upgradeConfigshell.sh"
+    ln -sv /opt/ConfigShell/bin/"$upgradeScriptFilename" . || errorExit 4 "Cannot create symlink to /opt/ConfigShell/$upgradeScriptFilename"
 else
-    echo 'Deleting s-link to from ~/.cpkg.d/ugprade to /opt/ConfigShell/bin/upgradeConfigshell.sh'
+    echo 'Deleting s-link to from ~/.cpkg.d/ugprade to'" /opt/ConfigShell/bin/$upgradeScriptFilename"
+    /bin/rm -f "$upgradeScriptFilename" || errorExit 5 "Cannot delete $upgradeScriptFilename"
 fi
