@@ -100,6 +100,17 @@ function main() {
          loadSshCompletionSpeedUp
          autoload -U +X bashcompinit && bashcompinit
          zstyle ':completion:*' matcher-list '' 'm:{a-zA-Z}={A-Za-z}' 'r:|=*' 'l:|=* r:|=*'  # allow case-insensitive completion
+         if [ -e  ~/.docker/completions ]; then
+            debug docker completions found, evaluating
+            tmp=~/.docker/completions  # required,as ~ is expanded before it it added to the array; double quoting also does not work
+            if (( $fpath[(Ie)$tmp] )); then
+               debug4 docker completions already found, not adding it again
+            else
+               fpath=($tmp $fpath)
+               debug4 docker completions added
+            fi
+            unset tmp
+         fi
          autoload -Uz compinit && compinit
 
          loadAliases
