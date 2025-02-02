@@ -135,7 +135,7 @@ function subSubUserExtension() {
     cd "$_localDir" || errorExit 41 "local directory $_localDir not found"
     echo local ${_localDir} ........................................................
     find "." -name '*.sh' -print0 | while IFS= read -r -d '' file; do
-        [ -x "$file" ] && echo executing "$file" && ./"$file"
+        [ -x "$file" ] && echo "  executing $file" && ./"$file"
         [ ! -x "$file" ] && debug file not executable "$file"
     done
 }
