@@ -16,8 +16,31 @@ function debug4()               { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:    ' "
 function debug8()               { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:        ' "$*" 1>&2 ; return 0; }
 
 set -u 
-
+readonly _appVersion="cpkg-includeCfgShell.sh v0.0.1"
 upgradeScriptDir=~/.cpkg.d/upgrade
+readonly _app=$(basename "$0")
+systemInst= 
+
+function usage() {
+    err SYNOPSIS:
+    err4 "$_app" '[-D] [-V]'
+    err4 "$_app" '[-h]'
+    err4 "$_app" '[-s]   # remove optional s-link for ConfigShell upgrades from ~/.cpkg.d/upgrade'
+    err DESCRIPTION
+    err4 Install the dot-files of ConfigShell to the current user
+    err OPTIONS
+    err4 -D := enable debug
+    err4 -V := show the version number
+    err4 -h := show this help
+}
+
+case "${1:-}" in
+    -h) usage ; exit 0 ;;
+    -V) echo "$_appVersion" ; exit 0 ;;
+    -D) debugSet ;;
+    -s) systemInst=TRUE ;;
+    *)  ;;
+esac
 
 if [ ! -d "$upgradeScriptDir" ] ; then
     mkdir -p "$upgradeScriptDir" || errorExit 1 "Cannot create directory "$upgradeScriptDir""
@@ -29,5 +52,8 @@ if [ -e upgradeConfigshell.sh ] ; then
     /bin/rm -f ./upgradeConfigshell.sh || errorExit 3 "Cannot delete upgradeConfigshell.sh"
 fi
 
-ln -s /opt/ConfigShell/bin/upgradeConfigshell.sh . || errorExit 4 "Cannot create symlink to /opt/ConfigShell/upgradeConfigshell.sh"
-
+if [ -z "$systemInst" ] ; then
+    ln -sv /opt/ConfigShell/bin/upgradeConfigshell.sh . || errorExit 4 "Cannot create symlink to /opt/ConfigShell/upgradeConfigshell.sh"
+else
+    echo 'Deleting s-link to from ~/.cpkg.d/ugprade to /opt/ConfigShell/bin/upgradeConfigshell.sh'
+fi
