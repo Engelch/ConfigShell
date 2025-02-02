@@ -1,0 +1,10 @@
+[Unit]
+Description="Timer for ConfigShell"
+
+[Timer]
+Unit=configshell-upgrade.service
+OnBootSec=1min
+OnUnitActiveSec=15m
+
+[Install]
+WantedBy=timers.target

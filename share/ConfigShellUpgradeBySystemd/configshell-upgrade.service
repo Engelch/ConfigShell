@@ -1,0 +1,8 @@
+[Unit]
+Description="ConfigShell Upgrade Reposiroty"
+Requires=configshell-upgrade.timer
+
+[Service]
+Type=simple
+ExecStart=/opt/ConfigShell/bin/configshell-upgrade.sh
+User=hadm

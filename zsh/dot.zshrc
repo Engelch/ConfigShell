@@ -57,7 +57,7 @@ function rl() {
 
 function loadSshCompletionSpeedUp() {
    typeset -rl _completion=~/.ssh/completion.lst
-   [ -d ~/.ssh ] && [ ! -f $_completion ] && { 1>&2 echo SSH completion list not found, please consider running ssh-createCompletionList. ; return ; }
+   [ ! -f $_completion ] && { 1>&2 echo SSH completion list not found, please consider running ssh-createCompletionList. ; return ; }
    host_list=($(cat $_completion))
    zstyle ':completion:*:(ssh|scp|sftp|rsync):*' hosts $host_list
 }
