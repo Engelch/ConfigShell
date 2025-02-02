@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-function warning()      { reverse 'WARNING:'"$*" 1>&2;           return 0; }
-function error()        { reverse 'ERROR:'"$@" 1>&2;  return 0; }
+function warning()      { echo 'WARNING:'"$*" 1>&2;           return 0; }
+function error()        { echo 'ERROR:'"$@" 1>&2;  return 0; }
 function errorExit()    { EXITCODE="$1" ; shift; error "$*" ; exit "$EXITCODE"; }
 function err()          { echo "$*" 1>&2; }                 # just write to stderr
 function err4()         { echo '   ' "$*" 1>&2; }           # just write to stderr
