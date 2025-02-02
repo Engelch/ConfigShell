@@ -28,7 +28,8 @@ CfgShellDir=/opt/ConfigShell/.
 
 [ ! -d "$CfgShellDir" ] && errorExit 1 "Default directory $CfgShellDir not found, exiting"
 
-CfgDirUid=$(stat -f %u /opt/ConfigShell/bin) || errorExit 2 "Cannot determine UID of ConfigShell, this should never happen"
+[ "$(uname)" =  Darwin ] && { CfgDirUid=$(stat -f %u /opt/ConfigShell/bin) || errorExit 2 "Cannot determine UID of ConfigShell, this should never happen" ; }
+[ "$(uname)" != Darwin ] && { CfgDirUid=$(stat -c %u /opt/ConfigShell/bin) || errorExit 2 "Cannot determine UID of ConfigShell, this should never happen" ; }
 
 [ "$CfgDirUid" != "$UID" ] && errorExit 3 "This script is run with the UID $UID, but the ConfigShell tree has the UID $CfgDirUid, they should be the same"
 

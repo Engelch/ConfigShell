@@ -16,11 +16,11 @@ function debug4()               { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:    ' "
 function debug8()               { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:        ' "$*" 1>&2 ; return 0; }
 
 set -u 
-readonly _appVersion="cpkg-includeCfgShell.sh v0.0.1"
+readonly _appVersion="cpkg-includeCfgShell.sh v0.1.1"
 upgradeScriptDir=~/.cpkg.d/upgrade
 readonly _app=$(basename "$0")
 systemInst=
-upgradeScriptFilename=upgradeConfigshell.sh
+upgradeScriptFilename=configshell-upgrade.sh
 
 function usage() {
     err SYNOPSIS:
