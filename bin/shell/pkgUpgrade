@@ -32,15 +32,15 @@ function osxUpgrade() {
          grep -E 'Your current Cloud SDK version' | awk '{ print $NF }')
       availableGCPSDK=$(gcloud components list 2>&1 | \
          grep -E 'The latest available version' | awk '{ print $NF }')
-      echo Installed version of GCP SDK: "$currentGCPSDK", available version: "$availableGCPSDK"
+      echo "  Installed version of GCP SDK: $currentGCPSDK, available version: $availableGCPSDK"
       [ ! "$currentGCPSDK" = "$availableGCPSDK" ] && sudo CLOUDSDK_PYTHON=python3.8 gcloud components update
       [ "$currentGCPSDK" = "$availableGCPSDK" ] && echo No GCP SDK update found.
    else
-      warning gcloud does not seem to be installed ;
+      echo -n '  ' ; warning 'gcloud does not seem to be installed'
    fi
    echo macTeX.................................................................... 1>&2
    if command -v tlmgr > /dev/null 2>&1 ; then tlmgr --self --all update
-   else warning mactex does not seem to be installed ;fi
+   else echo -n '  ' ; warning mactex does not seem to be installed ;fi
 }
 
 function debianUpgrade() {
@@ -50,9 +50,9 @@ function debianUpgrade() {
       sudo apt-get autoremove
    echo reboot ....................................................................
    if [ -f /run/reboot-required ] ; then 
-      echo "reboot is REQUIRED!"
+      echo "  reboot is REQUIRED!"
    else
-      echo NO reboot required.
+      echo "  NO reboot required." 
    fi
 }
 

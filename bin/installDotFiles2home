@@ -83,7 +83,7 @@ function parseCLI() {
 }
 
 function fixGnupg() {
-    echo 's-link ~/.gnupg to ~/.ssh/gnupg'
+    echo 'GNUPG fixing: s-link ~/.gnupg to ~/.ssh/gnupg'
     # .gnupg is kept under ~/.ssh/gnupg so that backups are easier as one tarball
     if [ \( ! -L ~/.gnupg \) ] && [ -d ~/.gnupg ] ; then
         if [ -d ~/.ssh ] ; then
@@ -121,15 +121,15 @@ function createConfigShellFishConfiguration() {
 }
 
 function installFish() {
-    echo fish configuration file setup
+    echo FISH configuration file setup
     declare -r fishCfgDir=~/.config/fish
     if [ -d "$fishCfgDir" ] ; then
-        read -e -r -p 'Fish shell configuration found. Shall it be overwritten? [yN]?' -i n answer
+        read -e -r -p '  Fish shell configuration found. Shall it be overwritten? [yN]?' -i n answer
         if [ "${answer^^}" = 'Y' ] ; then
             /bin/rm -fr "$fishCfgDir"
             createConfigShellFishConfiguration
         else
-            echo keeping existing configuration
+            echo '  keeping existing configuration'
         fi
     else
         createConfigShellFishConfiguration
@@ -151,35 +151,44 @@ function main() {
     cd || errorExit 10 to find home directory # jump to home directory, always install dot-files towards HOME directory
 
     # the job begins
+    cd || errorExit 10 cannot chdir to home directory # jump to home directory, always install dot-files towards HOME directory
     echo 's-link /opt/ConfigShell/dot.* files'
     for file in "$_absoluteAppDir"/dot* ; do
         _nameWithoutDot="$(basename "$file" | sed 's/^dot//')"
-        [[ $_nameWithoutDot =~ .*~ ]] && continue
+
+        [[ $_nameWithoutDot =~ .*~ ]] && continue   # not s-linking files with ~ at the end
+        [[ $_nameWithoutDot =~ .*bak ]] && continue   # not s-linking files with bak at the end
+        [[ $_nameWithoutDot =~ .*old ]] && continue   # not s-linking files with old at the end
+
         echo -n '  '
-        [ -e "~/${_nameWithoutDot}" ] && debug deleting "~/${_nameWithoutDot}" && /bin/rm -f "~/${_nameWithoutDot}"
-        [ -e "~/${_nameWithoutDot}" ] || debug not found "~/${_nameWithoutDot}" 
-        echo ln -sfv "$file" "$_nameWithoutDot"
+        [ -e "${_nameWithoutDot}" ] || debug4 not found "${_nameWithoutDot}" 
+        [ -e "${_nameWithoutDot}" ] && debug4 deleting "${_nameWithoutDot}" && /bin/rm -f "${_nameWithoutDot}"
+        echo -n '  '
+        ln -sfv "$file" "$_nameWithoutDot"
     done
 
     fixGnupg
     installFish
 
-    echo "  git: defining global excludesfile"
-    git config --global core.excludesfile "$HOME/.gitignore"
-
     mkdir -p ~/.sh.d    # add common shell directory for *.sh commands to be run as a sub-shell
 
-    echo Creating vim directories  '~/.vim/backup ~/.vim/swap ~/.vim/undo ~/.vim/pack' 
+    echo vim directory creation '~/.vim/backup ~/.vim/swap ~/.vim/undo ~/.vim/pack' 
     mkdir -p ~/.vim/backup ~/.vim/swap ~/.vim/undo  ~/.vim/pack
 
     # gitInit does not change ~/.gitignore
+    echo "GIT:"
+    echo "  - defining global excludesfile"
+    git config --global core.excludesfile "$HOME/.gitignore"
+    echo -n "  "
     /opt/ConfigShell/bin/gitInit
+    echo
 
     if [ -z "$systemInst" ] ; then
-        echo adding upgradeConfigShell to ~/.cpkg.d/upgrade
+        echo UpgradeConfigShell: adding upgradeConfigShell to ~/.cpkg.d/upgrade
         /opt/ConfigShell/bin/cpkg-includeCfgShell.sh
     else
-        echo not installing upgradeConfigShell for the cpkg command
+        echo UpgradeConfigShell: not installing and removing upgradeConfigShell for the cpkg command
+        /bin/rm -f ~/.cpkg.d/upgrade/upgradeConfigShell.sh 2>/dev/null
     fi
 }
 
