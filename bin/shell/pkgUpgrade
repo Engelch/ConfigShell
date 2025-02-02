@@ -96,7 +96,6 @@ function main() {
    if [ "$1" = '-f' ] || [ "$1" = '--force' ] ; then
       declare -rg ForceInstall='--force'
    fi
-   [ -d /opt/ConfigShell/. ] && ( cd /opt/ConfigShell || errorExit 10 "Could not jump to ConfigShell" ; echo ConfigShell Upgrade... ;  git pull )
    if [[ ${_uname} == Darwin ]] ; then
       echo OSX Homebrew Upgrade...
       osxUpgrade

@@ -14,7 +14,7 @@
 # - initial version
 # - s-link all /opt/ConfigShell/dot.* files to ~ 
 #
-# COPYRIGHT © 2021 Christian Engel (mailto:engel-ch@outlook.com)
+# COPYRIGHT © 2025 Christian Engel (mailto:engel-ch@outlook.com)
 # Skeleton:
 #   0.1.0 - improved exitIfErr
 # LICENSE: MIT
@@ -51,6 +51,7 @@ function usage()
     err SYNOPSIS:
     err4 "$_app" '[-D] [-V]'
     err4 "$_app" '[-h]'
+    err4 "$_app" '[-s]   # ConfigShell to be upgrade to system, not s-link added to ~/.cpkg.d/upgrade'
     err DESCRIPTION
     err4 Install the dot-files of ConfigShell to the current user
     err OPTIONS
@@ -60,7 +61,7 @@ function usage()
 }
 
 function parseCLI() {
-    while getopts "DVh" options; do         # Loop: Get the next option;
+    while getopts "DVhs" options; do         # Loop: Get the next option;
         case "${options}" in                    # TIMES=${OPTARG}
             D)  1>&2 echo Debug enabled ; DebugFlag="TRUE"
                 ;;
@@ -69,6 +70,8 @@ function parseCLI() {
                 ;;
             h)  usage ; exit 0
                 ;;
+            s)  systemInst=TRUE
+                ;;  
             # v)  verbose=TRUE
             #     ;;
             *)
@@ -106,14 +109,6 @@ function fixGnupg() {
     fi
 }
 
-# function oh-my-zsh() {
-#     if [ ! -d $HOME/.oh-my-zsh ] ; then
-#         echo -n 'Oh my ZSH is not installed. Shall it be installed? [Yynn]'
-#         read a
-#         [ "$a" = y -o "$a" = Y -o "$a" = "" ] && cd && git clone https://github.com/ohmyzsh/ohmyzsh.git .oh-my-zsh
-#     fi
-# }
-
 function createConfigShellFishConfiguration() {
     mkdir -p "$fishCfgDir" 2>/dev/null
     test -d  "$fishCfgDir" || errorExit 20 fish config directory "$fishCfgDir" could not be created
@@ -143,43 +138,32 @@ function installFish() {
 
 function warningIfBinariesNotFound()       { for file in "$@"; do command -v "$file" &>/dev/null || 1>&2 echo "WARNING:binary not found:$file"; done }
 
-function autoUpdateConfigShell() {
-    [ -f "$HOME/.bashrc.d/upgradeConfigShell.sh" ] && echo Shell upgrade found as $HOME/.bashrc.d/upgradeConfigShell.sh, skipping && return
-    read -e -r -p 'Install auto-upgrade ConfigShell [Yn]?' -i Y answer
-    if [ "${answer^^}" = 'Y' ] ; then
-        mkdir ~/.bashrc.d 2>/dev/null 
-        ln -svf /opt/ConfigShell/bin/upgradeConfigShell.sh ~/.bashrc.d
-    else
-        echo Not installing upgradeConfigShell.sh as answer is "$answer"
-    fi 
-    unset answer
-}
-
 function main() {
     readonly _app="$(basename "$0")"
     readonly _appDir="$(dirname "$0")"
     readonly _absoluteAppDir="$(cd "$_appDir" || errorExit 1 cannot change to directory of binary; /bin/pwd)"
-    readonly _appVersion="1.0.0" # use semantic versioning
+    readonly _appVersion="1.1.0" # use semantic versioning
     export DebugFlag=${DebugFlag:-FALSE}
+    systemInst=""
     exitIfBinariesNotFound pwd tput basename dirname mktemp
+    warningIfBinariesNotFound ruby gnutls-cli openssl openvpn tree curl vim diff ansible-vault thefuck git
     parseCLI "$@" ; # args=$parseCLI_result # args=$(parseCLI $*) creates a subshell and cannot set current shell debugFlag...
     cd || errorExit 10 to find home directory # jump to home directory, always install dot-files towards HOME directory
+
+    # the job begins
     echo 's-link /opt/ConfigShell/dot.* files'
     for file in "$_absoluteAppDir"/dot* ; do
         _nameWithoutDot="$(basename "$file" | sed 's/^dot//')"
         [[ $_nameWithoutDot =~ .*~ ]] && continue
         echo -n '  '
-        ln -sfv "$file" "$_nameWithoutDot"
+        [ -e "~/${_nameWithoutDot}" ] && debug deleting "~/${_nameWithoutDot}" && /bin/rm -f "~/${_nameWithoutDot}"
+        [ -e "~/${_nameWithoutDot}" ] || debug not found "~/${_nameWithoutDot}" 
+        echo ln -sfv "$file" "$_nameWithoutDot"
     done
+
     fixGnupg
     installFish
-    warningIfBinariesNotFound ruby gnutls-cli openssl openvpn tree curl vim diff ansible-vault thefuck git
 
-    echo "git: creating private ~/.gitignore"
-    [ -f ~/.gitignore ] && echo "  git: Found existing ~/.gitignore, moving it"  && mv "$HOME/.gitignore" "$HOME/.gitignore.$(date +%F_%T)"
-    [ -f /opt/ConfigShell/gitignore ] && cp /opt/ConfigShell/gitignore "$HOME/.gitignore"
-    [ -f /opt/ConfigShell/gitignore ] || echo "  ERROR:/opt/ConfigShell/gitignore not found" > /dev/stderr
-    # gitconfig will be managed by install-ssh from the ssh-client-base-config repository
     echo "  git: defining global excludesfile"
     git config --global core.excludesfile "$HOME/.gitignore"
 
@@ -188,11 +172,15 @@ function main() {
     echo Creating vim directories  '~/.vim/backup ~/.vim/swap ~/.vim/undo ~/.vim/pack' 
     mkdir -p ~/.vim/backup ~/.vim/swap ~/.vim/undo  ~/.vim/pack
 
-    # autoUpdateConfigShell # only to be done if the user is the same as the one owning ConfigShell
-    # Now to be done by the cpkg update alias cpu programme.
-    
     # gitInit does not change ~/.gitignore
     /opt/ConfigShell/bin/gitInit
+
+    if [ -z "$systemInst" ] ; then
+        echo adding upgradeConfigShell to ~/.cpkg.d/upgrade
+        /opt/ConfigShell/bin/cpkg-includeCfgShell.sh
+    else
+        echo not installing upgradeConfigShell for the cpkg command
+    fi
 }
 
 main "$@"

@@ -1,1 +1,1 @@
-shell/upgradeConfigShell2.sh
+shell/upgradeConfigShell.sh

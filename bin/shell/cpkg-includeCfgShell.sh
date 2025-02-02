@@ -15,24 +15,19 @@ function debug()                { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:'"$*" 1
 function debug4()               { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:    ' "$*" 1>&2 ; return 0; }
 function debug8()               { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:        ' "$*" 1>&2 ; return 0; }
 
-set -u
+set -u 
 
-case "${1:-}" in
-   -D|--debug) debugSet; debug Debug enabled
-      ;;
-   -V|--version) echo "upgradeConfigshell2.sh version 1..00"; exit 0
-      ;;
-esac
+upgradeScriptDir=~/.cpkg.d/upgrade
 
-CfgShellDir=/opt/ConfigShell/.
+if [ ! -d "$upgradeScriptDir" ] ; then
+    mkdir -p "$upgradeScriptDir" || errorExit 1 "Cannot create directory "$upgradeScriptDir""
+fi
 
-[ ! -d "$CfgShellDir" ] && errorExit 1 "Default directory $CfgShellDir not found, exiting"
+cd "$upgradeScriptDir" || errorExit 2 "Cannot chdir to "$upgradeScriptDir""
 
-CfgDirUid=$(stat -f %u /opt/ConfigShell/bin) || errorExit 2 "Cannot determine UID of ConfigShell, this should never happen"
+if [ -e upgradeConfigshell.sh ] ; then
+    /bin/rm -f ./upgradeConfigshell.sh || errorExit 3 "Cannot delete upgradeConfigshell.sh"
+fi
 
-[ "$CfgDirUid" != "$UID" ] && errorExit 3 "This script is run with the UID $UID, but the ConfigShell tree has the UID $CfgDirUid, they should be the same"
-
-debug ready to upgrade
-
-cd /opt/ConfigShell && git pull || errorExit 4 "Cannot upgrade ConfigShell"
+ln -s /opt/ConfigShell/bin/upgradeConfigshell.sh . || errorExit 4 "Cannot create symlink to /opt/ConfigShell/upgradeConfigshell.sh"
 

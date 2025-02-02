@@ -132,15 +132,12 @@ function subSubCmdHelper() {
 function subSubUserExtension() {
     [ -z "${1:-}" ] && errorExit 40 subSubUserExtension no command specified
     _localDir="$HOME/.cpkg.d/$1"
-    if [ -d "$_localDir" ] ; then
-        echo local ${_localDir} ........................................................
-        find "$_localDir" -type f -print0 | while IFS= read -r -d '' file; do
-            [ -x "$file" ] && debug executing "$file" && "$file"
-            [ ! -x "$file" ] && debug file not executable "$file"
-        done
-    else
-        echo local dir for $_localDir NOT FOUND ....................................................
-    fi
+    cd "$_localDir" || errorExit 41 "local directory $_localDir not found"
+    echo local ${_localDir} ........................................................
+    find "." -name '*.sh' -print0 | while IFS= read -r -d '' file; do
+        [ -x "$file" ] && echo executing "$file" && ./"$file"
+        [ ! -x "$file" ] && debug file not executable "$file"
+    done
 }
 
 function cargoUpdate() {
