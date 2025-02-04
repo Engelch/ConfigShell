@@ -124,7 +124,7 @@ function main() {
             [ ! -f "$file" ] && echo found $file but it is not a plain file
          done
 
-         which thefuck &>/dev/null && debug loading thefuck && eval $(thefuck --alias)
+         # python 3.12 issue which thefuck &>/dev/null && debug loading thefuck && eval $(thefuck --alias)
          which atuin &>/dev/null && debug loading atuin && source /opt/ConfigShell/zsh/atuin.rc &&
             atuin import auto &&
             atuin sync
