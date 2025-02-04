@@ -93,7 +93,7 @@ function main() {
          setopt PROMPT_SUBST
          autoload -Uz compinit   # required for compdef,..., otherwise loaded by omz
          compinit
-         PROMPT='%(?.√.%K{red}%?%k) %n@%m [$AWS_PROFILE] ($(eval gitContents)) %~ %# ${NEWLINE}'
+         PROMPT='%(?.√.%K{red}%?%k) %n@%F{green}%m%f [%F{yellow}$AWS_PROFILE%f] (%F{green}$(eval gitContents)%f) %~ %# ${NEWLINE}'
          unset RPROMPT
          setupPath
          bindkey '^R' history-incremental-pattern-search-backward # history-incremental-search-backward
