@@ -99,7 +99,7 @@ function main() {
          bindkey '^R' history-incremental-pattern-search-backward # history-incremental-search-backward
          bindkey -e # emacs mode
          loadSshCompletionSpeedUp
-         WORDCHARS='*?.[]~=&;!#$%^(){}<>'  # -_/ are positions where backward word del will stop
+         WORDCHARS='*?[]~&;!#$%^(){}<>'  # .=-_/ are positions where backward word del will stop
          autoload -U +X bashcompinit && bashcompinit
          zstyle ':completion:*' matcher-list '' 'm:{a-zA-Z}={A-Za-z}' 'r:|=*' 'l:|=* r:|=*'  # allow case-insensitive completion
          if [ -e  ~/.docker/completions ]; then
@@ -126,9 +126,22 @@ function main() {
          done
 
          # python 3.12 issue which thefuck &>/dev/null && debug loading thefuck && eval $(thefuck --alias)
+         readonly atuinSyncFile=~/.atuin.sync
          which atuin &>/dev/null && debug loading atuin && source /opt/ConfigShell/zsh/atuin.rc &&
-            atuin import auto &&
-            atuin sync
+            {  if [ -f "$atuinSyncFile" ]; then
+                  echo $atuinSyncFile found
+                  if test `find "$atuinSyncFile" -mmin +180` ; then 
+                     echo $atuinSyncFile older than 180 minutes
+                     atuin import auto && atuin sync
+                     touch "$atuinSyncFile"
+                  else
+                     echo $atuinSyncFile younger than 180 minutes
+                  fi
+               else
+                  echo $atuinSyncFile not found
+                  atuin import auto && atuin sync
+                  touch "$atuinSyncFile"
+               fi ; }
       
          debug end zshrc interactive
          ;;
