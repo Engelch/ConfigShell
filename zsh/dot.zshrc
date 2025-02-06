@@ -99,6 +99,7 @@ function main() {
          bindkey '^R' history-incremental-pattern-search-backward # history-incremental-search-backward
          bindkey -e # emacs mode
          loadSshCompletionSpeedUp
+         WORDCHARS='*?.[]~=&;!#$%^(){}<>'  # -_/ are positions where backward word del will stop
          autoload -U +X bashcompinit && bashcompinit
          zstyle ':completion:*' matcher-list '' 'm:{a-zA-Z}={A-Za-z}' 'r:|=*' 'l:|=* r:|=*'  # allow case-insensitive completion
          if [ -e  ~/.docker/completions ]; then
