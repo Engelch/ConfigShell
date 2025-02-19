@@ -98,6 +98,9 @@ function main() {
          setupPath
          bindkey '^R' history-incremental-pattern-search-backward # history-incremental-search-backward
          bindkey -e # emacs mode
+         bindkey "^[[3~" delete-char
+         bindkey "^[[F" end-of-line
+         bindkey "^[[H" beginning-of-line
          loadSshCompletionSpeedUp
          WORDCHARS='*?[]~&;!#$%^(){}<>'  # .=-_/ are positions where backward word del will stop
          autoload -U +X bashcompinit && bashcompinit
@@ -125,23 +128,24 @@ function main() {
             [ ! -f "$file" ] && echo found $file but it is not a plain file
          done
 
-         # python 3.12 issue which thefuck &>/dev/null && debug loading thefuck && eval $(thefuck --alias)
-         readonly atuinSyncFile=~/.atuin.sync
-         which atuin &>/dev/null && debug loading atuin && source /opt/ConfigShell/zsh/atuin.rc &&
-            {  if [ -f "$atuinSyncFile" ]; then
-                  echo $atuinSyncFile found
-                  if test `find "$atuinSyncFile" -mmin +180` ; then 
-                     echo $atuinSyncFile older than 180 minutes
-                     atuin import auto && atuin sync
-                     touch "$atuinSyncFile"
-                  else
-                     echo $atuinSyncFile younger than 180 minutes
-                  fi
-               else
-                  echo $atuinSyncFile not found
-                  atuin import auto && atuin sync
-                  touch "$atuinSyncFile"
-               fi ; }
+# python 3.12 issue which thefuck &>/dev/null && debug loading thefuck && eval $(thefuck --alias)
+#         readonly atuinSyncFile=~/.atuin.sync
+# removed atuin as it always deletes the current screen
+#which atuin &>/dev/null && debug loading atuin && source /opt/ConfigShell/zsh/atuin.rc &&
+#            {  if [ -f "$atuinSyncFile" ]; then
+#                  echo $atuinSyncFile found
+#                  if test `find "$atuinSyncFile" -mmin +180` ; then 
+#                     echo $atuinSyncFile older than 180 minutes
+#                     atuin import auto && atuin sync
+#                     touch "$atuinSyncFile"
+#                  else
+#                     echo $atuinSyncFile younger than 180 minutes
+#                  fi
+#               else
+#                  echo $atuinSyncFile not found
+#                  atuin import auto && atuin sync
+#                  touch "$atuinSyncFile"
+#               fi ; }
       
          debug end zshrc interactive
          ;;
