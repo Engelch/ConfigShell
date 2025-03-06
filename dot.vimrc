@@ -98,6 +98,7 @@ filetype plugin indent on
   " been set.
 
 " Backup stuff
+" :set backup       " makes tilde file backups"
 set backupdir=~/.vim/backup
 set directory=~/.vim/swap
 set undodir=~/.vim/undo
@@ -109,19 +110,19 @@ set history=1000
 
 " https://www.freecodecamp.org/news/vimrc-configuration-guide-customize-your-vim-editor/
 
+set nocp
+filetype plugin on
+
 " Enable auto completion menu after pressing TAB.
 set wildmenu
-
 " Make wildmenu behave like similar to Bash completion.
 set wildmode=list:longest
-
 " There are certain files that we would never want to edit with Vim.
 " Wildmenu will ignore files with these extensions.
 set wildignore=*.docx,*.jpg,*.png,*.gif,*.pdf,*.pyc,*.exe,*.flv,*.img,*.xlsx
 
 " Clear status line when vimrc is reloaded.
 set statusline=
-
 " Status line left side.
 set statusline+=\ %M\ %F\ %M\ %Y\ \%R\ col:%c\ ASCII_Unic/hex:%b/0x%B\ %p%%
 "⌘
@@ -161,21 +162,18 @@ set cursorline
 :set incsearch
 :set hlsearch
 
-:set tabstop=3     " tabs are at proper location"
-:set shiftwidth=3  " indenting is 4 spaces"
+:set tabstop=2     " tabs are at proper location"
+:set shiftwidth=2  " indenting is 4 spaces"
 :set autoindent    " turns it on"
 :set smartindent   " does the right thing (mostly) in programs"
 :set cindent       " stricter rules for C programs"
 autocmd FileType yaml setlocal ts=2 sts=2 sw=2 expandtab
 
-:set backup       " makes tilde file backups"
 :set mouse=a      " allow mouse to change cursor position"
 :set showmatch    " briefly jump to matching brackets"
-
 :set number       " show line numbers"
 :set expandtab    " replace tabs with spaces"
 " :set noswapfile " disable the swap file as required for some docker directories
-
 " *               - search for word currently under cursor"
 " g*              - search for partial word under cursor "
 "                   (repeat with n)"
@@ -186,13 +184,10 @@ set spelllang=en_gb
 if has("spell")
   " turn spelling on by default
   "set spell
-
   " toggle spelling with F12 key
   map <F12> :set spell!<CR><Bar>:echo "Spell Check: " . strpart("OffOn", 3 * &spell, 3)<CR>
-
   " they were using white on white
   highlight PmenuSel ctermfg=black ctermbg=lightgray
-
   " limit it to just the top 10 items
   set sps=best,10
 endif
@@ -202,18 +197,14 @@ endif
 " some useful keys for spellchecking:
 "   ]s       - forward to misspelled/rare/wrong cap word
 "  [s       - backwards
-
 "  ]S       - only stop at misspellings
 "  [S       - in other direction
-
 "  zG       - accept spelling for this session
 "  zg       - accept spelling and add to personal dictionary
-
 "  zW       - treat as misspelling for this session
 "  zw       - treat as misspelling and add to personal dictionary
-
 "  z=       - show spelling suggestions
-
 "  :spellr  - repeat last spell replacement for all words in window
 
+" GUI font
 set guifont=Source\ Code\ Pro\ for\ Powerline\ 16
