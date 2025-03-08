@@ -9,4 +9,10 @@ fi
 
 git branch -avv --color "$@"
 
+for module in $(git submodule status | awk '{print $2}') ; do
+    echo
+    echo "Submodule: $module"
+    git -C "$module" branch -avv --color "$@"
+done
+
 # EOF
