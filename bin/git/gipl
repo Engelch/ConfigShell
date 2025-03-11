@@ -25,7 +25,7 @@ declare -gr gitroot="$(git rev-parse --show-toplevel)"
 shallow=
 [ -f "$gitroot/.git/shallow" ] && shallow="--depth 1"
 
-$dry git pull --tags $shallow --autostash "$@"
+$dry git pull --tags $shallow "$@"
 res=$?
 
  [ "$res" -eq 0 ] && [ -f "$gitroot/.git/gee" ] && echo "Running git gee decrypt:" && $dry git gee de
