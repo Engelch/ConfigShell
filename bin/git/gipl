@@ -4,6 +4,8 @@
 #   gipl shall help to update a local git clone of a remote git repository. All branches and tags are supposed to
 #   be pulled.
 # CHANGELOG
+# V2.2
+# - git gee decrypt not showing no action lines anymore so that the important lines are more visible
 # V2.1
 # - set umask for the application
 # v2.0
@@ -15,10 +17,10 @@
 orig_umask=$(umask)
 umask 022
 dry=
-[ "$1" = '-V' ] && 1>&2 echo 2.1.0 && exit 0
-[ "$1" = '-n' ] || [ "$1" = '--dry' ] && dry=echo && echo DRY run
+[ "$1" = '-V' ] && 1>&2 echo 2.2.0 && exit 0
+[ "$1" = '-n' ] || [ "$1" = '--dry' ] && dry="echo" && echo DRY run
 
-git rev-parse --show-toplevel &>/dev/null || { 1>&2 echo NOT a git repository. ; umask $orig_umask ; exit 1 ; }
+git rev-parse --show-toplevel &>/dev/null || { 1>&2 echo NOT a git repository. ; umask "$orig_umask" ; exit 1 ; }
 
 declare -gr gitroot="$(git rev-parse --show-toplevel)"
 
@@ -30,8 +32,7 @@ res=$?
 
  [ "$res" -eq 0 ] && [ -f "$gitroot/.git/gee" ] && echo "Running git gee decrypt (no action lines suppressed):" && $dry git gee de 2>&1 | grep -v 'No action: .gee' 
 
-umask $orig_umask
+umask "$orig_umask" 
 
-# git fetch --tags $*
 
 # EOF   - old fashioned comment, but expressing that the file is supposed to end here. This was particular important, when we did reviewing on printed copies of programmes.
