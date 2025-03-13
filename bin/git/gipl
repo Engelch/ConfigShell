@@ -28,7 +28,7 @@ shallow=
 $dry git pull --tags $shallow "$@"
 res=$?
 
- [ "$res" -eq 0 ] && [ -f "$gitroot/.git/gee" ] && echo "Running git gee decrypt:" && $dry git gee de
+ [ "$res" -eq 0 ] && [ -f "$gitroot/.git/gee" ] && echo "Running git gee decrypt (no action lines suppressed):" && $dry git gee de 2>&1 | grep -v 'No action: .gee' 
 
 umask $orig_umask
 
