@@ -50,7 +50,7 @@
 # shellcheck disable=SC2155
 readonly _app=$(basename "${0}")
 readonly _appDir=$(dirname "$(readlink -f "${0}")")
-readonly _appVersion="3.3.1" # ALSO CHANGE THE PRECOMMIT FILE TO CONTAIN THE SAME VERSION NUMBER
+readonly _appVersion="3.4.0" # ALSO CHANGE THE PRECOMMIT FILE TO CONTAIN THE SAME VERSION NUMBER
 export DebugFlag=${DebugFlag:-FALSE}
 export VerboseFlag=''
 set -u
@@ -393,7 +393,7 @@ function createPreCommit() {
     # single-quotes around ENDINIT prevents evaluation of vars inside here document
     cat >|.git/hooks/pre-commit <<'ENDINIT'
 #!/usr/bin/env bash
-# gee:version:3.3.1
+# gee:version:3.4.0
 # --- debug: Conditional debugging. All commands begin w/ debug.
 function debugSet() {
     DebugFlag=TRUE
@@ -501,6 +501,17 @@ function decryptFile() {
 
 ######################################################################################################
 
+function addFileToGitignore() {
+    local gitFile="$(git-root-relative-path "$1")"
+    if [ -f "$gitignore" ] && grep -q -E "$gitFile" "$gitignore"; then
+        echo 1>&2 "WARNING: file $1 already in .gitignore"
+    else
+        echo "/$gitFile" >>"$gitroot/.gitignore"
+        git add "$gitroot/.gitignore" || errorExit 44 "adding .gitignore"
+    fi
+    git rm --cached "$1" &>/dev/null # remove file if potentially in index
+}
+
 function addMode() {
     debug "add mode"
     exitIfNotInGitRepo
@@ -511,19 +522,22 @@ function addMode() {
     for file in "$@"; do
         [ ! -e "$file" ] && errorExit 40 "$file does not seem to exist"
         [ ! -f "$file" ] && errorExit 41 "$file is not a plain file"
-        [[ "$file" =~ .*.gee ]] && errorExit 42 "not adding .gee files"
-        [ -f "$file.gee" ] && errorExit 43 "$file.gee already existing"
-        local gitFile="$(git-root-relative-path "$file")"
-        if [ -f "$gitignore" ] && grep -q -E "$gitFile" "$gitignore"; then
-            echo 1>&2 "WARNING: file $file already in .gitignore"
+        if [[ "$file" =~ .*.gee ]] ; then
+            basefile="$(dirname "$file")/$(basename "$file" .gee)"
+            [ ! -f "$basefile" ] && errorExit 42 "file $file specified and already existing, but no corresponding file without .gee"
+            [ "$basefile" -nt "$file" ] && errorExit 43 "$file already existing and newer than $file"
+            read -r -e -i y -p 'Do you want to overwrite? Y/n' answer
+            [ "$answer" != 'Y' ] && [ "$answer" != 'y' ] && echo answer was $answer && errorExit 44 "not overwriting"
+            /bin/rm -f "$file" || errorExit 45 "error deleting file $file"
+            addFileToGitignore "$basefile"
+            encryptFile "$geePwFile" "$basefile" "$file" || errorExit 46 "error encrypting file $basefile as $file"
+            git add "$file" || errorExit 47 "error adding encrypted file to index"
         else
-            echo "/$gitFile" >>"$gitroot/.gitignore"
-            git add "$gitroot/.gitignore" || errorExit 44 "adding .gitignore"
+            addFileToGitignore "$file"
+            encryptFile "$geePwFile" "$file" "$file.gee" || errorExit 45 "error encrypting file $file as $TMP1"
+            debug4 "adding $file.gee"
+            git add "$file.gee" || errorExit 46 "error adding encrypted file to index"
         fi
-        git rm --cached "$file" &>/dev/null # remove file if potentially in index
-        encryptFile "$geePwFile" "$file" "$file.gee" || errorExit 45 "error encrypting file $file as $TMP1"
-        debug4 "adding $file.gee"
-        git add "$file.gee" || errorExit 46 "error adding encrypted file to index"
     done
 }
 
@@ -706,7 +720,7 @@ function main() {
     shift $((OPTIND - 1)) # not working inside parseCLI
     debug args after CLI parsing are: "$@"
 
-    case $1 in
+    case ${1:-} in
     a | add)
         addMode "$@"
         ;;
@@ -753,7 +767,7 @@ function main() {
         echo git gee not installed && exit 1
         ;;
     *)
-        [ -z "$1" ] && exit 0
+        [ -z "${1:-}" ] && echo 'yes? (sub-command missing)' && exit 11
         errorExit 10 "unknown sub-command to git gee $1"
         ;;
     esac
