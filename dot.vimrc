@@ -72,13 +72,27 @@ nnoremap <C-L> <C-W>l
 nnoremap <C-Left> :tabprevious<CR>
 nnoremap <C-Right> :tabnext<CR>
 
+map <F2> :w<CR>
+
+" show spaces as ., enabled with :set list, disabled w/ :set nolist
+set lcs+=space:· 
+let b:togglelist = 0
+function ToggleList()
+  echom "hi"
+ if b:togglelist == 0
+   :set list
+   let b:togglelist = 1
+ else
+   :set nolist
+   let b:togglelist = 0
+ endif
+endfunction
+map <F3> :call ToggleList()<CR>
+
 " ====================================================
 scriptencoding utf-8
 set nofoldenable
 set nocompatible
-
-" show spaces as ., enabled with :set list, disabled w/ :set nolist
-set lcs+=space:· 
 
 " = ALE plugin specifics ======================================================= 
 " Load all of the helptags now, after plugins have been loaded.
@@ -152,7 +166,7 @@ syntax on
 filetype on
 
 " Highlight cursor line underneath the cursor horizontally.
-set cursorline
+" set cursorline
 
 " Highlight cursor line underneath the cursor vertically.
 " set cursorcolumn
