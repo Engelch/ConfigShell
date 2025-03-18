@@ -6,6 +6,11 @@
 # DESCRIPTION: <see usage function below>
 #
 # CHANGELOG:
+# 3.5
+# - git gee -V working now
+# 3.4
+# - gee gee add <file>.gee is working to add <file> with a question if this shall be done.
+#   Calling it without .gee will prevent a question
 # 3.2
 # - git gee hasBeenInstalled - to check if the current directory is under git gee
 # 3.1 
@@ -50,7 +55,7 @@
 # shellcheck disable=SC2155
 readonly _app=$(basename "${0}")
 readonly _appDir=$(dirname "$(readlink -f "${0}")")
-readonly _appVersion="3.4.0" # ALSO CHANGE THE PRECOMMIT FILE TO CONTAIN THE SAME VERSION NUMBER
+readonly _appVersion="3.5.0" # ALSO CHANGE THE PRECOMMIT FILE TO CONTAIN THE SAME VERSION NUMBER
 export DebugFlag=${DebugFlag:-FALSE}
 export VerboseFlag=''
 set -u
@@ -341,8 +346,9 @@ function usage() {
 #############################################################################################
 #############################################################################################
 
+# parseCLI EXIT 1, 2, 3
 function parseCLI() {
-    while getopts "Dhv" options; do # Loop: Get the next option;
+    while getopts "DhvV" options; do # Loop: Get the next option;
         case "${options}" in        # TIMES=${OPTARG}
         D)
             err "Debug enabled"
@@ -354,6 +360,9 @@ function parseCLI() {
             ;;
         v)
             verboseSet
+            ;;
+        V)  echo $_appVersion
+            exit 3
             ;;
         *)
             # shellcheck disable=SC2086
@@ -393,7 +402,7 @@ function createPreCommit() {
     # single-quotes around ENDINIT prevents evaluation of vars inside here document
     cat >|.git/hooks/pre-commit <<'ENDINIT'
 #!/usr/bin/env bash
-# gee:version:3.4.0
+# gee:version:3.5.0
 # --- debug: Conditional debugging. All commands begin w/ debug.
 function debugSet() {
     DebugFlag=TRUE
