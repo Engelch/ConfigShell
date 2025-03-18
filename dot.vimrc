@@ -1,26 +1,26 @@
 " = READ ONLY MODE =======================================================
 " vi -R <<file>>  open the file in RO-mode
 
-" = SHOW/REMOVE TABS ======================================================= 
+" = SHOW/REMOVE TABS =======================================================
 " /\t  to show tabs
 " :retab to replace tabs with spaces
 " test line with tabs 	bla
 " :set list to show EOL and Tabs as ^I, :set nolist to remove this mode again
 "
-" = previous delete/yank  ======================================================= 
+" = previous delete/yank  =======================================================
 " :reg to show the previous deletes (vim clipboards) = :registers
 " To add the 2nd register again below the current line:  "2p
 "
 " There is a YankRing plugin if you are also interested in previous yanks
 " (copy clipboard).
 "
-" = PARAGRAPH FORMATTING ======================================================= 
+" = PARAGRAPH FORMATTING =======================================================
 "
 " gwip      format current paragraph
 " gwG       format document from current line to EOF
 "           use set textwidth=80, defaulting to 78
 
-" = RELOAD VIMRC WITHOUT STOPPING VI ======================================================= 
+" = RELOAD VIMRC WITHOUT STOPPING VI =======================================================
 " reload .vimrc if file is in the active buffer:  :so %
 " 
 " surround plugin: yss to impact a full line.
@@ -38,14 +38,14 @@
 " :ls list buffer
 " :b1..n change to buffer n
 
-" PLUGINS ---------------------------------------------------------------- 
+" PLUGINS ----------------------------------------------------------------
 " removed as plugins are directly install using the vim-internal package
 " manager. Packages are in the directory ~/.vim/pack/<name>/{start,opt}/<plugin>
 " If the parent directory is called start, then the plugin is loaded
 " automatically. If it is called opt, then the plugin is loaded only when
 " called with :packadd <plugin-name>.
 
-" MAPPINGS --------------------------------------------------------------- 
+" MAPPINGS ---------------------------------------------------------------
 " 3 different ways to change keyboard mappings
 "     nnoremap – Allows you to map keys in normal mode.
 "     inoremap – Allows you to map keys in insert mode.
@@ -73,6 +73,7 @@ nnoremap <C-Left> :tabprevious<CR>
 nnoremap <C-Right> :tabnext<CR>
 
 map <F2> :w<CR>
+map <S-F2> :wq<CR>
 
 " show spaces as ., enabled with :set list, disabled w/ :set nolist
 set lcs+=space:· 
@@ -89,12 +90,14 @@ function ToggleList()
 endfunction
 map <F3> :call ToggleList()<CR>
 
+map <F4> :noh<CR>
+
 " ====================================================
 scriptencoding utf-8
 set nofoldenable
 set nocompatible
 
-" = ALE plugin specifics ======================================================= 
+" = ALE plugin specifics =======================================================
 " Load all of the helptags now, after plugins have been loaded.
 " All messages and errors will be ignored.
 silent! helptags ALL
