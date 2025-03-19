@@ -73,7 +73,9 @@ nnoremap <C-Left> :tabprevious<CR>
 nnoremap <C-Right> :tabnext<CR>
 
 map <F2> :w<CR>
+inoremap <F2> <Esc>:w<CR>
 map <S-F2> :wq<CR>
+inoremap <S-F2> <Esc>:wq<CR>
 
 " show spaces as ., enabled with :set list, disabled w/ :set nolist
 set lcs+=space:· 
