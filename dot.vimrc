@@ -47,9 +47,12 @@
 
 " MAPPINGS ---------------------------------------------------------------
 " 3 different ways to change keyboard mappings
-"     nnoremap – Allows you to map keys in normal mode.
-"     inoremap – Allows you to map keys in insert mode.
-"     vnoremap – Allows you to map keys in visual mode.
+"     inoremap ö <esc>         " Remap in Insert and Replace mode
+"     vnoremap ö <esc>         " Remap in Visual and Select mode
+"     xnoremap ö <esc>         " Remap in Visual mode
+"     snoremap ö <esc>         " Remap in Select mode
+"     cnoremap ö <C-C>         " Remap in Command-line mode
+"     onoremap ö <esc>         " Remap in Operator pending mode
 "
 " Mapleader will allow you set a key unused by Vim as the <leader> key.
 " The leader key, in conjunction with another key, will allow you to create new shortcuts.
