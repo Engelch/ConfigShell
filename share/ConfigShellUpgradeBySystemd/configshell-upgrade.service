@@ -1,7 +1,11 @@
 [Unit]
-Description="ConfigShell Upgrade Reposiroty"
+Description="Pull ConfigShell"
 Requires=configshell-upgrade.timer
 
 [Service]
 Type=simple
-ExecStart=/
+ExecStart=/opt/ConfigShell/bin/configshell-upgrade.sh
+User=configshell
+
+[Install]
+WantedBy=multi-user.target
