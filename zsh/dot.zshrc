@@ -128,6 +128,10 @@ function main() {
             [ ! -f "$file" ] && echo found $file but it is not a plain file
          done
 
+# The following lines have been added by Docker Desktop to enable Docker CLI completions.
+        [ -f $HOME/.docker/completions ] && fpath=(/Users/engelch/.docker/completions $fpath) && \
+          autoload -Uz compinit && compinit
+# End of Docker CLI completions
 # python 3.12 issue which thefuck &>/dev/null && debug loading thefuck && eval $(thefuck --alias)
 #         readonly atuinSyncFile=~/.atuin.sync
 # removed atuin as it always deletes the current screen
