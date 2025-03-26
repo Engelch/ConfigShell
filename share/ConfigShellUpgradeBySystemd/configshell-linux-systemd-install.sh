@@ -24,6 +24,7 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
+_gitRepo=${configshellRepo:-https://github.com/engelch/ConfigShell}
 function error()                        { echo 'ERROR:'"$@" 1>&2;  return 0; }
 function errorExit()                    { EXITCODE="$1" ; shift; error "$*" ; exit "$EXITCODE"; }
 function exitIfBinariesNotFound()       { for file in "$@"; do command -v "$file" &>/dev/null || errorExit 254 binary not found: "$file"; done ; }
@@ -80,7 +81,7 @@ function cloneConfigShell() {
 	[ -e /opt/ConfigShell ] && { sudo /bin/rm -fr /opt/ConfigShell || errorExit 22 cannot delete /opt/Configshell ; } 
 	sudo mkdir /opt/ConfigShell || errorExit 20 cannot create /opt/ConfigShell
   sudo chown configshell:configshell /opt/ConfigShell || errorExit 21 cannot set ownership of /opt/ConfigShell
-  sudo su configshell bash -c 'git clone https://github.com/engelch/ConfigShell /opt/ConfigShell'
+  sudo su configshell bash -c "git clone $configshellRepo /opt/ConfigShell"
 }
 
 function createCleanConfigShell() {
