@@ -81,7 +81,7 @@ function cloneConfigShell() {
 	[ -e /opt/ConfigShell ] && { sudo /bin/rm -fr /opt/ConfigShell || errorExit 22 cannot delete /opt/Configshell ; } 
 	sudo mkdir /opt/ConfigShell || errorExit 20 cannot create /opt/ConfigShell
   sudo chown configshell:configshell /opt/ConfigShell || errorExit 21 cannot set ownership of /opt/ConfigShell
-  sudo su configshell bash -c "git clone $configshellRepo /opt/ConfigShell"
+  sudo su configshell bash -c "git clone $_gitRepo /opt/ConfigShell"
 }
 
 function createCleanConfigShell() {
@@ -107,7 +107,7 @@ function createSystemdTimer() {
     errorExit 32 error rsyncing systemd unit files
   sudo chown root:root /etc/systemd/system/configshell-upgrade.* || errorExit 33 cannot normalise ownership of /etc/systemd/system/configshell..
   sudo systemctl daemon-reload 
-  sudo systemctl enable --now configshell-upgrade || errorExit 35 cannot enable + start configshell-upgrade
+  sudo systemctl enable --now configshell-upgrade.timer || errorExit 35 cannot enable + start configshell-upgrade.timer
   sudo systemctl status configshell-upgrade
 }
 
