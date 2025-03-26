@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# This file can be copied to /usr/local/bin if the git pull requires authentication
+# using an ssh key.
+
 function warning()      { echo 'WARNING:'"$*" 1>&2;           return 0; }
 function error()        { echo 'ERROR:'"$@" 1>&2;  return 0; }
 function errorExit()    { EXITCODE="$1" ; shift; error "$*" ; exit "$EXITCODE"; }
@@ -35,5 +38,7 @@ CfgShellDir=/opt/ConfigShell/.
 
 debug ready to upgrade
 
+[ -d "$HOME/.ssh" ] && [ "$(ssh-add -l | grep -v 'no identities' | wc -l)" -eq 0 ] && \
+	echo sourcing .bashrc &&
+	source $HOME/.bashrc
 cd /opt/ConfigShell && git pull || errorExit 4 "Cannot upgrade ConfigShell"
-
