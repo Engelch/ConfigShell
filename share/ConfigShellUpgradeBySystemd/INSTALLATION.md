@@ -27,7 +27,8 @@ The log of a configshell-upgrade run can be checked with the command:
 
 If cloning the ConfigShell repository requires an ssh key, you can follow this approach:
 
-1. create a home-directory for the user configshell
-2. add a .ssh directory with the deployment key, e.g. .ssh/deploy
-3. add the dot.bashrc as .bashrc and .bash_profile files
-4. execute the configshell-linux... installation script.
+1. execute the configshell-linux... installation script. This creates the user and group.
+2. create a home-directory for the user configshell
+3. add a .ssh directory with the deployment key, e.g. .ssh/deploy
+4. add the dot.bashrc as .bashrc and .bash_profile files (files are supposed to be identical)
+5. execute the configshell-linux... installation script.

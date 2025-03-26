@@ -101,7 +101,7 @@ function createSystemdTimer() {
   [ ! -d /etc/systemd/system ] && errorExit 30 cannot find dir /etc/systemd/system
   [ ! -d /opt/ConfigShell/share/ConfigShellUpgradeBySystemd/ ] && errorExit 31 cannot find dir /opt/ConfigShell/share/ConfigShellUpgradeBySystemd/
   # no -a to avoid -go group+owner
-  sudo rsync -pt --copy-links /opt/ConfigShell/bin/configshell-upgrade.sh /usr/local/bin || \
+  sudo rsync -pt --copy-links /opt/ConfigShell/share/ConfigShellUpgradeBySystemd/configshell-upgrade.sh /usr/local/bin || \
     errorExit 34 error rsyncing confighsell-upgrade.sh
   sudo rsync -rlptD --copy-links /opt/ConfigShell/share/ConfigShellUpgradeBySystemd/configshell-upgrade.* /etc/systemd/system || \
     errorExit 32 error rsyncing systemd unit files
