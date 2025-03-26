@@ -77,6 +77,26 @@ function exitIfPlainFilesNotExisting()  { for file in "$@"; do [ ! -f "$file" ] 
 function exitIfFilesNotExisting()       { for file in "$@"; do [ ! -e "$file" ] && errorExit 255 'file not found:'"$file" 1>&2; done }
 function exitIfDirsNotExisting()        { for dir in  "$@"; do [ ! -d "$dir"  ] && errorExit 252 "$APP:ERROR:directory not found:$dir"; done }
 
+function exitIfNotLinux()               { [ "$(uname)" != Linux ] && errorExit 253 "OS is not Linux, detected $(uname)" ; }
+# ownerFile returns the ownername as a string
+function ownerFile() {
+    [ ! -e "$1" ] && errorExit 252 in ownerfile file not found $1
+    [ "$(uname)" = Darwin ] && { stat -f %Su "$1" ; return 0 ; }
+    [ "$(uname)" = Linux  ] && { stat -c %U "$1"  ; return 0 ; }
+    errorExit 251 "onwerFile unsupported OS $(uname)" 
+}
+
+# lineExisting
+# EXIT 100, 101, 102
+function lineExisting() {
+  [ $# != 2 ]   && errorExit 100 "wrong call to lineExisting, args are $#, expected:2"
+  [ ! -e "$2" ] && errorExit 101 "file $2 not existing"
+  [ ! -r "$2" ] && errorExit 102 "file $2 not readable"
+  # echo output is "$(grep -Ec "$1" "$2")"
+  [ "$(grep -Ec "$1" "$2")" -gt 0 ] && return 0
+  return 1
+}
+
 # --- Temporary file/directory  creation
 # -- file creation -- TMP1=$(tempFile); TMP2=$(tempFile) ;;;; trap "rm -f $TMP1 $TMP2" EXIT
 # -- directory creation -- TMPDIR=$(tempDir) ;;;;;  trap "rm -fr $TMPDIR;" EXIT
