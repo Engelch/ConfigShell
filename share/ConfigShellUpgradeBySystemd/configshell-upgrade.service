@@ -4,7 +4,7 @@ Requires=configshell-upgrade.timer
 
 [Service]
 Type=simple
-ExecStart=/opt/ConfigShell/bin/configshell-upgrade.sh
+ExecStart=/usr/local/bin/configshell-upgrade.sh
 User=configshell
 
 [Install]
