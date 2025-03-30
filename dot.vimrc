@@ -230,3 +230,5 @@ endif
 
 " GUI font
 set guifont=Source\ Code\ Pro\ for\ Powerline\ 16
+" save buffers when the graphical vim looses its focus.
+autocmd FocusLost * nested silent! wall
