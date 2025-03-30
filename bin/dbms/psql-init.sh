@@ -44,23 +44,41 @@ function helpExit() {
     err The password and the user are used to set up the super-user of the DBMS. It is common
     err practice that the complete record for the localadm looks like:
     err
-    err localadm_DB_TYPE=psql
-    err localadm_HOST=127.0.0.1
-    err localadm_PORT=5432
-    err localadm_USER=postgres...considerUsingAnAlternative
-    err localadm_PW=setYourPasswordHere..............
-    err localadm_DB=postgres
+    err '  localadm_DB_TYPE=psql'
+    err '  localadm_HOST=127.0.0.1'
+    err '  localadm_PORT=5432'
+    err '  localadm_USER=postgres...considerUsingAnAlternative'
+    err '  localadm_PW=setYourPasswordHere..............'
+    err '  localadm_DB=postgres'
     err
     err It is not a bad idea to use a different default admin user instead of postgres to make
     err hacking attempts more difficult. Experience shows that such topics should already be
     err addressed at development time. Often, they are to be forgotten in later stages.
+    err
+    err 'COMMANDS:'
+    err '  init'
+    err '  start'
+    err '  stop'
+    err '  delete'
+    err '  status'
     err 
     err "OPTIONAL EXTERNAL ENVIRONMENT VARIABLES or CLI arguments:"
-    err name=psql0 default is psql0, or use "PSQL_CONTAINER_NAME=..."
-    err volume=psql0 default is psql0, or use "PSQL_CONTAINER_VOLUME=..."
-    err image=postgres default is postgres "PSQL_IMAGE_NAME=..."
-    err arch='linux/arm64' default is not set, or set it like: "PSQL_CONTAINER_ARCHITECTURE='--platform linux/arm64'"
-    err port=nnn default is defined from db-connect.pws, or use "PSQL_PORT=..." to overwrite it.
+    err '  name=psql0'
+    err '    default is psql0, or use "PSQL_CONTAINER_NAME=..."'
+    err '  volume=vipdata0'
+    err '    default is to use the same as the container name, or use "PSQL_CONTAINER_VOLUME=..."'
+    err '  image=postgres'
+    err '    default is postgres "PSQL_IMAGE_NAME=..."'
+    err '  arch=linux/amd64' 
+    err '    default if not set, use the current architecture of the host.'
+    err '    x86_64 is converted into amd64'
+    err '  port=nnn'
+    err '    default is defined from db-connect.pws, or use "PSQL_PORT=..." to overwrite it.'
+    err
+    err 'Examples (-n dry-run)'
+    err '  db-psql-init.sh -n init name=psql66  # create a container and a volume named psql66'
+    err '  db-psql-init.sh -n name=psql66 init  # same as command before'
+    err '  db-psql-init.sh -n name=psql66 init volume=psql-data  # same as command before'
     exit 2
 }
 
@@ -73,6 +91,8 @@ function helpExit() {
 #  EXIT 4
 #  EXIT 5
 # EXIT 6 wrong container_label
+# EXIT 7 multiple commands specified
+# EXIT 8 no command set
 function main() {
   #########################################################################################
   # ConfigShell lib 1.1 (codebase 1.0.0)
@@ -87,7 +107,6 @@ function main() {
 
   # environment variables to override the labels for the containes
   export POSTGRESQL_CONTAINER_LABEL="${PSQL_CONTAINER_NAME:-psql0}"
-  export CONTAINER_VOLUME="${PSQL_CONTAINER_VOLUME:-psql0}" # set again for delete command
   export PSQL_PORT=
 
   DRY=
@@ -98,14 +117,23 @@ function main() {
   else
     DRY=
   fi
+  if [ "${1:-}" = '-D' ]; then
+    err Step-wise debug mode
+    debugSet
+    STEP=true
+    shift
+  else
+    STEP=
+  fi  
 
   container.sh ps > /dev/null ; res=$?
   [ $res -ne 0 ] && errorExit 5 Container environment does not seem to be started or user is not in the required group.
 
+  CMD=
   while true ; do
     case "${1:-}" in
     arch=*)
-      export PSQL_CONTAINER_ARCHITECTURE="--platform ${1//arch=/}"
+      PSQL_CONTAINER_ARCHITECTURE="--platform ${1//arch=/}"
       shift
       echo architecture is:"$PSQL_CONTAINER_ARCHITECTURE"
       ;;
@@ -133,44 +161,80 @@ function main() {
       ;;
     i|in|ini|init)
       shift
-      startContainer "$POSTGRESQL_CONTAINER_LABEL" "$CONTAINER_VOLUME" "$@"
-      exit $?
+      debug set CMD to init
+      [ -n "$CMD" ] && errorExit 7 cmd to be set to init, but already set to $CMD
+      CMD=init
       ;;
     s|start)  
       shift
-      container.sh start "$@" "$POSTGRESQL_CONTAINER_LABEL"
-      exit $?
+      debug set CMD to start
+      [ -n "$CMD" ] && errorExit 7 cmd to be set to start, but already set to $CMD
+      CMD=start
       ;;
     e|stop)
       shift
-      container.sh stop "$@" "$POSTGRESQL_CONTAINER_LABEL"
-      exit $?
+      debug set CMD to stop
+      [ -n "$CMD" ] && errorExit 7 cmd to be set to stop, but already set to $CMD
+      CMD=stop
       ;;
     delete)
-      container.sh stop "$@" "$POSTGRESQL_CONTAINER_LABEL"
-      container.sh container rm "$POSTGRESQL_CONTAINER_LABEL"
-      container.sh volume rm "$CONTAINER_VOLUME"
-      exit $?
+      shift
+      debug set CMD to delete
+      [ -n "$CMD" ] && errorExit 7 cmd to be set to delete, but already set to $CMD
+      CMD=delete
       ;;
     stat|status)
       # return exit ne 0 if no running container found
       shift
-      local -r output=$(container.sh  ps -q  --filter name="${POSTGRESQL_CONTAINER_LABEL}" "$@")
-      [ -z "$output" ] && exit 1
-      echo "${POSTGRESQL_CONTAINER_LABEL}":"$output" ; exit 0
+      debug set CMD to status
+      [ -n "$CMD" ] && errorExit 7 cmd to be set to status, but already set to $CMD
+      CMD=status
       ;;
     -h|h|help|--help)
       helpExit  # exits
       ;;
     version)
-      err 1.5.0
+      err 1.6.0
       exit 3
       ;;
     *)
-      errorExit 4 'ERROR_UNKNOWN_COMMAND:usage:' ${_options}
+      break
       ;;
     esac
   done
+
+  # by default, use the same name for the container volume
+  [ -z "${CONTAINER_VOLUME:-}" ] && CONTAINER_VOLUME="${POSTGRESQL_CONTAINER_LABEL}" 
+  [ -z "${PSQL_CONTAINER_ARCHITECTURE:-}" ] && {
+    [ "$(uname -m)" = "x86_64" ] && PSQL_CONTAINER_ARCHITECTURE="--platform linux/amd64"
+    [ "$(uname -m)" != "x86_64" ] && PSQL_CONTAINER_ARCHITECTURE="--platform linux/$(uname -m)" ; } 
+  debug container architecture is $PSQL_CONTAINER_ARCHITECTURE
+  debug checking CMD which is $CMD
+  case "$CMD" in 
+    delete)
+      container.sh stop "$@" "$POSTGRESQL_CONTAINER_LABEL"
+      container.sh container rm "$POSTGRESQL_CONTAINER_LABEL"
+      container.sh volume rm "$CONTAINER_VOLUME"
+      ;;
+    init)
+      debug startContainer "$POSTGRESQL_CONTAINER_LABEL" "$CONTAINER_VOLUME" "$@"
+      startContainer "$POSTGRESQL_CONTAINER_LABEL" "$CONTAINER_VOLUME" "$@"
+      ;;
+    start) 
+      container.sh start "$@" "$POSTGRESQL_CONTAINER_LABEL"
+      ;;
+    status)
+      local -r output=$(container.sh  ps -q  --filter name="${POSTGRESQL_CONTAINER_LABEL}" "$@")
+      [ -z "$output" ] && exit 1
+      echo "${POSTGRESQL_CONTAINER_LABEL}":"$output" 
+      ;;
+    stop)
+      container.sh stop "$@" "$POSTGRESQL_CONTAINER_LABEL"
+      ;;
+    *)
+      errorExit 8 command not set
+      ;;
+  esac
 }
 
 main "$@"
