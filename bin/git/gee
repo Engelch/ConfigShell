@@ -55,7 +55,7 @@
 # shellcheck disable=SC2155
 readonly _app=$(basename "${0}")
 readonly _appDir=$(dirname "$(readlink -f "${0}")")
-readonly _appVersion="3.5.0" # ALSO CHANGE THE PRECOMMIT FILE TO CONTAIN THE SAME VERSION NUMBER
+readonly _appVersion="3.6.0" # ALSO CHANGE THE PRECOMMIT FILE TO CONTAIN THE SAME VERSION NUMBER
 export DebugFlag=${DebugFlag:-FALSE}
 export VerboseFlag=''
 set -u
@@ -402,7 +402,7 @@ function createPreCommit() {
     # single-quotes around ENDINIT prevents evaluation of vars inside here document
     cat >|.git/hooks/pre-commit <<'ENDINIT'
 #!/usr/bin/env bash
-# gee:version:3.5.0
+# gee:version:3.6.0
 # --- debug: Conditional debugging. All commands begin w/ debug.
 function debugSet() {
     DebugFlag=TRUE
@@ -581,6 +581,7 @@ function cleanMode() {
 
 # decryptModeFile is a helper for decryptMode
 function decryptModeFile() {
+    # echo silent is "${_silent:-not set}"
     local -r file=$1
     debug "decryptModeFile processing file $file"
     local -r _basefile="$(dirname "$file")/$(basename "$file" .gee)"    # make sure, we have the correspondig gee file
@@ -591,10 +592,10 @@ function decryptModeFile() {
         touch -r "$_geefile" "$_basefile"
     elif [ "$(mtime "$_basefile")" = "$(mtime "$_geefile")" ]; then
         # shellcheck disable=SC2086
-        echo 1>&2 "No action: .gee file and related file have the same age: $_basefile"
+        [ -z "${_silent}" ] &&  echo 1>&2 "No action: .gee file and related file have the same age: $_basefile"
     else
         # shellcheck disable=SC2086
-        echo 1>&2 "WARNING: not decrypting $_geefile as the correspondig unencrypted file is younger"
+        [ -z "${_silent}" ] &&  echo 1>&2 "WARNING: not decrypting $_geefile as the correspondig unencrypted file is younger"
     fi
 }
 
@@ -604,11 +605,33 @@ function decryptMode() {
     initDefaultVars
     exitIfNotInGitGeeRepo
     exitIfBinariesNotFound ansible-vault
-    shift
-    if [ "${1:-}" = -f ] || [ "${1:-}" = --force ]; then
+    shift   # remove the decrypt command
+    _force=
+    _silent=
+    while [ -n "${1:-}" ] ; do
+      if [ "${1:-}" = -f ] || [ "${1:-}" = --force ]; then
         _force=TRUE
         shift
-    else _force=; fi
+        continue
+      fi
+      if [ "${1:-}" = -s ] || [ "${1:-}" = --silent ]; then
+        _silent=TRUE
+        shift
+        continue
+      fi
+      if [ "${1:-}" = -fs ] || [ "${1:-}" = -sf ]; then
+        _force=TRUE
+        _silent=TRUE
+        shift
+        continue
+      fi
+      if [ "${1:-}" = '--' ] ; then
+        shift
+        break 
+      fi
+      break
+    done
+
     local file
     if [ -z "$*" ]; then # all gee file mode
         find "$gitroot" -name '*.gee' -type f -print | while read -r file; do
