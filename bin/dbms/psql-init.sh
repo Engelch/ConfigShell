@@ -64,15 +64,20 @@ function helpExit() {
     err 
     err "OPTIONAL EXTERNAL ENVIRONMENT VARIABLES or CLI arguments:"
     err '  name=psql0'
+    err '  -l psql0'
     err '    default is psql0, or use "PSQL_CONTAINER_NAME=..."'
     err '  volume=vipdata0'
+    err '  -v vipdata0'
     err '    default is to use the same as the container name, or use "PSQL_CONTAINER_VOLUME=..."'
     err '  image=postgres'
+    err '  -i postgres' 
     err '    default is postgres "PSQL_IMAGE_NAME=..."'
     err '  arch=linux/amd64' 
+    err '  -a linux/amd64' 
     err '    default if not set, use the current architecture of the host.'
     err '    x86_64 is converted into amd64'
     err '  port=nnn'
+    err '  -p nnn' 
     err '    default is defined from db-connect.pws, or use "PSQL_PORT=..." to overwrite it.'
     err
     err 'Examples (-n dry-run)'
@@ -137,10 +142,22 @@ function main() {
       shift
       echo architecture is:"$PSQL_CONTAINER_ARCHITECTURE"
       ;;
+    -a)
+      shift
+      PSQL_CONTAINER_ARCHITECTURE="--platform ${1}"
+      shift
+      echo architecture is:"$PSQL_CONTAINER_ARCHITECTURE"
+      ;;
     name=*)
       POSTGRESQL_CONTAINER_LABEL="${1//name=/}"
       shift
       [ -z "$POSTGRESQL_CONTAINER_LABEL" ] && errorExit 6 'empty container label'
+      echo container label:"$POSTGRESQL_CONTAINER_LABEL"
+      ;;
+    -l)
+      shift
+      POSTGRESQL_CONTAINER_LABEL="${1}"
+      shift
       echo container label:"$POSTGRESQL_CONTAINER_LABEL"
       ;;
     volume=*)
@@ -149,13 +166,31 @@ function main() {
       [ -z "$CONTAINER_VOLUME" ] && err 'empty volume name'
       echo volume label:"$CONTAINER_VOLUME"
       ;;
+    -v)
+      shift
+      CONTAINER_VOLUME="${1}"
+      shift
+      echo volume label:"$CONTAINER_VOLUME"
+      ;;
     image=*)
       export PSQL_IMAGE_NAME="${1/image=/}"
       shift
       echo image:"$PSQL_IMAGE_NAME"
       ;;
+    -i)
+      shift
+      export PSQL_IMAGE_NAME="${1}"
+      shift
+      echo image:"$PSQL_IMAGE_NAME"
+      ;;
     port=*)
       export PSQL_PORT="${1/port=/}"
+      shift
+      echo port:"$PSQL_PORT"
+      ;;
+    -p)
+      shift
+      export PSQL_PORT="${1}"
       shift
       echo port:"$PSQL_PORT"
       ;;
@@ -190,11 +225,11 @@ function main() {
       [ -n "$CMD" ] && errorExit 7 cmd to be set to status, but already set to $CMD
       CMD=status
       ;;
-    -h|h|help|--help)
+    -h|h|help|--help|-?)
       helpExit  # exits
       ;;
-    version)
-      err 1.6.0
+    -V|--version|version)
+      err 1.7.0
       exit 3
       ;;
     *)
