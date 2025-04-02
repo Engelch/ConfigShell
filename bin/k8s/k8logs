@@ -89,7 +89,7 @@ function doLogs() {
     for pod in $($KUBECTL get pods ${ns[@]} | grep "$matcher" | awk '{ print $1; }') ; do
         echo "$pod -------------------------------------------"
         #set -x
-        $dry "$KUBECTL" logs "${follow:+-f}" ${ns[@]} "$pod" "$@"
+        $dry "$KUBECTL" logs ${ns[@]} "$pod" "$@"
         #set +x
     done
 }
@@ -98,7 +98,7 @@ function main() {
     declare -r _app=$(basename "${0}")
     declare -r _appDir=$(dirname "$0")
     declare -r _absoluteAppDir=$(cd "$_appDir" || exit 99 ; /bin/pwd)
-    declare -r _appVersion="1.1.3"      # use semantic versioning
+    declare -r _appVersion="1.2.0"      # use semantic versioning
     export DebugFlag=${DebugFlag:-FALSE}
 
     declare -a ns=()
