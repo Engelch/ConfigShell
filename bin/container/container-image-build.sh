@@ -215,7 +215,7 @@ function parseCLI() {
             n)  DRY="echo"
                 err DRY run enabled...
                 ;;
-            t)  extTargetEnv="$extTargetEnv --arch=$OPTARG"
+            t)  extTargetEnv="$extTargetEnv --platform $OPTARG"
                 debug setting target env to "$OPTARG"
                 ;;
             x)  skipTestContainerfileJ2="TRUE"

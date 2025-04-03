@@ -226,8 +226,8 @@ function callDB() {
     debug in "${FUNCNAME[0]}"
     exitIfBinariesNotFound "$db_caller"
     case "$db_caller" in
-    psql)       [ -z "$*" ] && debug no command && $dry psql $xoutput postgresql://"$db_user":"$db_pw"@"$db_host":"$db_port"/"$db_db"
-                [ -n "$*" ] && debug command supplied && $dry psql $xoutput -c "$*" postgresql://"$db_user":"$db_pw"@"$db_host":"$db_port"/"$db_db"
+    psql)       [ -z "$*" ] && debug no command && $dry psql -P pager=off $xoutput postgresql://"$db_user":"$db_pw"@"$db_host":"$db_port"/"$db_db"
+                [ -n "$*" ] && debug command supplied && $dry psql -P pager=off $xoutput -c "$*" postgresql://"$db_user":"$db_pw"@"$db_host":"$db_port"/"$db_db"
                 ;;
     mysql)      [ -z "$*" ] && debug no command && $dry mysql -h "$db_host" -P "$db_port" -u "$db_user" --password="$db_pw" "$db_db"
                 [ -n "$*" ] && debug command supplied && echo "$*" | $dry mysql -h "$db_host" -P "$db_port" -u "$db_user" --password="$db_pw" "$db_db"
