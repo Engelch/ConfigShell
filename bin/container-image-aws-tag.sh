@@ -56,7 +56,7 @@ function parseCLI() {
             D)  err Debug enabled
                 debugSet
                 ;;
-            V)  err $_appVersion
+            V)  err 1.2.0
                 exit 3
                 ;;
             h)  usage
@@ -85,6 +85,7 @@ function main() {
     setContainerCmd
     if [ -z "$1" ] ; then
         setContainerName
+        baseContainerName=$containerName
         if [ -d ContainerBuild ] ; then
             containerName="$containerName:$(version.sh ContainerBuild)"
         else
@@ -100,8 +101,10 @@ function main() {
     login2aws
     debug "target to be pushed is $target"
     debug "would execute: $containerCmd tag $containerName $REGISTRY/$extraTag"
+    debug "would execute: $containerCmd tag $containerName $REGISTRY/$baseContainerName:latest"
     [ "$DebugFlag" = TRUE ] && echo press ENTER to execute && read -r
     $DRY $containerCmd tag "$containerName" "$REGISTRY/$extraTag"
+    $DRY $containerCmd tag "$containerName" "$REGISTRY/$baseContainerName:latest"
 }
 
 main "$@"
