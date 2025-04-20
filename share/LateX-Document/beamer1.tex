@@ -1,0 +1,168 @@
+\documentclass{beamer}
+\usepackage{ukdate}     % OSX compatibility: (cd ~/Library; ln -s /opt/ConfigShell/share/texmf .)
+\usetheme{Hannover}
+
+\title{My Presentation}
+\subtitle{Using Beamer}
+\author{Joe Bloggs}
+\institute{University of ShareLaTeX}
+\date{\today}
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\begin{frame}
+\label{contents}
+\frametitle{Outline}
+\tableofcontents
+\end{frame}
+
+\section{Section 1}
+\subsection{sub a}
+
+\begin{frame}
+\frametitle{Title}
+Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+\end{frame}
+
+\begin{frame}
+\frametitle{List}
+\begin{itemize}
+\item Point A
+\item Point B
+\begin{itemize}
+\item part 1
+\item part 2
+\end{itemize}
+\item Point C
+\item Point D
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Using Columns}
+\begin{columns}
+\column{0.5\textwidth}
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula
+eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient
+montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque
+eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo,
+fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut,
+imperdiet a, venenatis vitae, justo. Nullam dictum felis eu pede mollis pretium.
+Integer tincidunt. Cras dapibus. Vivamus elementum semper nisi. Aenean vulputate
+eleifend
+\column{0.5\textwidth}
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula
+eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient
+montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque
+eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo,
+fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut,
+imperdiet a, venenatis vitae, justo. Nullam dictum felis eu pede mollis pretium.
+Integer tincidunt. Cras dapibus. Vivamus elementum semper nisi. Aenean vulputate
+eleifend
+\end{columns}
+\end{frame}
+
+\begin{frame}
+\frametitle{Pictures}
+\begin{figure}
+\includegraphics[scale=0.5]{roses}
+\caption{roses.jpeg}
+\end{figure}
+Lorem ipsum dolor sit amet
+\end{frame}
+
+\begin{frame}
+\begin{block}{Block Title}
+Lorem ipsum dolor sit amet, consectetur adipisicing elit, 
+sed do eiusmod tempor incididunt ut labore et 
+dolore magna aliqua.
+\end{block}
+
+\begin{alertblock}{Block Title}
+Lorem ipsum dolor sit amet, consectetur adipisicing elit, 
+sed do eiusmod tempor incididunt ut labore et 
+dolore magna aliqua.
+\end{alertblock}
+
+\begin{definition}
+A prime number is a number that...
+\end{definition}
+
+\begin{example}
+Lorem ipsum dolor sit amet, consectetur adipisicing elit, 
+sed do eiusmod tempor incididunt ut labore et
+dolore magna aliqua.
+\end{example}
+\end{frame}
+
+\begin{frame}
+\begin{theorem}[Pythagoras] 
+$ a^2 + b^2 = c^2$
+\end{theorem}
+\begin{corollary}
+$ x + y = y + x  $
+\end{corollary}
+\begin{proof}
+$\omega +\phi = \epsilon $
+\end{proof}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Including Code}
+\begin{semiverbatim}
+\\begin\{frame\}
+\\frametitle\{Outline\}
+\\tableofcontents
+\\end\{frame\}
+\end{semiverbatim}
+\end{frame}
+
+\begin{frame}
+\hyperlink{contents}{click here for contents page}
+
+\hyperlink{contents}{\beamergotobutton{contents page}}
+\hyperlink{contents}{\beamerbutton{contents page}}
+\hyperlink{contents}{\beamerskipbutton{contents page}}
+\hyperlink{contents}{\beamerreturnbutton{contents page}}
+\end{frame}
+
+\begin{frame}
+\frametitle{List}
+\begin{itemize}
+\pause
+\item Point A
+\pause
+\item Point B
+\begin{itemize}
+\pause
+\item part 1
+\pause
+\item part 2
+\end{itemize}
+\pause
+\item Point C
+\pause
+\item Point D
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{More Lists}
+\begin{enumerate}[(I)]
+\item<1-> Point A
+\item<2-> Point B
+\begin{itemize}
+\item<3-> part 1
+\item<4-> part 2
+\end{itemize}
+\item<5-> Point C
+\item<6-> Point D
+\end{enumerate}
+\end{frame}
+
+
+\end{document}
