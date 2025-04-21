@@ -80,22 +80,26 @@ function main() {
          fi
          [ "$ZSHENV_LOADED" != 1 ] && source /opt/ConfigShell/zsh/dot.zshenv && debug loading zshenv # after source .zshenv, debug is available
          debug START dot.zshrc interactive
-         # gitContents is integrated here as it is required by setPrompt().
-         # Helper for PS1, git bash prompt like, but much shorter and also working for darwin.
-         function gitContents() {
-            if [[ $(git rev-parse --is-inside-work-tree 2>&1 | grep fatal | wc -l) -eq 0  ]] ; then
-                _gitBranch=$(git status -s -b | head -1 | sed 's/^##.//')
-                _gitStatus=$(git status -s -b | tail -n +2 | sed 's/^\(..\).*/\1/' | sort | uniq | tr "\n" " " | sed -e 's/ //g' -e 's/??/?/' -e 's/^[ ]*//')
-                echo $_gitStatus $_gitBranch
-            fi
-         }
          set autocd # enter dir with just specifying it, no cd required
          setopt PROMPT_SUBST
          autoload -Uz compinit   # required for compdef,..., otherwise loaded by omz
          compinit
-         PROMPT='%(?.√.%K{red}%?%k) %n@%F{green}%m%f [%F{yellow}$AWS_PROFILE%f] (%F{green}$(eval gitContents)%f) %~ %# ${NEWLINE}'
-         unset RPROMPT
-         setupPath
+         setupPath # required before we can check if starship is installed
+         if which starship &> /dev/null ; then
+           eval "$(starship init zsh)"
+         else
+          # gitContents is integrated here as it is required by setPrompt().
+          # Helper for PS1, git bash prompt like, but much shorter and also working for darwin.
+          function gitContents() {
+             if [[ $(git rev-parse --is-inside-work-tree 2>&1 | grep fatal | wc -l) -eq 0  ]] ; then
+                 _gitBranch=$(git status -s -b | head -1 | sed 's/^##.//')
+                 _gitStatus=$(git status -s -b | tail -n +2 | sed 's/^\(..\).*/\1/' | sort | uniq | tr "\n" " " | sed -e 's/ //g' -e 's/??/?/' -e 's/^[ ]*//')
+                 echo $_gitStatus $_gitBranch
+             fi
+          } 
+          PROMPT='%(?.√.%K{red}%?%k) %n@%F{green}%m%f [%F{yellow}$AWS_PROFILE%f] (%F{green}$(eval gitContents)%f) %~ %# ${NEWLINE}'
+          unset RPROMPT
+         fi
          bindkey '^R' history-incremental-pattern-search-backward # history-incremental-search-backward
          bindkey -e # emacs mode
          bindkey "^[[3~" delete-char
@@ -131,26 +135,6 @@ function main() {
 # The following lines have been added by Docker Desktop to enable Docker CLI completions.
         [ -f $HOME/.docker/completions ] && fpath=(/Users/engelch/.docker/completions $fpath) && \
           autoload -Uz compinit && compinit
-# End of Docker CLI completions
-# python 3.12 issue which thefuck &>/dev/null && debug loading thefuck && eval $(thefuck --alias)
-#         readonly atuinSyncFile=~/.atuin.sync
-# removed atuin as it always deletes the current screen
-#which atuin &>/dev/null && debug loading atuin && source /opt/ConfigShell/zsh/atuin.rc &&
-#            {  if [ -f "$atuinSyncFile" ]; then
-#                  echo $atuinSyncFile found
-#                  if test `find "$atuinSyncFile" -mmin +180` ; then 
-#                     echo $atuinSyncFile older than 180 minutes
-#                     atuin import auto && atuin sync
-#                     touch "$atuinSyncFile"
-#                  else
-#                     echo $atuinSyncFile younger than 180 minutes
-#                  fi
-#               else
-#                  echo $atuinSyncFile not found
-#                  atuin import auto && atuin sync
-#                  touch "$atuinSyncFile"
-#               fi ; }
-      
          debug end zshrc interactive
          ;;
       *) #echo "This is a script";;
