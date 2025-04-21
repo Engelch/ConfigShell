@@ -403,7 +403,6 @@ if status is-interactive # main code
     setupAliases_Abbreviations
     setupCompletion
     setupSsh
-    setupPrompt
 
     for file in $HOME/.config/fish/conf.d/*.sh $HOME/.sh.d/*.sh
         debug "  executing $file"
@@ -424,6 +423,7 @@ if status is-interactive # main code
     hadmRealUser
     command -q thefuck ; and thefuck --alias | source
     command -q thefuck ; or echo thefuck not found >&2
+    command -q starship ; and starship init fish | source ; or setupPrompt
 end
 
 # EOF
