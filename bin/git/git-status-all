@@ -35,10 +35,10 @@ if [ "$1" = -V ] || [ "$1" = '--version' ] ; then
     exit 0
 fi
 
-[ "$1" = "-h" ] || [ "$1" = "--help" ] && usage && exit 2
+[ "$1" = "-h" ] || [ "$1" = "--help" ] && usage && exit 0
 
 
 [ -n "$1" ] && find "$@" -name .git -execdir bash -c 'checkGitDir' \;
-[ -z "$1" ] && find . /opt/ConfigShell/ -name .git -execdir bash -c 'checkGitDir' \;
+[ -z "$1" ] && find . -name .git -execdir bash -c 'checkGitDir' \;
 
 # EOF
