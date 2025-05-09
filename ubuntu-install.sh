@@ -3,7 +3,7 @@
 # setup a develop-environment
 
 sudo apt-get -y update
-sudo apt-get install -y unzip ansible python3-pip bumpversion ruby gnutls-bin gpg vim python3-jinja2 zsh curl openssl openvpn tree thefuck zsh fish
+sudo apt-get install -y unzip ansible python3-pip bumpversion ruby gnutls-bin gpg vim python3-jinja2 zsh curl openssl openvpn tree thefuck zsh fish tig
 
 sudo snap install j2
 sudo snap install bruno
