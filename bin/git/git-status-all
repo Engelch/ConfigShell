@@ -5,12 +5,13 @@ function usage() {
     cat << HERE
 git-status-all -V
 git-status-all ( -h | --help )
-git-status-all [ dir ] ...
+git-status-all [ -u ] [ dir ] ...
 
 Without a directory, the commands start at your home-directory and at /opt/ConfigShell to
 check the status of your git repositories. With arguments, the commands starts at the specified
 directories and recursively checks for git repositories and output their status.
 
+-u ::= update if the local repository has no changes (M) and is behind the remote branch
 -V ::= output the version   and exit 1
 -h ::= output help          and exit 2
 HERE
@@ -21,7 +22,10 @@ function checkGitDir() {
     repo="$(git rev-parse --show-toplevel | sed -E s,"$HOME",~,)"
     status="$(gitStatus)"
     echo -e "$status\033[1;31m repo: \033[1;34m$repo \033[1;0m";
-    #git status -s -u --ignore-submodules --show-stash  # not showing how many commits ahead of behind
+    [ "$1" = '-u' ] && 
+      [ $(echo $status | grep -c behind) -eq 1 ] &&
+      [ $(echo $status | grep -c '^M' ) -eq 0 ] &&
+      git pull --tags
 }
 
 export -f checkGitDir       # export function to sub-processes
@@ -37,8 +41,10 @@ fi
 
 [ "$1" = "-h" ] || [ "$1" = "--help" ] && usage && exit 0
 
+updateIfBehindAndNotModified=
+[ "$1" = "-u" ] || [ "$1" = "--update" ] && updateIfBehindAndNotModified=-u && shift
 
-[ -n "$1" ] && find "$@" -name .git -execdir bash -c 'checkGitDir' \;
-[ -z "$1" ] && find . -name .git -execdir bash -c 'checkGitDir' \;
+[ -n "$1" ] && find "$@" -name .git -execdir bash -c "checkGitDir $updateIfBehindAndNotModified" \;
+[ -z "$1" ] && find . -name .git -execdir bash -c "checkGitDir $updateIfBehindAndNotModified" \;
 
 # EOF
