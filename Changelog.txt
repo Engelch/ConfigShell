@@ -1,0 +1,11 @@
+# 250523 
+
+## git-status-all new -u option
+
+Update the local repository if it is behind the remote one if possible.
+
+## onfigshell-include-to-cpu-upgrade.sh 
+
+s-link to cpkg version so that the cpu (cpkg upgrade) also tries to update
+ConfigShell
+
