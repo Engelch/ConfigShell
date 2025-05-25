@@ -31,7 +31,7 @@ function addPath() {
 function setupPath2() {
     debug4 START setupPath
     [ $UID = 0 ] && debug4 root PATH initialisation &&  PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin
-    [ $UID != 0 ] && debug4 normal user PATH init &&    PATH=./bin:/usr/local/bin:/sbin:/usr/sbin:/bin:/usr/bin
+    [ $UID != 0 ] && debug4 normal user PATH init &&    PATH=/bin:/usr/local/bin:/sbin:/usr/sbin:/bin:/usr/bin
     # add directories if existing for all platforms
 
     # 1
