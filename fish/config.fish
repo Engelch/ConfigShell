@@ -377,7 +377,7 @@ function setupExportVars
     umask 0022
     set -g -x LESS '-iR'
     set -g -x RSYNC_FLAGS "-rltHpDvu" # Windows FS updates file-times only every 2nd second
-    set -g -x RSYNC_Add_Windows "--modfiy-window=1" # Windows FS updates file-times only every 2nd second
+    set -g -x RSYNC_Add_Windows "--modify-window=1" # Windows FS updates file-times only every 2nd second
     set -g -x RSYNC_Add_RemoveSLinks "--copy-links"  # convert links into fi    les
     set -g -x VISUAL vim
     set -g -x EDITOR $VISUAL       # bsroot has no notion about VISUAL

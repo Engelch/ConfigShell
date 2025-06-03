@@ -88,7 +88,7 @@ function envVars() {
                             # The default is to display control characters using the caret notation.
     export PAGER=less
 
-    export RSYNC_FLAGS="-rltDvu --modfiy-window=1"      # Windows FS updates file-times only every 2nd second
+    export RSYNC_FLAGS="-rltDvu --modify-window=1"      # Windows FS updates file-times only every 2nd second
     export RSYNC_SLINK_FLAGS="$RSYNCFLAGS --copy-links" # copy s-links as files
     export RSYNC_LINK='--copy-links'
 
