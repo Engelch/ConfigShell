@@ -17,3 +17,20 @@ disabled = false
 format = 'on [$symbol($profile )(\($region\) )]($style)'
 style = 'bold blue'
 symbol = '🅰 '
+
+[azure]
+disabled = false
+format = 'on [$symbol($subscription)]($style) '
+symbol = '󰠅 '
+style = 'blue bold'
+
+# 250605
+# node showed timeout problems, 
+#  timeouts on node command #5707
+#  https://github.com/starship/starship/discussions/5707
+# doc for Node.js
+#  https://starship.rs/config/#node-js
+# circumvented by below
+[nodejs]
+version_format = ''
+# disabled = true
