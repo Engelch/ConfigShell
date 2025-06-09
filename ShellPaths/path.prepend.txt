@@ -7,4 +7,6 @@
 ~/.ghcup/bin
 ~/.cabal/bin
 
+/opt/zig
+
 # EOF
