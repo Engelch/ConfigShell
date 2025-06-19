@@ -3,6 +3,7 @@
 sudo dnf -y group install development-tools
 sudo dnf install -y ansible ruby zsh tig fish thefuck ripgrep bat fd yq mmv procs tokei
 sudo dnf install -y vim-X11 texlive textlive-psutils golang opentofu gh htop xmlstarlet
+sudo dnf install -y npm dpkg fakeroot
 
 # vivaldi
 sudo dnf config-manager addrepo --from-repofile=https://repo.vivaldi.com/stable/vivaldi-fedora.repo
