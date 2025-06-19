@@ -184,8 +184,14 @@ function main() {
     echo
 
     if [ -z "$systemInst" ] ; then
-        echo UpgradeConfigShell: adding upgradeConfigShell to ~/.cpkg.d/upgrade
-        /opt/ConfigShell/bin/cpkg-includeCfgShell.sh
+        _uid="$(id -u)"
+        [ "$(uname)" = Darwin ] && statOption='-f' || statOption='-c'
+        _configShellUid="$(stat $statOption %u /opt/ConfigShell/.)"
+        # echo uid $_uid configShellUid $_configShellUid
+        [ "$_uid" = "$_configShellUid" ] && {
+          echo UpgradeConfigShell: adding upgradeConfigShell to ~/.cpkg.d/upgrade
+          /opt/ConfigShell/bin/cpkg-includeCfgShell.sh
+        } || echo DIFFERENT uids for you and /opt/ConfighShell
     else
         echo UpgradeConfigShell: not installing and removing upgradeConfigShell for the cpkg command
         /bin/rm -f ~/.cpkg.d/upgrade/upgradeConfigShell.sh 2>/dev/null
