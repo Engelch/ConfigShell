@@ -81,7 +81,7 @@ function cloneConfigShell() {
 	[ -e /opt/ConfigShell ] && { sudo /bin/rm -fr /opt/ConfigShell || errorExit 22 cannot delete /opt/Configshell ; } 
 	sudo mkdir /opt/ConfigShell || errorExit 20 cannot create /opt/ConfigShell
   sudo chown configshell:configshell /opt/ConfigShell || errorExit 21 cannot set ownership of /opt/ConfigShell
-  sudo su configshell bash -c "git clone $_gitRepo /opt/ConfigShell"
+  sudo su configshell bash -c "git clone --depth 1 --no-tags $_gitRepo /opt/ConfigShell"
 }
 
 function createCleanConfigShell() {
