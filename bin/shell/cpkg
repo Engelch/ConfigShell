@@ -134,8 +134,8 @@ function subSubUserExtension() {
     _localDir="$HOME/.cpkg.d/$1"
     [ ! -d "$_localDir" ] && debug no local directory $_localDir found && return
     echo local ${_localDir} ........................................................
-    find "." -name '*.sh' -print0 | while IFS= read -r -d '' file; do
-        [ -x "$file" ] && echo "  executing $file" && ./"$file"
+    find "${_localDir}" -name '*.sh' -print0 | while IFS= read -r -d '' file; do
+        [ -x "$file" ] && echo "  executing $file" && "$file"
         [ ! -x "$file" ] && warning file not executable "$file"
     done
 }
