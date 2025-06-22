@@ -1,12 +1,29 @@
 # Welcome to ConfigShell
 
-January 2025
+## Last Upgrade
+
+22nd June 2025
+
+## About
+
+*ConfigShell* offers you scripts and helper routines that were created over the last 40 years to support your work with either *bash*, *zsh*, or *fish*.
+For security reasons, ConfigShell neither contains binaries nor encrypted data. ConfigShell is under the MIT license.
+
+The origins of ConfigShell are from the late 1980's. The first bits were started still on SunOS, Ultrix, Xenix, and Microport UNIX. Some of you might still remember...
 
 ## Contents
 
 - [Welcome to ConfigShell](#welcome-to-configshell)
-  - [Contents](#contents)
+  - [Last Upgrade](#last-upgrade)
   - [About](#about)
+  - [Contents](#contents)
+  - [Changelog / Release Notes](#changelog--release-notes)
+    - [250621 cpkg fix](#250621-cpkg-fix)
+    - [250620 els, ela](#250620-els-ela)
+    - [250619 fedora-install.sh](#250619-fedora-installsh)
+    - [250609 zig Programming Language Support](#250609-zig-programming-language-support)
+    - [250609 starhip fix](#250609-starhip-fix)
+    - [250523 git-status-all new -u option](#250523-git-status-all-new--u-option)
   - [Security Notice](#security-notice)
   - [License](#license)
   - [Modular, Optional Extensions](#modular-optional-extensions)
@@ -27,28 +44,43 @@ January 2025
 
 [//]: # (delete before 4 LaTeX)
 
-## About
+## Changelog / Release Notes
 
-Welcome to *ConfigShell*. *ConfigShell* offers you scripts and helper routines that were created over the last 40 years. 
-The first bits were started still on SunOS, Ultrix, Xenix, and Microport UNIX. Some of you might still remember...
+### 250621 cpkg fix
 
-The scripts are supposed to run under Linux, OSX, Free-, Open-, and NetBSD, and other UNIX variants. These days, the scripts are only tested with Linux and OSX.
+Fixed a stupid error to upgrade your OS.  You can easily do it using the `cpu` script which actually calls `cpkg upgrade`. 
 
-ConfigShell supports 3 major areas denoted here.
+### 250620 els, ela
 
-![3 major modules](img/configShellModules.drawio.png)
+`ela` and `els` are new shell scripts with reasonable defaults for the eza ls-replacement. The eza is written in Rust and is not installed by ConfigShell.
+
+### 250619 fedora-install.sh
+
+Script to install often used applications to use a Fedora installation for software development and deployment.
+
+### 250609 zig Programming Language Support
+
+Support for [zig](https://ziglang.org) installation under `/opt/zig`. 
+
+### 250609 starhip fix
+
+Starship is a prompt utility for bash, zsh, and fish. If starship is installed on a host with ConfigShell, then it is used. A timeout issue was existing under OSX for node JS. This is supposed to be fixed by this patch.
+
+### 250523 git-status-all new -u option
+
+`git-status-all` traverses the current directory tree; you can also specify directories as arguments. If a directory is a git repository, it shows it status, in particular versus a potential remote repository. The new option `-u` tries to pull the latest version the current branch, if the branch is behind the remote one. This is great to upgrade you working environment.
 
 ## Security Notice
 
 **ConfigShell is script-only.**
 
-I.e., it contains only scripts and / or configuration files. There are no binaries included in the  ConfigShell repository. So, you shall be able to see what every bit does.
+I.e., it contains only scripts and / or configuration files. There are no binaries included in the  ConfigShell repository. Furthermore, no encryption is used. So, you shall be able to see what every bit does.
 
 This is different for the optional git submodules such as ConfigLinux and ConfigDarwin. ConfigShell can be used without the git submodules.
 
 ## License
 
-This collection is under the MIT license.
+ConfigShell and also the modules are all under the MIT license.
 
 ## Modular, Optional Extensions
 
