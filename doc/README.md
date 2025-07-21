@@ -46,6 +46,11 @@ The origins of ConfigShell are from the late 1980's. The first bits were started
 
 ## Changelog / Release Notes
 
+### 250721 k8pod-get k8logs
+
+- k8pod-get can get an argument now which is used to limit the output of k8pod-get with `grep -E`
+- k8logs supports now the -f options for `tail -f` mode if one pod is specified
+
 ### 250621 cpkg fix
 
 Fixed a stupid error to upgrade your OS.  You can easily do it using the `cpu` script which actually calls `cpkg upgrade`. 
