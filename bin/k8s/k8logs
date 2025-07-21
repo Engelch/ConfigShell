@@ -33,6 +33,16 @@ function loadLibs() {
     source "$bashLib"
 }
 
+function reverse() {
+  if [ "$TERM" = "xterm" ] || [ "$TERM" = "vt100" ] || [ "$TERM" = "xterm-256color" ] || [ "$TERM" = "screen" ] ; then
+      tput smso ; echo "$@" ; tput rmso
+  else
+    echo "$@"
+  fi
+}
+function error()        { reverse 'ERROR:'"$@" 1>&2;  return 0; }
+function errorExit()    { EXITCODE="$1" ; shift; error "$*" ; exit "$EXITCODE"; }
+
 function usage()
 {
     1>&2 cat <<HERE
@@ -70,6 +80,7 @@ function parseCLI() {
             h) usage ; exit 0
                ;;
             f) follow=1
+               followString=-f
                ;;
             n) ns=("-n" "${OPTARG}")
                ;;
@@ -89,7 +100,7 @@ function doLogs() {
     for pod in $($KUBECTL get pods ${ns[@]} | grep "$matcher" | awk '{ print $1; }') ; do
         echo "$pod -------------------------------------------"
         #set -x
-        $dry "$KUBECTL" logs ${ns[@]} "$pod" "$@"
+        $dry "$KUBECTL" logs $followString ${ns[@]} "$pod" "$@"
         #set +x
     done
 }
@@ -103,6 +114,7 @@ function main() {
 
     declare -a ns=()
     declare follow=0
+    declare followString=
     declare dry=
 
     parseCLI "$@"               # cannot use fn-s from loadLibs
