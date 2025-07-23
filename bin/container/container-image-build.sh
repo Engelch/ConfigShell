@@ -6,6 +6,13 @@
 # shellcheck disable=SC2154 # as variables are assigned in the library file
 
 # Changelog
+# 2.6
+# - documentation added
+# - ../tests also excluded from ContainerBuild directory and tar ball
+# 2.5
+# - set architecture to linux/amd64 if not explicitly set 
+# 2.4
+# - rsync not verbose anymore when creating ContainerBuild/ directory
 # 2.3
 # - set -u
 # - _appVersion set
@@ -99,7 +106,7 @@ function createBuildPackages() {
     [ "$DebugFlag" != "TRUE" ] && local -r rsyncFlags="-a --copy-links"
     $DRY rsync $rsyncFlags $_versionPattern ../*.go ../go.mod ../go.sum ./ContainerBuild/
     for file in ../* ; do
-        [ -d "$file" ] && [ "$file" != ../Container ]  && [ "$file" !=  ../build ] && [ "$file" != ../test ] && [ "$file" != ../Old ] && [ "$file" != ../old ] && [ "$file" != ../archive ] && [ "$file" != ../tmp ] && \
+        [ -d "$file" ] && [ "$file" != ../Container ]  && [ "$file" !=  ../build ] && [ "$file" != ../test ] && [ "$file" != ../tests ] &&  [ "$file" != ../Old ] && [ "$file" != ../old ] && [ "$file" != ../archive ] && [ "$file" != ../tmp ] && \
         echo $file && \
         $DRY rsync $rsyncFlags "$file" ./ContainerBuild/
     done
@@ -240,7 +247,7 @@ function main() {
     [ "$(uname)" = Darwin ]  && exitIfBinariesNotFound gtar
     set -u
     declare -g app="$(basename $0)"
-    declare -gr appVersion='2.5.0'
+    declare -gr appVersion='2.6.0'
     declare -g containerCmd=''
     declare -g containerFile=''
     declare -g containerName=''
@@ -250,13 +257,14 @@ function main() {
 
     exitIfNotInContainerDir
 
-    setContainerCmd
-    setContainerFile
-    checkDockerFile
-    checkForGoCompatibility
-    setContainerName
-    loginAwsIfInContainerfile
-    optionallyCreateGoSetup
+    setContainerCmd                   # do we use docker or podman or ...
+    setContainerFile                  # Containerfile or Dockerfile or is there a newer template so that the container-file is outdated
+    checkDockerFile                   # check if the Containerfile is a proper file
+    checkForGoCompatibility           # determine if this build process requires go. 
+                                      # If so, does the Containerfile require the same version as the source code?
+    setContainerName                  # set the name of the new, to be built container
+    loginAwsIfInContainerfile         # login into AWS if the container-file mentions AWS
+    optionallyCreateGoSetup           # checks if to create ContainerBuild directory and tar-ball for go compilation
     unset _version
     if [ -d ContainerBuild ] ; then
         debug "ContainerBuild directory found, determining version using version.sh ContainerBuild"

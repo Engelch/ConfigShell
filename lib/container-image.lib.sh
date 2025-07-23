@@ -1,4 +1,4 @@
-declare -r _appVersion="2.1.0"
+declare -r _appVersion="2.6.0"
 
 ####################################################################################
 ########### set the container command
@@ -53,8 +53,15 @@ function setContainerFile() {
 # EXIT 8    AWS region not set
 # EXIT 9    AWS registry not set
 function login2aws() {
-    [ -z "${AWS_PROFILE}" ] && errorExit 6 "AWS_PROFILE environment variable is required, in order to login to the docker registry"
-    debug AWS_PROFILE set to "$AWS_PROFILE"
+    if [ -z "${AWS_PROFILE}" ]  ; then
+      _err=0
+      [ -z "${AWS_ACCESS_KEY_ID}" ] && _err=6
+      [ -z "${AWS_SECRET_ACCESS_KEY}" ] && _err=6
+      [ -z "${AWS_SESSION_TOKEN}" ] && _err=6
+      [ ${_err} = 6 ] && errorExit 6 "AWS_PROFILE environment variable is required, in order to login to the docker registry"
+    fi 
+    [ -n "$AWS_PROFILE"] && debug AWS_PROFILE set to "$AWS_PROFILE"
+    [ -z "$AWS_PROFILE"] && debug AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN set
 
     # vars expected in aws.cfg
     #REGION=
