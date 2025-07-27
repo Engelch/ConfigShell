@@ -1,1 +1,1 @@
-bin/installDotFiles2home
+bin/developmentGeneric/installDotFiles2home
