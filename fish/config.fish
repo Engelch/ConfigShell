@@ -193,6 +193,7 @@ function setupPath
         set fish_user_paths /bin /usr/bin/ /sbin /usr/sbin /usr/local/bin /usr/local/sbin
         build_path_by_config_files
     end
+    set -g CDPATH '.:~/prj:/opt/ConfigShell' # specification with spaces did not work
 end
 
 # optSourceFile tries to read an optionally existing script file to be sourced into the current shell.
