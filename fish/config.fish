@@ -423,8 +423,9 @@ if status is-interactive # main code
 
     hadmRealUser
     command -q thefuck ; and thefuck --alias | source
-    command -q thefuck ; or echo thefuck not found >&2
+    # command -q thefuck ; or echo thefuck not found >&2
     command -q starship ; and starship init fish | source ; or setupPrompt
+    command -q zoxide ; and zoxide init fish | source
 end
 
 # EOF

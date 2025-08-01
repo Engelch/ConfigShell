@@ -1,5 +1,8 @@
-250728.0.0
+250801.0.0
 
+# 250801
+# - load zoxide if found
+# - no message anymore if thefuck not found
 # 250728
 # - CDPATH defined
 
