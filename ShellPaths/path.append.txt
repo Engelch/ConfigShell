@@ -16,6 +16,6 @@ $HOME/google-cloud-sdk/bin
 /usr/local/flutter/bin
 /opt/flutter/bin
 $HOME/bin
-
+$HOME/.local/bin
 
 # eof
