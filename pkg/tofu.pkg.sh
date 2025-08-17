@@ -26,5 +26,32 @@ deb-src [signed-by=/etc/apt/keyrings/opentofu.gpg,/etc/apt/keyrings/opentofu-rep
 }
 
 
-opentofuRepo
+
+function main() {
+  if [ -z "$1" ] ; then
+    command="status"
+  else
+    command="$1"
+  fi
+  case "$command" in
+    install) opentofuRepo 
+      ;;
+    status) command -v tofu && echo tofu command found  \
+        && [ -f  /etc/apt/keyrings/opentofu-repo.gpg ] && echo '  /etc/apt/keyrings/opentofu-repo.gpg found' \
+        && [ ! -f /etc/apt/sources.list.d/opentofu.list ] && echo '/etc/apt/sources.list.d/opentofu.list found'
+      command -v tofu || { echo tofu command not found ; exit 1 ; }
+      ;;
+    *) echo command not found
+      exit 1
+      ;;
+  esac
+}
+
+
+
+
+main "$@"
+
+
+# EOF
 
