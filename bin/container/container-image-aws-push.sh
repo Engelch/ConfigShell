@@ -54,8 +54,8 @@ function parseCLI() {
             D)  err Debug enabled
                 debugSet
                 ;;
-            V)  err $_appVersion
-                exit 3
+            V)  echo $_appVersion
+                exit 0
                 ;;
             h)  usage
                 exit 1
@@ -83,6 +83,7 @@ function main() {
     setContainerCmd
     if [ -z "$1" ] ; then
         setContainerName
+        baseContainerName=$containerName
         if [ -d ContainerBuild ] ; then
             containerName="$containerName:$(version.sh ContainerBuild)"
         else
@@ -91,12 +92,18 @@ function main() {
     else
         containerName="$1"
     fi
+    extraTag=
+    [ -f Containerfile ] && extraTag="$(cat Containerfile | grep ^FROM  | grep -Eo 'com/[a-z0-9]+-[a-z0-9:.]+' | sed -e 's,com/,,' -e 's/:/-/g')"
+    [ -n "$extraTag" ] && extraTag="$containerName-$extraTag"
+    [ -z "$extraTag" ] && extraTag="$containerName"
     login2aws
-    target="$REGISTRY/$containerName"
+    target="$REGISTRY/$extraTag"
     debug "target to be pushed is $target"
     debug "would execute: $containerCmd push $target"
+    debug "would execute: $containerCmd push $REGISTRY/$baseContainerName:latest"
     [ "$DebugFlag" = TRUE ] && echo press ENTER to execute && read -r
     $DRY $containerCmd push "$target"
+    $DRY $containerCmd push "$REGISTRY/$baseContainerName:latest"
 }
 
 main "$@"

@@ -193,6 +193,7 @@ function setupPath
         set fish_user_paths /bin /usr/bin/ /sbin /usr/sbin /usr/local/bin /usr/local/sbin
         build_path_by_config_files
     end
+    set -g CDPATH '.:~/prj:/opt/ConfigShell' # specification with spaces did not work
 end
 
 # optSourceFile tries to read an optionally existing script file to be sourced into the current shell.
@@ -422,8 +423,11 @@ if status is-interactive # main code
 
     hadmRealUser
     command -q thefuck ; and thefuck --alias | source
-    command -q thefuck ; or echo thefuck not found >&2
+    command -q thefuck ; or debug thefuck not found >&2
     command -q starship ; and starship init fish | source ; or setupPrompt
+    command -q starship ; or debug starship not found >&2
+    command -q zoxide ; and zoxide init fish | source
+    command -q zoxide ; or debug zoxide not found >&2
 end
 
 # EOF
