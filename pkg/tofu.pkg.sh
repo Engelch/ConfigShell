@@ -1,19 +1,4 @@
-#!/usr/bin/env bash 
-
-# setup a develop-environment
-#
-
-_installMode="${ubuntuInstallationMode:-repo} 
-
-case "${_installMode}" in
-  repo) echo Installation mode using repositories.
-    ;;
-  snap) echo Installation mode using snap.
-    ;;
-  *) echo Unsupport installation mode: ${_installMode} 
-     exit 1
-    ;;
-esac
+#!/usr/bin/env bash
 
 function opentofuRepo() {
   if [ ! -f  /etc/apt/keyrings ]  ; then
@@ -38,25 +23,6 @@ deb-src [signed-by=/etc/apt/keyrings/opentofu.gpg,/etc/apt/keyrings/opentofu-rep
   sudo apt-get install -y tofu
 }
 
-sudo apt-get -y update
-sudo apt-get install -y unzip ansible python3-pip bumpversion ruby gnutls-bin gpg vim python3-jinja2 zsh curl openssl openvpn tree thefuck zsh fish tig
 
-case "${_installMode}" in
-  repo) :
-      sudo snap install j2
-      sudo snap install bruno
+opentofuRepo
 
-      sudo snap install --classic go
-      sudo snap install --classic opentofu
-      sudo snap install --classic aws-cli
-      sudo snap install --classic rustup
-      ;;
-  snap) :
-      curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-      ;;
-esac
-
-rustup default stable
-rustup update
-
-sudo apt-get -y autoremove
