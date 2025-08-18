@@ -45,6 +45,7 @@ function main() {
   [ ! -d "$appDir/../files" ] && errorExit 128 tofu.pkg.d/files not found
   [ -z "$1" ] && errorExit 129
   res=0
+  command="$1"
   case "$command" in
     force-install) opentofuRepoInstall; res=$?
       ;;
@@ -58,7 +59,7 @@ function main() {
       ;;
     uninstall) : # not yet implemented
       ;;
-    *) errorExit 9 'command mode not found, currently supported: install, force-install, status, version'
+    *) errorExit 9 'command mode not found, currently supported: install, force-install, status, version. Supplied was: ' $command
       ;;
   esac
   exit $res
