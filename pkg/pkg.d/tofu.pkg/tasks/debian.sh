@@ -38,60 +38,34 @@ function opentofuRepoStatus() {
   which tofu &>/dev/null || errorExit 1 tofu command not found 
 }
 
-function recordSuccess() {
-  [ ! -d /etc/configshell.pkg/installed ] && sudo mkdir -p /etc/configshell.pkg/installed 
-  [ ! -d /etc/configshell.pkg/installed ] && errorExit 10 cannot create configshell.pkg/installed
-  _date="$(date --utc '+%y%m%d_%H:%M')"
-  echo $_date::$(dpkg -l $1 | grep ^ii)  | sudo tee /etc/configshell.pkg/installed/$1.$_date
-  find /etc/configshell.pkg/error/$1\* -exec /bin/rm -f {} \; &>/dev/null
-  find /etc/configshell.pkg/uninstalled/$1\* -exec /bin/rm -f {} \; &>/dev/null
-}
-
-function recordError() {
-  [ ! -d /etc/configshell.pkg/error ] && sudo mkdir -p /etc/configshell.pkg/error 
-  [ ! -d /etc/configshell.pkg/error ] && errorExit 11 cannot create configshell.pkg/error
-  _date="$(date --utc '+%y%m%d_%H:%M')"
-  echo $_date::$1  | sudo tee /etc/configshell.pkg/error/$1.$_date
-  find /etc/configshell.pkg/success/$1\* -exec /bin/rm -f {} \; &>/dev/null
-  find /etc/configshell.pkg/uninstalled/$1\* -exec /bin/rm -f {} \; &>/dev/null
-}
-
 
 function main() {
   loadLib
   appDir="$(dirname "$0")"
-  [ ! -d "$appDir/tofu.pkg.d/" ] && errorExit 3 tofu.pkg.d not found
-  if [ -z "$1" ] ; then
-    command="status"
-  else
-    command="$1"
-  fi
+  [ ! -d "$appDir/../files" ] && errorExit 128 tofu.pkg.d/files not found
+  [ -z "$1" ] && errorExit 129
+  res=0
   case "$command" in
     force-install) opentofuRepoInstall; res=$?
-	    [ "$res" -eq 0 ] && recordSuccess tofu
-	    [ "$res" -ne 0 ] && recordError tofu
       ;;
     install) 
       which tofu &>/dev/null && echo tofu already found.
-      which tofu &>/dev/null || { opentofuRepoInstall ; res=$?
-	      [ "$res" -eq 0 ] && recordSuccess tofu
-	      [ "$res" -ne 0 ] && recordError tofu
-      }
+      which tofu &>/dev/null || { opentofuRepoInstall ; res=$? ; }
       ;;
     status) opentofuRepoStatus 
       ;;
-    version) echo 0.0.3
+    version) echo tofu:0.0.3
+      ;;
+    uninstall) : # not yet implemented
       ;;
     *) errorExit 9 'command mode not found, currently supported: install, force-install, status, version'
       ;;
   esac
+  exit $res
 }
 
 
-
-
 main "$@"
-
 
 # EOF
 
