@@ -64,13 +64,13 @@ function recordUninstallation() {
 
 function determineOS() {
   which lsb_release &> /dev/null && _release="$(lsb_release -i | grep -i distributor\ id | awk '{ print $NF }')"
-  if [ "$_release" = "Debian" ] ; then
+  if [ "$_release" = "Debian" ] || [ "$_release" = "Kali" ] ; then
     declare -gr release=debian  
   elif [ "$_release" = "Ubuntu" ] ; then
-    declare -gr release=ubuntu
+    declare -gr release=ubuntu  # Ubuntu is not considered to be Debian, as snapd might have to be removed,...
   elif [ "$_release" = "Fedora" ] ; then
     declare -gr release=fedora
-  elif [ "$_release" = "Redhat" ] ; then 
+  elif [ "$_release" = "Redhat" ] || [ "$_release" = "AlmaLinux" ]  ; then 
     declare -gr release=redhat
   else
     [ -z "$release" ] && [ -f /etc/os-release ] && \
