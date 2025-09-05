@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env -S bash --norc --noprofile
 
 #########################################################################################
 # pkg installer as an alternative to ansible
@@ -16,21 +16,36 @@
 #       is the last entry to see if a pkg was installed, uninstalled, or ended in an error
 #  - the installation is operating-system dependent
 
+
+
+# loadLib loads the ConfigShell library with functions such as reverse, debug, error, warning, errorExit
 function loadLib() {
 	########################################################################################
 	# ConfigShell lib 1.1 (codebase 1.0.0)
-	bashLib="/opt/ConfigShell/lib/bashlib.sh"
+  # 	bashLib="/opt/ConfigShell/lib/bashlib.sh" changing the default path to be relative to the binary
+	bashLib="$appDir/../lib/bashlib.sh"
 	[ ! -f "$bashLib" ] && 1>&2 echo "bash-library $bashLib not found" && exit 127
 	# shellcheck source=/opt/ConfigShell/lib/bashlib.sh
 	source "$bashLib"
 	unset bashLib
 }
 
+
+
+# continueIfRoot aborts execution if the current effective user is not root 
+function continueIfRoot() {
+  if [ "$EUID" -ne 0 ]; then
+    errorExit 1 "Running as root is required for many installation steps, stopping execution. Please execute it again as root."
+  fi
+}
+
+
 # checkpath installed|uninstalled|error errorCode
 #   - create the /etc/configshell.pkg/<arg1> if not existing
 #   - if it cannot be created, exit the execution with errorCode
+#   - the environment variable CONFIGSHELL_PKG_PATH_LOG can be used to overwrite the default path for logging
+#   - EXIT 17, 18, 19, $2
 function checkpath() {
-  declare -r prePath=/etc/configshell.pkg
   [ $# -ne 2 ] && errorExit 19 checkpath is supposed to be called with 2 args and was called with $# args: $*
   [[ "$1" =~ ^(installed|uninstalled|error)$ ]] || errorExit 18 undefined 1st argument is $1
   [[ "$2" =~ ^[0-9]+$ ]] || errorExit 17 exit-code does not only consist of integers....
@@ -38,14 +53,24 @@ function checkpath() {
   [ ! -d $prePath/"$1" ] && errorExit $2 cannot create $prePath/"$1"
 }
 
+
+
+# recordInstallation records a successful installation
+# Only one or no file shall exist for every pkg, either in installed, error, or uninstalled.
+# The no file case might exist if the operating system is not supported. Perhaps, this will
+# be handled later as an error or a 4th case.
 function recordInstallation() {
   checkpath installed 10
+  declare -r prePath=${CONFIGSHELL_PKG_PATH_LOG:-/etc/configshell.pkg}
   _date="$(date --utc '+%y%m%d_%H:%M')"
   echo $_date:: $1  | sudo tee /etc/configshell.pkg/installed/$1.$_date # dpkg -l $1 | grep ^ii) 
   find /etc/configshell.pkg/error/$1* -exec sudo /bin/rm -f {} \; &>/dev/null
   find /etc/configshell.pkg/uninstalled/$1* -exec sudo /bin/rm -f {} \; &>/dev/null
 }
 
+
+
+# for each pkg, only one entry, here: uninstalled
 function recordError() {
   checkpath error 11
   _date="$(date --utc '+%y%m%d_%H:%M')"
@@ -54,6 +79,9 @@ function recordError() {
   find /etc/configshell.pkg/uninstalled/$1* -exec sudo /bin/rm -f {} \; &>/dev/null
 }
 
+
+
+# for each pkg, only one entry, here: uninstalled
 function recordUninstallation() {
   checkpath uninstalled 12
   _date="$(date --utc '+%y%m%d_%H:%M')"
@@ -62,6 +90,10 @@ function recordUninstallation() {
   find /etc/configshell.pkg/error/$1* -exec sudo /bin/rm -f {} \; &>/dev/null
 } 
 
+
+
+# determineOS determines and normalises the OS name that we are running on.
+# Machine-specific differences are supposed to be handled in the OS-specific pkg-installation scripts.
 function determineOS() {
   which lsb_release &> /dev/null && _release="$(lsb_release -i | grep -i distributor\ id | awk '{ print $NF }')"
   if [ "$_release" = "Debian" ] || [ "$_release" = "Kali" ] ; then
@@ -108,15 +140,45 @@ function processResult() {
   esac
 }
 
+
+
+# processPackage executes for each package and checks minimal package consistency
+# SYNOPSIS: processPackage <app> <mode> 
+# EXIT 70
+function processPackage() {
+  local app="$1"
+  local mode="$2"
+  [ -z "$app" ] || [ -z "$mode" ] && errorExit 70 wrong call to processPkg with arguments $*
+  debug working on package $app
+  # for every pkg, error if not tasks directory
+  [ ! -d "${app}/tasks/" ] && error "${app}/tasks/" not existing, not a configshell pkg, skipping && continue
+  # skip if no support for the OS. The OS name is unified in the function determineOS in this file
+  [ ! -f "${app}/tasks/$osName.sh" ] && error "${app}/tasks/$osName.sh" not found, no support for this OS, skipping && return
+  debug installing...
+  bash "${app}/tasks/$osName.sh" $mode ; res=$?
+  processResult $app $mode $res
+}
+
+
+
+# EXIT 0, 3, 9
 function main() {
-  unset release
-  loadLib
-  appDir="$(dirname "$0")"
+  appDir="$(cd $(dirname "$0") ; pwd )"
   appName="$(basename "$0")"
   appBaseName="$(basename "$0" .sh)"
-  enabledPkgDir="${PKGDIR:-${appDir}/enabled-pkg.d}"
+  loadLib         # EXIT 127
+
+  declare -r appVersion='0.0.5'   # required 5 lines below
+
+  [ "$1" = -D ] || [ "$1" = --debug ] && { debugSet ; debug enabling debug mode ; shift ; }
+  [ "$1" = -V ] || [ "$1" = --version ] && { echo $appVersion; exit 0 ; }
+
+  continueIfRoot  # EXIT 1
+
+  enabledPkgDir="${CONFIGSHELL_PKG_DIR:-${appDir}/enabled-pkg.d}"
   osName="$(determineOS)"
-  echo $osName detected as the operating system
+  debug $osName detected as the operating system
+  declare -r prePath=${CONFIGSHELL_PKG_PATH_LOG:-/etc/configshell.pkg}
   [ ! -d "$enabledPkgDir/." ] && errorExit 3 $enabledPkgDir/. not found
      
   if [ -z "$1" ] ; then
@@ -125,37 +187,46 @@ function main() {
     command="$1"
   fi
   case "$command" in
-    force-install) :
+    reinstall) : # reinstall the pkg, even if bits are found before
       ;;
-    install) :
+    install) :  # does not overwrite existing installations and changed configurations
       ;;
-    uninstall) :
+    uinstall) : # ...
       ;;
-    status) :
+    status) : # ... output if installed
       ;;
-    version) echo 0.0.3
+    version) :
+      echo $appVersion
       exit 0
       ;;
-    *) errorExit 9 'command mode not found, currently supported: install, force-install, status, version'
+    *) :
+      errorExit 9 'command mode not found, currently supported: install, reinstall, status, version'
       ;;
   esac
-  echo command is $command
+  debug command mode is $command
   shift
+  
   if [ -n "$*" ] ; then 
-    for app in $enabledPkgDir/$* ; do
-      [ ! -d "${app}/tasks/" ] && error "${app}/tasks/" not existing, not a configshell pkg, skipping && continue
-      [ ! -f "${app}/tasks/$osName.sh" ] && error "${app}/tasks/$osName.sh" not found, no support for this OS, skipping && continue
-      bash "${app}/tasks/$osName.sh" $mode ; res=$?
-      processResult $app $command $res
+   for app in $enabledPkgDir/$* ; do
+      processPackage $app $command
     done
   else
+    # check all prerequesites of all packages
+    debug running pre checks for:
+    find -L $enabledPkgDir -name $osName.pre.sh -print0 | while IFS= read -r -d '' prePkg; do
+      debug executing pre-check file $prePkg ...
+      bash "$prePkg" || { echo ERROR script $prePkg failed ; exit 2 ; } 
+    done ; res=$?
+    [ $res -ne 0 ] && errorExit 2 "prerequisite does not hold for a pkg"
     for app in $enabledPkgDir/* ; do 
-      [ ! -d "${app}/tasks/" ] && error "${app}/tasks/" not existing, not a configshell pkg, skipping && continue
-      [ ! -f "${app}/tasks/$osName.sh" ] && error "${app}/tasks/$osName.sh" not found, no support for this OS, skipping && continue
-      bash "${app}/tasks/$osName.sh" $mode ; res=$?
-      processResult $app $command $res
+      echo would start processPackage $app $command
     done
   fi
+  # run optional cleanup tasks
+  find -L $enabledPkgDir -name $osName.post.sh -print0 | while IFS= read -r -d '' postPkg; do
+      debug executing cleanup file $postPkg ...
+      bash "$postPkg"
+  done
 }
  
 

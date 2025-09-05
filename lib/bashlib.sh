@@ -25,7 +25,7 @@
 #
 
 #########################################################################################
-# Skeleton functions, considered RO. v1.2.0
+# Skeleton functions, considered RO. v1.2.1
 
 # reverse helps to write a message in reverse mode
 function reverse() {
@@ -40,7 +40,7 @@ function reverse() {
 export DebugFlag=${DebugFlag:-FALSE}
 function debugSet()             { DebugFlag="TRUE"; return 0; }
 function debugUnset()           { DebugFlag=; return 0; }
-function debugExecIfDebug()     { [ "$DebugFlag" = TRUE ] && "$*"; return 0; }
+function debugExecIfDebug()     { [ "$DebugFlag" = TRUE ] && $*; return 0; }
 function debug()                { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:'"$*" 1>&2 ; return 0; }
 function debug4()               { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:    ' "$*" 1>&2 ; return 0; }
 function debug8()               { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:        ' "$*" 1>&2 ; return 0; }
