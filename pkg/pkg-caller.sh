@@ -92,9 +92,12 @@ function recordUninstallation() {
 
 
 
-# determineOS determines and normalises the OS name that we are running on.
+# determineOSClass determines and normalises the OS name that we are running on.
 # Machine-specific differences are supposed to be handled in the OS-specific pkg-installation scripts.
-function determineOS() {
+# A special OS like all has not been implemented as we expect that thoughts are required for any operating
+# system if the package is applicable.
+# This function is supposed to be extended for more operating systems.
+function determineOSClass() {
   which lsb_release &> /dev/null && _release="$(lsb_release -i | grep -i distributor\ id | awk '{ print $NF }')"
   if [ "$_release" = "Debian" ] || [ "$_release" = "Kali" ] ; then
     declare -gr release=debian  
@@ -152,7 +155,7 @@ function processPackage() {
   debug working on package $app
   # for every pkg, error if not tasks directory
   [ ! -d "${app}/tasks/" ] && error "${app}/tasks/" not existing, not a configshell pkg, skipping && continue
-  # skip if no support for the OS. The OS name is unified in the function determineOS in this file
+  # skip if no support for the OS. The OS name is unified in the function determineOSClass in this file
   [ ! -f "${app}/tasks/$osName.sh" ] && error "${app}/tasks/$osName.sh" not found, no support for this OS, skipping && return
   debug installing...
   bash "${app}/tasks/$osName.sh" $mode ; res=$?
@@ -168,7 +171,7 @@ function main() {
   appBaseName="$(basename "$0" .sh)"
   loadLib         # EXIT 127
 
-  declare -r appVersion='0.0.5'   # required 5 lines below
+  declare -r appVersion='0.0.6'   # required for -V and --version check
 
   [ "$1" = -D ] || [ "$1" = --debug ] && { debugSet ; debug enabling debug mode ; shift ; }
   [ "$1" = -V ] || [ "$1" = --version ] && { echo $appVersion; exit 0 ; }
@@ -176,7 +179,7 @@ function main() {
   continueIfRoot  # EXIT 1
 
   enabledPkgDir="${CONFIGSHELL_PKG_DIR:-${appDir}/enabled-pkg.d}"
-  osName="$(determineOS)"
+  osName="$(determineOSClass)"
   debug $osName detected as the operating system
   declare -r prePath=${CONFIGSHELL_PKG_PATH_LOG:-/etc/configshell.pkg}
   [ ! -d "$enabledPkgDir/." ] && errorExit 3 $enabledPkgDir/. not found

@@ -30,15 +30,44 @@ function lineExisting() {
   return 1
 }
 
-
 function pkgName() {
   echo $(echo $appDirName | xargs dirname | xargs basename | sed 's/\.pkg$//')
 }
 
+###########################################################################################3
+
+# EXIT 40, 41, 42, 43, 44, 45
+function createSystemdTimer() {
+  echo Setting up systemd
+  [ ! -d /etc/systemd/system ] && errorExit 40 cannot find dir /etc/systemd/system
+  [ ! -d /opt/ConfigShell/share/ConfigShellUpgradeBySystemd/ ] && errorExit 41 cannot find dir /opt/ConfigShell/share/ConfigShellUpgradeBySystemd/
+  # no -a to avoid -go group+owner
+  sudo rsync -pt --copy-links /opt/ConfigShell/share/ConfigShellUpgradeBySystemd/configshell-upgrade.sh /usr/local/bin || \
+    errorExit 44 error rsyncing confighsell-upgrade.sh
+  sudo rsync -rlptD --copy-links /opt/ConfigShell/share/ConfigShellUpgradeBySystemd/configshell-upgrade.* /etc/systemd/system || \
+    errorExit 42 error rsyncing systemd unit files
+  sudo chown root:root /etc/systemd/system/configshell-upgrade.* || errorExit 43 cannot normalise ownership of /etc/systemd/system/configshell..
+  sudo systemctl daemon-reload
+  sudo systemctl enable --now configshell-upgrade.timer || errorExit 45 cannot enable + start configshell-upgrade.timer
+  sudo systemctl status configshell-upgrade.timer
+}
+
+# ConfigShell not found, install it. 
+# EXIt 20, 22, 23
+function installConfigShell() { 
+  mkdir /opt/ConfigShell || errorExit 20 cannot create /opt/ConfigShell
+  useradd configshell 
+  groupadd configshell
+  git clone --depth 1 -b master https://github.com/engelch/ConfigShell /opt/ConfigShell || errorExit 22 cannot clone ConfigShell
+  createSystemdTimer || errorExit 23 error while creating systemd timer
+}
+
 function installPkg() {
   echo Installing pkg $(pkgName)
-  : # TODO
-
+  [ ! -d /opt/Configshell/. ] && installConfigShell && return $?
+  user=$(ownerFile /opt/ConfigShell/bin )
+  [ "$user" != configshell ] && echo ConfigShell is not installed as part of the system using the user configshell. &&
+     echo Consider a reinstall? && return 0
 }
 
 function reinstallPkg {
