@@ -111,7 +111,7 @@ function determineOSClass() {
     [ -z "$release" ] && [ -f /etc/os-release ] && \
        _release="$(grep ID= /etc/os-release | sed s/ID=// |  tr '[:upper:]' '[:lower:]')" 
     [ -n "$_release" ] && declare -gr release="$_release"
-    [ -z "$_release"] && [ "$(uname)" = "Darwin" ] && declare -gr release=darwin
+    [ -z "$_release" ] && [ "$(uname)" = "Darwin" ] && declare -gr release=darwin
   fi
   [ -z "$release" ] && errorExit 20 cannot determine the OS
   echo "$release"
