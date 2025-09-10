@@ -97,23 +97,34 @@ function recordUninstallation() {
 # A special OS like all has not been implemented as we expect that thoughts are required for any operating
 # system if the package is applicable.
 # This function is supposed to be extended for more operating systems.
+# supported output:
+#   darwin
+#   debian
+#   ubuntu (might be different as snap must be handled)
+#   redhat
+#   fedora (dnf vs yum)
 function determineOSClass() {
-  which lsb_release &> /dev/null && _release="$(lsb_release -i | grep -i distributor\ id | awk '{ print $NF }')"
-  if [ "$_release" = "Debian" ] || [ "$_release" = "Kali" ] ; then
+  if lsb_release &> /dev/null ; then
+    _release="$(lsb_release -i | grep -i distributor\ id | awk '{ print $NF }' | tr '[:upper:]' '[:lower:]')" 
+  elif [ -f /etc/os-release ] ; then
+    _release="$(grep '^ID=' /etc/os-release | sed s/ID=// | sed 's/\"//g' | tr '[:upper:]' '[:lower:]')" 
+  elif [ "$(uname)" = "Darwin" ] ; then
+    declare -gr release=darwin && echo $release && return 0
+  else
+    errorExit 21 cannot determine the OS
+  fi
+  # normalise the returned name
+  if [ "$_release" = "debian" ] || [ "$_release" = "kali" ] ; then
     declare -gr release=debian  
-  elif [ "$_release" = "Ubuntu" ] ; then
+  elif [ "$_release" = "ubuntu" ] ; then
     declare -gr release=ubuntu  # Ubuntu is not considered to be Debian, as snapd might have to be removed,...
-  elif [ "$_release" = "Fedora" ] ; then
+  elif [ "$_release" = "fedora" ] ; then
     declare -gr release=fedora
-  elif [ "$_release" = "Redhat" ] || [ "$_release" = "AlmaLinux" ]  ; then 
+  elif [ "$_release" = "redhat" ] || [ "$_release" = "almalinux" ]  ; then 
     declare -gr release=redhat
   else
-    [ -z "$release" ] && [ -f /etc/os-release ] && \
-       _release="$(grep ID= /etc/os-release | sed s/ID=// |  tr '[:upper:]' '[:lower:]')" 
-    [ -n "$_release" ] && declare -gr release="$_release"
-    [ -z "$_release" ] && [ "$(uname)" = "Darwin" ] && declare -gr release=darwin
+    [ -z "$release" ] && errorExit 20 cannot determine the OS
   fi
-  [ -z "$release" ] && errorExit 20 cannot determine the OS
   echo "$release"
 }
 
@@ -143,6 +154,15 @@ function processResult() {
   esac
 }
 
+function osSupportForOSClass() {
+  echo scripts to be executed in the following sequence ...
+  local result=0
+  find -L $enabledPkgDir -mindepth 1 -maxdepth 1 -type d -print  | sort | sed -e 's/^.*enabled-pkg.d\//    /'
+  exit 99
+  [ $result -ne 0 ] && errorExit 80 not all packages support the os class $osName
+  debug result is 0, end of osSupportForOSClass
+  debug return is $RETURN
+}
 
 
 # processPackage executes for each package and checks minimal package consistency
@@ -156,13 +176,11 @@ function processPackage() {
   # for every pkg, error if not tasks directory
   [ ! -d "${app}/tasks/" ] && error "${app}/tasks/" not existing, not a configshell pkg, skipping && continue
   # skip if no support for the OS. The OS name is unified in the function determineOSClass in this file
-  [ ! -f "${app}/tasks/$osName.sh" ] && error "${app}/tasks/$osName.sh" not found, no support for this OS, skipping && return
+  [ ! -f "${app}/tasks/$osName.sh" ] && errorExit 71 "${app}/tasks/$osName.sh" not found, no support for this OS
   debug installing...
   bash "${app}/tasks/$osName.sh" $mode ; res=$?
   processResult $app $mode $res
 }
-
-
 
 # EXIT 0, 3, 9
 function main() {
@@ -202,6 +220,17 @@ function main() {
       echo $appVersion
       exit 0
       ;;
+    os)
+      determineOSClass; exit $?
+      ;;
+    enabled-pkg)
+      /bin/ls -1 $enabledPkgDir/
+      exit $?
+      ;;
+    available-pkg)
+      /bin/ls -1 ${appDir}/pkg.d/
+      exit $?
+      ;;
     *) :
       errorExit 9 'command mode not found, currently supported: install, reinstall, status, version'
       ;;
@@ -210,19 +239,23 @@ function main() {
   shift
   
   if [ -n "$*" ] ; then 
+   osSupportForOSClass
    for app in $enabledPkgDir/$* ; do
       processPackage $app $command
     done
   else
     # check all prerequesites of all packages
+    osSupportForOSClass
     debug running pre checks for:
     find -L $enabledPkgDir -name $osName.pre.sh -print0 | while IFS= read -r -d '' prePkg; do
       debug executing pre-check file $prePkg ...
-      bash "$prePkg" || { echo ERROR script $prePkg failed ; exit 2 ; } 
+      bash "$prePkg" ||  errorExit 3 script $prePkg failed
     done ; res=$?
     [ $res -ne 0 ] && errorExit 2 "prerequisite does not hold for a pkg"
     for app in $enabledPkgDir/* ; do 
-      echo would start processPackage $app $command
+      debug starting processPackage $app $command
+      processPackage $app $command ; res=$? ; echo result was $res
+      [ $res -ne 0 ] && errorExit 9 error running processPackage $app $command
     done
   fi
   # run optional cleanup tasks

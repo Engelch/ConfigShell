@@ -1,4 +1,5 @@
 #!/usr/bin/env -S bash --norc --noprofile
+# shellcheck disable=SC2012
 
 export DebugFlag=${DebugFlag:-FALSE}
 function debugSet()             { DebugFlag="TRUE"; return 0; }
@@ -15,8 +16,8 @@ function exitIfDirsNotExisting()        { for dir in  "$@"; do [ ! -d "$dir"  ] 
 
 # ownerFile returns the ownername as a string
 function ownerFile() {
-    [ ! -e "$1" ] && errorExit 252 in ownerfile file not found $1
-    ls -l "$1" | awk '{ print $3 }'; return 0
+    [ ! -e "$1" ] && errorExit 252 in ownerfile file not found "$1"
+    /bin/ls -l "$1" | awk '{ print $3 }'; return 0
 }
 
 # lineExisting
@@ -31,7 +32,7 @@ function lineExisting() {
 }
 
 function pkgName() {
-  echo $(echo $appDirName | xargs dirname | xargs basename | sed 's/\.pkg$//')
+   echo "$appDirName" | xargs dirname | xargs basename | sed 's/\.pkg$//'
 }
 
 ###########################################################################################3
@@ -52,6 +53,41 @@ function createSystemdTimer() {
   sudo systemctl status configshell-upgrade.timer
 }
 
+function deleteSystemdTimer() {
+  debug deleting systemd timer,... for configshell upgrades...
+
+  local -r localbin="/usr/local/bin/configshell-upgrade.sh"
+  [ -f  "$localbin" ] && { debug4 deleting "$localbin" ; /bin/rm -f "$localbin" ; res=$? ; }
+  [ "$res" -ne 0 ] && error error deleting "$localbin" with code "$res", continuing
+  
+  systemctl disable --now configshell-upgrade.timer
+
+  for file in /etc/systemd/system/configshell* ; do
+    if [ -f "$file" ] ; then 
+      debug4 deleting file "$file"
+      /bin/rm -f "$file" ; res=$?
+      [ "$res" -ne 0 ] && error error deleting "$file" with code "$res", continuing
+    fi
+  done
+}
+
+function deleteConfigShell() {
+  debug deleting /opt/ConfigShell
+  if [ -d /opt/ConfigShell/. ] ; then 
+    debug4 /opt/ConfigShell found, actually removing it
+    rm -fr /opt/ConfigShell ; res=$?
+    [ "$res" -ne 0 ] && error error deleting /opt/ConfigShell, error code "$res", continuing
+  fi
+}
+
+function deleteConfigShellUserGroup() {
+  userdel configshell &>/dev/null ; res=$? # 6 :- user does not exist
+  debug delete user configshell returned exit code $res
+  [ $res -ne 0 ] && [ $res -ne 6 ] && errorExit 90 error deleting user configshell with exit code $res
+  groupdel configshell &>/dev/null ; res=$? # 6 :- group does not exist
+  [ $res -ne 0 ] && [ $res -ne 6 ] && errorExit 91 error deleting group configshell with exit code $res
+}
+
 # ConfigShell not found, install it. 
 # EXIt 20, 22, 23
 function installConfigShell() { 
@@ -63,7 +99,7 @@ function installConfigShell() {
 }
 
 function installPkg() {
-  echo Installing pkg $(pkgName)
+  echo Installing pkg "$(pkgName)"
   [ ! -d /opt/Configshell/. ] && installConfigShell && return $?
   user=$(ownerFile /opt/ConfigShell/bin )
   [ "$user" != configshell ] && echo ConfigShell is not installed as part of the system using the user configshell. &&
@@ -71,17 +107,21 @@ function installPkg() {
 }
 
 function reinstallPkg {
-  echo Reinstalling pkg $(pkgName)
-  : # TODO
+  echo Reinstalling pkg "$(pkgName)"
+  uninstallPkg
+  installPkg
 }
 
 function statusPkg() {
-  : # TODO
+  [ -d /opt/ConfigShell/bin ] && echo ConfigShell found && exit 0
+  echo NOT FOUND ConfigShell ; exit 1
 }
 
 function uninstallPkg {
-  echo Uninstalling pkg $(pkgName)
-  : # TODO
+  echo Uninstalling pkg "$(pkgName)"
+  deleteSystemdTimer
+  deleteConfigShell
+  deleteConfigShellUserGroup
 }
 
 # pkg also supports <<osName>>.pre.sh and <<osName>>.post.sh scripts.
@@ -89,9 +129,9 @@ function uninstallPkg {
 #  They are run before or after all enabled packages were or will be (re-)installed.
 #
 function main() {
-  declare -r appDirName="$(cd "$(dirname "$0")" ; pwd)"
+  declare -r appDirName="$(cd "$(dirname "$0")" || errorExit 128 cannot cd to dir; pwd)"
   [ -z "$1" ] && errorExit 129 command not specified
-  [ "$1" = '-D' -o "$1" = '--debug' ] && debugSet && debug enabled && shift
+  [ "$1" = '-D' ] || [ "$1" = '--debug' ] && debugSet && debug enabled && shift
   res=0
   mode="$1"
   case "$mode" in
@@ -99,15 +139,16 @@ function main() {
       ;;
     install) installPkg; res=$?
       ;;
-    status) statusPkg; res=$?
+    status) statusPkg # no return
       ;;
     version) echo template:0.0.1 ; exit 0   # TODO
       ;;
     uninstall) uninstallPkg; res=$?
       ;;
     load) return 0  # allow loading of these functions into a bash shell for further testing
+      # No other practical use-case is known for this mode.
       ;;
-    *) errorExit 9 'command mode not found, currently supported: install, reinstall, status, version. Supplied was: ' $command
+    *) errorExit 9 'command mode not found, currently supported: install, reinstall, status, version, load. Supplied was: ' "$mode"
       ;;
   esac
   exit $res
