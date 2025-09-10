@@ -1,5 +1,6 @@
 #!/usr/bin/env -S bash --norc --noprofile
-
+# shellcheck disable=SC2012
+#
 export DebugFlag=${DebugFlag:-FALSE}
 function debugSet()             { DebugFlag="TRUE"; return 0; }
 function debugUnset()           { DebugFlag=; return 0; }
@@ -15,7 +16,7 @@ function exitIfDirsNotExisting()        { for dir in  "$@"; do [ ! -d "$dir"  ] 
 
 # ownerFile returns the ownername as a string
 function ownerFile() {
-    [ ! -e "$1" ] && errorExit 252 in ownerfile file not found $1
+    [ ! -e "$1" ] && errorExit 252 in ownerfile file not found "$1"
     ls -l "$1" | awk '{ print $3 }'; return 0
 }
 
@@ -32,17 +33,18 @@ function lineExisting() {
 
 
 function pkgName() {
-  echo $(echo $appDirName | xargs dirname | xargs basename | sed 's/\.pkg$//')
+  echo "$appDirName" | xargs dirname | xargs basename | sed 's/\.pkg$//'
 }
+  
 
 function installPkg() {
-  echo Installing pkg $(pkgName)
+  echo Installing pkg "$(pkgName)"
   : # TODO
 
 }
 
 function reinstallPkg {
-  echo Reinstalling pkg $(pkgName)
+  echo Reinstalling pkg "$(pkgName)"
   : # TODO
 }
 
@@ -51,7 +53,7 @@ function statusPkg() {
 }
 
 function uninstallPkg {
-  echo Uninstalling pkg $(pkgName)
+  echo Uninstalling pkg "$(pkgName)"
   : # TODO
 }
 
@@ -60,9 +62,10 @@ function uninstallPkg {
 #  They are run before or after all enabled packages were or will be (re-)installed.
 #
 function main() {
-  declare -r appDirName="$(cd "$(dirname "$0")" ; pwd)"
+  declare -r appDirName="$(cd "$(dirname "$0")" || errorExit 128 cannot cd to dir; pwd)"
   [ -z "$1" ] && errorExit 129 command not specified
-  [ "$1" = '-D' -o "$1" = '--debug' ] && debugSet && debug enabled && shift
+  [ "$1" = '-D' ] || [ "$1" = '--debug' ] && debugSet && debug enabled && shift
+
   res=0
   mode="$1"
   case "$mode" in
@@ -78,7 +81,7 @@ function main() {
       ;;
     load) return 0  # allow loading of these functions into a bash shell for further testing
       ;;
-    *) errorExit 9 'command mode not found, currently supported: install, reinstall, status, version. Supplied was: ' $command
+    *) errorExit 9 'command mode not found, currently supported: install, reinstall, status, version. Supplied was: ' "$mode"
       ;;
   esac
   exit $res

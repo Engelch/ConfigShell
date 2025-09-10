@@ -56,9 +56,10 @@ function createSystemdTimer() {
 function deleteSystemdTimer() {
   debug deleting systemd timer,... for configshell upgrades...
 
+  local err=0
   local -r localbin="/usr/local/bin/configshell-upgrade.sh"
   [ -f  "$localbin" ] && { debug4 deleting "$localbin" ; /bin/rm -f "$localbin" ; res=$? ; }
-  [ "$res" -ne 0 ] && error error deleting "$localbin" with code "$res", continuing
+  [ "$res" -ne 0 ] && error error deleting "$localbin" with code "$res", continuing && err=2
   
   systemctl disable --now configshell-upgrade.timer
 
@@ -66,9 +67,10 @@ function deleteSystemdTimer() {
     if [ -f "$file" ] ; then 
       debug4 deleting file "$file"
       /bin/rm -f "$file" ; res=$?
-      [ "$res" -ne 0 ] && error error deleting "$file" with code "$res", continuing
+      [ "$res" -ne 0 ] && error error deleting "$file" with code "$res", continuing && err=3
     fi
   done
+  return "$err"
 }
 
 function deleteConfigShell() {
@@ -86,6 +88,7 @@ function deleteConfigShellUserGroup() {
   [ $res -ne 0 ] && [ $res -ne 6 ] && errorExit 90 error deleting user configshell with exit code $res
   groupdel configshell &>/dev/null ; res=$? # 6 :- group does not exist
   [ $res -ne 0 ] && [ $res -ne 6 ] && errorExit 91 error deleting group configshell with exit code $res
+  return 0
 }
 
 # ConfigShell not found, install it. 
@@ -99,7 +102,7 @@ function installConfigShell() {
 }
 
 function installPkg() {
-  echo Installing pkg "$(pkgName)"
+  echo Installing "$(pkgName)"
   [ ! -d /opt/Configshell/. ] && installConfigShell && return $?
   user=$(ownerFile /opt/ConfigShell/bin )
   [ "$user" != configshell ] && echo ConfigShell is not installed as part of the system using the user configshell. &&
@@ -107,7 +110,7 @@ function installPkg() {
 }
 
 function reinstallPkg {
-  echo Reinstalling pkg "$(pkgName)"
+  echo Reinstalling "$(pkgName)"
   uninstallPkg
   installPkg
 }
@@ -118,10 +121,10 @@ function statusPkg() {
 }
 
 function uninstallPkg {
-  echo Uninstalling pkg "$(pkgName)"
-  deleteSystemdTimer
-  deleteConfigShell
-  deleteConfigShellUserGroup
+  echo Uninstalling "$(pkgName)"
+  deleteSystemdTimer ; debug deleteSystemdTimer result is $?
+  deleteConfigShell ; debug deleteConfigShell result is $?
+  deleteConfigShellUserGroup ; debug deleteConfigShellUserGroup result is $?
 }
 
 # pkg also supports <<osName>>.pre.sh and <<osName>>.post.sh scripts.
