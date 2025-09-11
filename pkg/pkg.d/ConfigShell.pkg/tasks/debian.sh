@@ -98,6 +98,7 @@ function installConfigShell() {
   useradd configshell 
   groupadd configshell
   git clone --depth 1 -b master https://github.com/engelch/ConfigShell /opt/ConfigShell || errorExit 22 cannot clone ConfigShell
+  chown -R configshell:configshell /opt/ConfigShell || errorExit 21 error executing chown with code $?
   createSystemdTimer || errorExit 23 error while creating systemd timer
 }
 
