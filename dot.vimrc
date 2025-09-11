@@ -229,6 +229,5 @@ endif
 "  :spellr  - repeat last spell replacement for all words in window
 
 " GUI font
-set guifont=Source\ Code\ Pro\ for\ Powerline\ 16
-" save buffers when the graphical vim looses its focus.
+" set guifont=Source\ Code\ Pro\ for\ Powerline\ 16
 autocmd FocusLost * nested silent! wall
