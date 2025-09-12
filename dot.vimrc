@@ -1,66 +1,5 @@
-" = READ ONLY MODE =======================================================
-" vi -R <<file>>  open the file in RO-mode
 
-" = SHOW/REMOVE TABS =======================================================
-" /\t  to show tabs
-" :retab to replace tabs with spaces
-" test line with tabs 	bla
-" :set list to show EOL and Tabs as ^I, :set nolist to remove this mode again
-"
-" = previous delete/yank  =======================================================
-" :reg to show the previous deletes (vim clipboards) = :registers
-" To add the 2nd register again below the current line:  "2p
-"
-" There is a YankRing plugin if you are also interested in previous yanks
-" (copy clipboard).
-"
-" = PARAGRAPH FORMATTING =======================================================
-"
-" gwip      format current paragraph
-" gwG       format document from current line to EOF
-"           use set textwidth=80, defaulting to 78
-
-" = RELOAD VIMRC WITHOUT STOPPING VI =======================================================
-" reload .vimrc if file is in the active buffer:  :so %
-" 
-" surround plugin: yss to impact a full line.
-"                  ysip to impact a paragraph
-"                  ysi) to impact a sentence
-" iw, aw :- inside/around word
-" is, as :- inside/around sentence
-" ip, ap :- inside/around paragraph
-" i",i',a",a' :- e.g. ci" will delete everything inside double-quotes
-" i[,i(,i{,a(,a[,a{
-" it,at  :- tags
-"
-" % represents the active buffer, can also be used to replace 1,$
-"
-" :ls list buffer
-" :b1..n change to buffer n
-
-" PLUGINS ----------------------------------------------------------------
-" removed as plugins are directly install using the vim-internal package
-" manager. Packages are in the directory ~/.vim/pack/<name>/{start,opt}/<plugin>
-" If the parent directory is called start, then the plugin is loaded
-" automatically. If it is called opt, then the plugin is loaded only when
-" called with :packadd <plugin-name>.
-
-" MAPPINGS ---------------------------------------------------------------
-" 3 different ways to change keyboard mappings
-"     inoremap ö <esc>         " Remap in Insert and Replace mode
-"     vnoremap ö <esc>         " Remap in Visual and Select mode
-"     xnoremap ö <esc>         " Remap in Visual mode
-"     snoremap ö <esc>         " Remap in Select mode
-"     cnoremap ö <C-C>         " Remap in Command-line mode
-"     onoremap ö <esc>         " Remap in Operator pending mode
-"
-" Mapleader will allow you set a key unused by Vim as the <leader> key.
-" The leader key, in conjunction with another key, will allow you to create new shortcuts.
-" 
-" The backslash key is the default leader key but some people change it to a comma ",".
-" let mapleader = ","
-
-" With the leader key mapped to backslash, I can use it like this:
+" vimrc ConfigShell
 
 " Turn off search highlighting by pressing \\.
 nnoremap <leader>\ :nohlsearch<CR>
@@ -82,20 +21,37 @@ inoremap <S-F2> <Esc>:wq<CR>
 
 " show spaces as ., enabled with :set list, disabled w/ :set nolist
 set lcs+=space:· 
+
 let b:togglelist = 0
 function ToggleList()
-  echom "hi"
  if b:togglelist == 0
-   :set list
+   echom "list mode"
+   set list
    let b:togglelist = 1
  else
-   :set nolist
+   echom "nolist mode"
+   set nolist
    let b:togglelist = 0
  endif
 endfunction
-map <F3> :call ToggleList()<CR>
 
+let b:togglepaste = 0
+function TogglePaste()
+   if b:togglepaste == 0
+      let b:togglepaste = 1
+		echom "paste"
+      set paste
+   else
+      let b:togglepaste = 0
+		echom "nopaste"
+      set nopaste
+   endif
+endfunction
+
+map <F3> :call ToggleList()<CR>
 map <F4> :noh<CR>
+" to stop indenting when pasting
+map <F5> :call TogglePaste()<CR>
 
 " ====================================================
 scriptencoding utf-8
@@ -114,26 +70,20 @@ let g:NERDTreeFileLines = 1
 " ==========================================================
 filetype plugin indent on
 
-"set autowriteall " Like 'autowrite', but also used for commands ":edit", ":enew", ":quit",
-  " ":qall", ":exit", ":xit", ":recover" and closing the Vim window.
-  " Setting this option also implies that Vim behaves like 'autowrite' has
-  " been set.
-
 " Backup stuff
-" :set backup       " makes tilde file backups"
+" set backup       " makes tilde file backups"
 set backupdir=~/.vim/backup
 set directory=~/.vim/swap
 set undodir=~/.vim/undo
 set undofile
-set undolevels=1000
+set undolevels=10000
 set undoreload=10000
 " Set the commands to save in history default number is 20.
 set history=1000
 
-" https://www.freecodecamp.org/news/vimrc-configuration-guide-customize-your-vim-editor/
-
-set nocp
-filetype plugin on
+filetype plugin on   " enable file-type detection
+syntax on
+filetype on
 
 " Enable auto completion menu after pressing TAB.
 set wildmenu
@@ -143,11 +93,9 @@ set wildmode=list:longest
 " Wildmenu will ignore files with these extensions.
 set wildignore=*.docx,*.jpg,*.png,*.gif,*.pdf,*.pyc,*.exe,*.flv,*.img,*.xlsx
 
-" Clear status line when vimrc is reloaded.
-set statusline=
 " Status line left side.
-set statusline+=\ %M\ %F\ %M\ %Y\ \%R\ col:%c\ ASCII_Unic/hex:%b/0x%B\ %p%%
-"⌘
+set statusline=\ %M\ %F\ %M\ %Y\ \%R\ col:%c\ ASCII_ord\ (dec/hex):%b/0x%B\ %p%%
+
 " Show the status on the second to last line.
 set laststatus=2
 
@@ -170,64 +118,51 @@ let g:go_auto_type_info = 1
 let g:completor_filetype_map = {}
 let g:completor_filetype_map.go = {'ft': 'lsp', 'cmd': 'gopls -remote=auto'}"
 " ========================================================== end
-syntax on
-filetype on
 
-" Highlight cursor line underneath the cursor horizontally.
-" set cursorline
+" set cursorline     " Highlight cursor line underneath the cursor horizontally.
+" set cursorcolumn   " Highlight cursor line underneath the cursor vertically.
 
-" Highlight cursor line underneath the cursor vertically.
-" set cursorcolumn
+set incsearch
+set hlsearch
 
-:set ignorecase
-:set smartcase
-:set incsearch
-:set hlsearch
+set tabstop=3     " tabs are at proper location"
+set shiftwidth=3  " indenting is 3 spaces"
+set autoindent    " turns it on"
+autocmd FileType yaml setlocal ts=3 sts=3 sw=3 expandtab
 
-:set tabstop=2     " tabs are at proper location"
-:set shiftwidth=2  " indenting is 4 spaces"
-:set autoindent    " turns it on"
-:set smartindent   " does the right thing (mostly) in programs"
-:set cindent       " stricter rules for C programs"
-autocmd FileType yaml setlocal ts=2 sts=2 sw=2 expandtab
+" paste command <F5> might be required if you paste from outside
+" and all text gets more and more indented by line
 
-:set mouse=a      " allow mouse to change cursor position"
-:set showmatch    " briefly jump to matching brackets"
-:set number       " show line numbers"
-:set expandtab    " replace tabs with spaces"
-" :set noswapfile " disable the swap file as required for some docker directories
-" *               - search for word currently under cursor"
-" g*              - search for partial word under cursor "
-"                   (repeat with n)"
-" ctrl-o, ctrl-i  - go through jump locations"
-" [I              - show lines with matching word under cursor"
+set smartindent   " does the right thing (mostly) in programs"
+set cindent       " stricter rules for C programs"
+set expandtab    " replace tabs with spaces"
 
-set spelllang=en_gb
-if has("spell")
-  " turn spelling on by default
-  "set spell
-  " toggle spelling with F12 key
-  map <F12> :set spell!<CR><Bar>:echo "Spell Check: " . strpart("OffOn", 3 * &spell, 3)<CR>
-  " they were using white on white
-  highlight PmenuSel ctermfg=black ctermbg=lightgray
-  " limit it to just the top 10 items
-  set sps=best,10
-endif
+set mouse=a      " allow mouse to change cursor position"
 
-" if you manually add to your wordlist, you need to regenerate it:
-"     :mkspell! ~/.vim/spell/en.latin1.add
-" some useful keys for spellchecking:
-"   ]s       - forward to misspelled/rare/wrong cap word
-"  [s       - backwards
-"  ]S       - only stop at misspellings
-"  [S       - in other direction
-"  zG       - accept spelling for this session
-"  zg       - accept spelling and add to personal dictionary
-"  zW       - treat as misspelling for this session
-"  zw       - treat as misspelling and add to personal dictionary
-"  z=       - show spelling suggestions
-"  :spellr  - repeat last spell replacement for all words in window
+set showmatch    " briefly jump to matching brackets"
+
+set relativenumber " show line numbers, short form rnu, nornu
+set number " show the current line not as 0 but as the current line number
+" set noswapfile " disable the swap file as required for some docker directories
+
+set splitright	" new window to the right, def left
+set splitbelow	" new windoe to bottom, def top
+
+set clipboard+=unnamed  " plus	" yanked elements also put into system clipboard
+
+" ==============================================================
+" spelling
+"
+" use built-in spelling, as vimspell only supports [ia]spell, no hunspell,...
+" It also downloads dictionaries on demand,...
+" Still have to teach it to avoid -ize endings
+
+set spell
+set spelllang=en_gb,de " de_ch existing
 
 " GUI font
+" better set in ~/.gvimrc
 " set guifont=Source\ Code\ Pro\ for\ Powerline\ 16
+
+" save buffer if focus is moved
 autocmd FocusLost * nested silent! wall
