@@ -18,7 +18,9 @@ HERE
 }
 
 function checkGitDir() {
+  echo -n "remote update $(basename $(pwd))..." 
     git remote update &>/dev/null
+    echo done
     repo="$(git rev-parse --show-toplevel | sed -E s,"$HOME",~,)"
     status="$(gitStatus)"
     echo -e "$status\033[1;31m repo: \033[1;34m$repo \033[1;0m";
@@ -45,6 +47,6 @@ updateIfBehindAndNotModified=
 [ "$1" = "-u" ] || [ "$1" = "--update" ] && updateIfBehindAndNotModified=-u && shift
 
 [ -n "$1" ] && find "$@" -name .git -execdir bash -c "checkGitDir $updateIfBehindAndNotModified" \;
-[ -z "$1" ] && find . -name .git -execdir bash -c "checkGitDir $updateIfBehindAndNotModified" \;
+[ -z "$1" ] && find . -maxdepth 2 -type d -name .git -execdir bash -c "checkGitDir $updateIfBehindAndNotModified" \;
 
 # EOF

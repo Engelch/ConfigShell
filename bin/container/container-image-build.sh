@@ -6,6 +6,8 @@
 # shellcheck disable=SC2154 # as variables are assigned in the library file
 
 # Changelog
+# 2.7
+# adding the option build --provenance=false to build images compatible with Huawei SWR
 # 2.6
 # - documentation added
 # - ../tests also excluded from ContainerBuild directory and tar ball
@@ -247,7 +249,7 @@ function main() {
     [ "$(uname)" = Darwin ]  && exitIfBinariesNotFound gtar
     set -u
     declare -g app="$(basename $0)"
-    declare -gr appVersion='2.6.0'
+    declare -gr appVersion='2.7.0'
     declare -g containerCmd=''
     declare -g containerFile=''
     declare -g containerName=''
@@ -280,10 +282,10 @@ function main() {
     debug "Version is: $_version"
     date="$(date -u +%y%m%d_%H%M%S)"
     debug "Date tag set to $date"
-    debug Would execute: "$containerCmd" buildx build  $@ $extTargetEnv --progress plain -t "$containerName":"$_version" -t "$containerName:latest" -t "$containerName:$date" .
+    debug Would execute: "$containerCmd" buildx build  $@ $extTargetEnv --provenance=false --progress plain -t "$containerName":"$_version" -t "$containerName:latest" -t "$containerName:$date" .
 
     [ "$DebugFlag" = TRUE ] && echo press ENTER to execute && read -r
-    $DRY "$containerCmd" buildx build $@ $extTargetEnv --progress plain -t "$containerName":"$_version" -t "$containerName:latest" -t "$containerName:$date" .
+    $DRY "$containerCmd" buildx build $@ $extTargetEnv --provenance=false --progress plain -t "$containerName":"$_version" -t "$containerName:latest" -t "$containerName:$date" .
 }
 
 main "$@"
