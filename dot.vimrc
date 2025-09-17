@@ -57,13 +57,15 @@
 " Mapleader will allow you set a key unused by Vim as the <leader> key.
 " The leader key, in conjunction with another key, will allow you to create new shortcuts.
 " 
-" The backslash key is the default leader key but some people change it to a comma ",".
-" let mapleader = ","
+" The backslash key is the default leader key but some people change it to a comma "\".
+let mapleader = "\\"
 
 " With the leader key mapped to backslash, I can use it like this:
 
 " Turn off search highlighting by pressing \\.
 nnoremap <leader>\ :nohlsearch<CR>
+nnoremap <leader>ev :split $MYVIMRC<CR>
+nnoremap <leader>lv :so $MYVIMRC<cr>|:echom "$MYVIMRC sourced"
 
 " move between windows, default ^w h/j/k/l   or   ^w left-arrow/...
 nnoremap <C-H> <C-W>h
@@ -230,4 +232,10 @@ endif
 
 " GUI font
 " set guifont=Source\ Code\ Pro\ for\ Powerline\ 16
-autocmd FocusLost * nested silent! wall
+:augroup autochg
+  :autocmd!
+  :autocmd FocusLost * nested silent! wall
+:augroup END
+
+iabbrev adn and
+iabbrev tehn then
