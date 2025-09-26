@@ -1,3 +1,9 @@
 #!/usr/bin/env -S bash --norc --noprofile
+#
+# 250926: FC uses vimx -g instead of vim -g. Command changed to support this.
 
-exec vim -g  "$@"
+if which vimx >&/dev/null ; then
+   exec vimx -g  "$@"
+else
+   exec vim -g  "$@"
+fi

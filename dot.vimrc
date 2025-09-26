@@ -1,9 +1,10 @@
 " vimrc ConfigShell
 
 " Turn off search highlighting by pressing \\.
+:let mapleader = "\\"
 nnoremap <leader>\ :nohlsearch<CR>
 nnoremap <leader>ev :split $MYVIMRC<CR>
-nnoremap <leader>lv :so $MYVIMRC<cr>|:echom "$MYVIMRC sourced"
+nnoremap <leader>lv :so $MYVIMRC<cr>
 
 " move between windows, default ^w h/j/k/l   or   ^w left-arrow/...
 nnoremap <C-H> <C-W>h
@@ -24,7 +25,7 @@ inoremap <S-F2> <Esc>:wq<CR>
 set lcs+=space:· 
 
 let b:togglelist = 0
-function ToggleList()
+function! ToggleList()
  if b:togglelist == 0
    echom "list mode"
    set list
@@ -37,7 +38,7 @@ function ToggleList()
 endfunction
 
 let b:togglepaste = 0
-function TogglePaste()
+function! TogglePaste()
    if b:togglepaste == 0
       let b:togglepaste = 1
 		echom "paste"
@@ -160,6 +161,21 @@ set clipboard+=unnamed  " plus	" yanked elements also put into system clipboard
 
 set spell
 set spelllang=en_gb,de " de_ch existing
+let b:togglespell = 0
+function! ToggleSpell()
+   if b:togglespell == 0
+      let b:togglespell = 1
+		echom "nospell"
+      set nospell
+   else
+      let b:togglespell = 0
+		echom "spell"
+      set spell
+   endif
+endfunction
+
+map <F4>   :noh<CR>
+map <S-F4> :call ToggleSpell()<CR>
 
 " GUI font
 " better set in ~/.gvimrc
@@ -171,3 +187,5 @@ set spelllang=en_gb,de " de_ch existing
 
 iabbrev adn and
 iabbrev tehn then
+
+" echo $MYVIMRC " loaded" 
