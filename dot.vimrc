@@ -159,7 +159,7 @@ set clipboard+=unnamed  " plus	" yanked elements also put into system clipboard
 " It also downloads dictionaries on demand,...
 " Still have to teach it to avoid -ize endings
 
-set spell
+set nospell
 set spelllang=en_gb,de " de_ch existing
 let b:togglespell = 0
 function! ToggleSpell()
