@@ -150,7 +150,7 @@ set number " show the current line not as 0 but as the current line number
 set splitright	" new window to the right, def left
 set splitbelow	" new windoe to bottom, def top
 
-set clipboard+=unnamed  " plus	" yanked elements also put into system clipboard
+set clipboard=unnamedplus  " plus	" yanked elements also put into system clipboard
 
 " ==============================================================
 " spelling
