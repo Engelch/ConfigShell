@@ -23,7 +23,8 @@ grep ^sudo  /etc/group &>/dev/null && echo sudo system  && _sudoType=sudo
 ##########################################################################################
 
 sudo dnf -y group install development-tools
-sudo dnf remove  -y podman podman-compose yq jq bat tig mmv xmlstarlet
+sudo dnf remove  -y podman podman-compose
+sudo dnf install -y yq jq bat tig mmv xmlstarlet
 sudo dnf install -y fish vim git-lfs procs du-dust lsb_release vim-X11 gnutls openvpn tree
 sudo dnf install -y golang-bin rust cargo tokei java-25-openjdk-devel ruby dotnet-sdk-9.0
 sudo dnf install -y openssh-server htop telnet ansible opentofu npm
