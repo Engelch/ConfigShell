@@ -167,12 +167,15 @@ function cmdUpgrade() {
         break
     done     
     pkgUpgrade $forceMode
-    echo rustup ..................................................................... &&
-    $(which rustup &> /dev/null) && 
+    $(which rustup &> /dev/null) &&
+        echo rustup ..................................................................... &&
         rustup update
     cargoUpdate
+    $(which flatpak &> /dev/null) &&
+        echo flatpak .................................................................... &&
+       flatpak update
     [ $(uname) = Darwin ] && {
-        echo OSX base ..................................................................
+        echo OSX base ...................................................................
         if which softwareupdate &>/dev/null ; then softwareupdate -ai ; else 1>&2 echo softwareupdate NOT FOUND ; fi
     }
     subSubUserExtension upgrade "$@"
