@@ -1,0 +1,487 @@
+# espanso match file
+
+# For a complete introduction, visit the official docs at: https://espanso.org/docs/
+
+# You can use this file to define the base matches (aka snippets)
+# that will be available in every application when using espanso.
+
+# Matches are substitution rules: when you type the "trigger" string
+# it gets replaced by the "replace" string.
+
+# yaml-language-server: $schema=https://raw.githubusercontent.com/espanso/espanso/dev/schemas/match.schema.json
+
+matches:
+  # Simple text replacement
+  - trigger: ":espanso"
+    replace: "Hi there!"
+
+  # NOTE: espanso uses YAML to define matches, so pay attention to the indentation!
+
+  # But matches can also be dynamic:
+
+  # Print the current date
+  - trigger: ":date "
+    replace: "{{mydate}}"
+    vars:
+      - name: mydate
+        type: date
+        params:
+          format: "%y-%m-%d"
+
+  # Print the output of a shell command
+  - trigger: ":shell "
+    replace: "{{output}}"
+    vars:
+      - name: output
+        type: shell
+        params:
+          cmd: "echo 'Hello from your shell'"
+
+    # 3b1
+  - trigger: ":alpha "
+    replace: "α"
+    # 391
+  - trigger: ":Alpha "
+    replace: "Α"
+
+    # 3b2
+  - trigger: ":beta "
+    replace: "β"
+    # 392
+  - trigger: ":Beta "
+    replace: "Β"
+
+    # 3b3
+  - trigger: ":gamma "
+    replace: "γ"
+    # 393
+  - trigger: ":Gamma "
+    replace: "Γ"
+
+    # 3b4
+  - trigger: ":delta "
+    replace: "δ"
+    # 394
+  - trigger: ":Delta "
+    replace: "Δ"
+
+    # 3b5
+  - trigger: ":epsilon "
+    replace: "ε"
+    # 395
+  - trigger: ":Epsilon "
+    replace: "Ε"
+
+    # 3b6
+  - trigger: ":zeta "
+    replace: "ζ"
+    # 396
+  - trigger: ":Zeta "
+    replace: "Ζ"
+
+    # 3b7
+  - trigger: ":eta "
+    replace: "η"
+    # 397
+  - trigger: ":Eta "
+    replace: "Η"
+
+    # 3b8
+  - trigger: ":theta "
+    replace: "θ"
+    # 398
+  - trigger: ":Theta "
+    replace: "Θ"
+
+    # 3b9
+  - trigger: ":iota "
+    replace: "ι"
+    # 399
+  - trigger: ":Iota "
+    replace: "Ι"
+
+    # 3ba
+  - trigger: ":kappa "
+    replace: "κ"
+    # 39a
+  - trigger: ":Kappa "
+    replace: "Κ"
+
+    # 3bb
+  - trigger: ":lambda "
+    replace: "λ"
+    # 39b
+  - trigger: ":Lambda "
+    replace: "Λ"
+
+    # 3bc
+  - trigger: ":mu "
+    replace: "μ"
+    # 39c
+  - trigger: ":Mu "
+    replace: "Μ"
+
+    # 3bd
+  - trigger: ":nu "
+    replace: "ν"
+    # 39d
+  - trigger: ":Nu "
+    replace: "Ν"
+
+    # 3be
+  - trigger: ":xi "
+    replace: "ξ"
+    # 39e
+  - trigger: ":Xi "
+    replace: "Ξ"
+
+    # 3bf
+  - trigger: ":omicron "
+    replace: "ο"
+    # 39f
+  - trigger: ":Omicron "
+    replace: "Ο"
+
+    # 3c0
+  - trigger: ":pi "
+    replace: "π"
+    # 3a0
+  - trigger: ":Pi "
+    replace: "Π"
+
+    # 3c1
+  - trigger: ":rho "
+    replace: "ρ"
+    # 3a1
+  - trigger: ":Rho "
+    replace: "Ρ"
+
+    # 3c3
+  - trigger: ":sigma "
+    replace: "σ"
+    # 3a3
+  - trigger: ":Sigma "
+    replace: "Σ"
+
+    # 3c4
+  - trigger: ":tau "
+    replace: "τ"
+    # 3a4
+  - trigger: ":Tau "
+    replace: "Τ"
+
+    # 3c5
+  - trigger: ":upsilon "
+    replace: "υ"
+    # 3a5
+  - trigger: ":Upsilon "
+    replace: "Υ"
+
+    # 3c6
+  - trigger: ":psi "
+    replace: "φ"
+    # 3a6
+  - trigger: ":Psi "
+    replace: "Φ"
+
+    # 3c9
+  - trigger: ":omega "
+    replace: "ω"
+    # 3a9
+  - trigger: ":Omega "
+    replace: "Ω"
+
+
+    # 1f44d
+  - trigger: ":thumbup "
+    replace: "👍"
+    # 1f44d
+  - trigger: ":thumbUp "
+    replace: "👍"
+
+    # 1f44e
+  - trigger: ":thumbdn "
+    replace: "👎"
+    # 1f44e
+  - trigger: ":thumbdown "
+    replace: "👎"
+    # 1f44e
+  - trigger: ":thumbDn "
+    replace: "👎"
+    # 1f44e
+  - trigger: ":thumbDown "
+    replace: "👎"
+
+    # 2190
+  - trigger: ":leftarrow "
+    replace: "←"
+  - trigger: ":larrow "
+    replace: "←"
+  - trigger: ":<- "
+    replace: "←"
+
+    # 2192
+  - trigger: ":rightarrow "
+    replace: "→"
+  - trigger: ":rarrow "
+    replace: "→"
+  - trigger: ":-> "
+    replace: "→"
+
+    # 2191
+  - trigger: ":uparrow "
+    replace: "↑"
+
+    # 2193
+  - trigger: ":dnarrow "
+    replace: "↓"
+  - trigger: ":downarrow "
+    replace: "↓"
+    
+    # 2423
+  - trigger: ":spc "
+    replace: "␣"
+  - trigger: ":space "
+    replace: "␣"
+
+    # b6
+  - trigger: ":para "
+    replace: "¶"
+  - trigger: ":paragraph "
+    replace: "¶"
+
+    # 2115
+  - trigger: ":N "
+    replace: "ℕ"
+    # 2124
+  - trigger: ":Z "
+    replace: "ℤ"
+    # 211a
+  - trigger: ":Q "
+    replace: "ℚ"
+    # 211d
+  - trigger: ":R "
+    replace: "ℝ"
+    # 2102
+  - trigger: ":C "
+    replace: "ℂ"
+
+    # 2194
+  - trigger: ":leftrightarrow "
+    replace: "↔"
+  - trigger: ":<-> "
+    replace: "↔"
+
+    # 21d4
+  - trigger: ":<=> "
+    replace: "⇔"
+
+    # 2211
+  - trigger: ":sum "
+    replace: "∑"
+    # d7
+  - trigger: ":times "
+    replace: "×"
+    # f7
+  - trigger: ":div "
+    replace: "÷"
+
+    # 222a
+  - trigger: ":cup "
+    replace: "∪"
+    # 2229
+  - trigger: ":cap "
+    replace: "∩"
+    
+    # 2205
+  - trigger: ":empty "
+    replace: "∅"
+  - trigger: ":emptyset "
+    replace: "∅"
+
+    # 2208
+  - trigger: ":elem "
+    replace: "∈"
+  - trigger: ":iselem "
+    replace: "∈"
+    # 2209
+  - trigger: ":notelem "
+    replace: "∉"
+  - trigger: ":isnotelem "
+    replace: "∉"
+
+    # 2282
+  - trigger: ":subset "
+    replace: "⊂"
+    # 2286
+  - trigger: ":subseteq "
+    replace: "⊆"
+
+    # 2264
+  - trigger: ":leq "
+    replace: "≤"
+    # 2265
+  - trigger: ":req "
+    replace: "≥"
+
+    # 2200
+  - trigger: ":forall "
+    replace: "∀"
+    # 2203
+  - trigger: ":exists "
+    replace: "∃"
+    # 2204
+  - trigger: ":notexists "
+    replace: "∄"
+    # ac
+  - trigger: ":not "
+    replace: "¬"
+    # 2260
+  - trigger: ":neq "
+    replace: "≠"
+  - trigger: ":notequal "
+    replace: "≠"
+    # 2248 almost equal
+  - trigger: ":eqv "
+    replace: "≈"
+    # 2261
+  - trigger: ":ident "
+    replace: "≡"
+  - trigger: ":identical "
+    replace: "≡"
+    # 2262
+  - trigger: ":notident "
+    replace: "≢"
+  - trigger: ":notidentical "
+    replace: "≢"
+    # 2221
+  - trigger: ":arc "
+    replace: "∡"
+
+    # 2318
+  - trigger: ":cmd "
+    replace: "⌘"
+    # 2325
+  - trigger: ":alt "
+    replace: "⌥"
+    # 23ce
+  - trigger: ":enter "
+    replace: "⏎"
+    # 232b
+  - trigger: ":bsp "
+    replace: "⌫"
+  - trigger: ":backspace "
+    replace: "⌫"
+    # 21e5
+  - trigger: ":tab "
+    replace: "⇥"
+
+    # 274c
+  - trigger: ":cross "
+    replace: "❌"
+    # 2714
+  - trigger: ":check "
+    replace: "✔"
+    # 1f5f2
+  - trigger: ":flash "
+    replace: "🗲"
+    # 26d4
+  - trigger: ":block "
+    replace: "⛔"
+  - trigger: ":blocker "
+    replace: "⛔"
+    # 26a0
+  - trigger: ":caution "
+    replace: "⚠"
+  - trigger: ":alert "
+    replace: "⚠"
+    # 231a
+  - trigger: ":clock "
+    replace: "⌚"
+  - trigger: ":watch "
+    replace: "⌚"
+    # 1f5d1
+  - trigger: ":trash "
+    replace: "🗑"
+  - trigger: ":bin "
+    replace: "🗑"
+    # 1f4de
+  - trigger: ":phone "
+    replace: "📞"
+    # 2622
+  - trigger: ":radiation "
+    replace: "☢"
+
+    # 2318
+  - trigger: ":cmd "
+    replace: "⌘"
+    # 2325
+  - trigger: ":alt "
+    replace: "⌥"
+    # 23ce
+  - trigger: ":enter "
+    replace: "⏎"
+    # 232b
+  - trigger: ":bsp "
+    replace: "⌫"
+  - trigger: ":backspace "
+    replace: "⌫"
+    # 21e5
+  - trigger: ":tab "
+    replace: "⇥"
+
+    # 274c
+  - trigger: ":cross "
+    replace: "❌"
+    # 2714
+  - trigger: ":check "
+    replace: "✔"
+    # 1f5f2
+  - trigger: ":flash "
+    replace: "🗲"
+    # 26d4
+  - trigger: ":block "
+    replace: "⛔"
+  - trigger: ":blocker "
+    replace: "⛔"
+    # 26a0
+  - trigger: ":caution "
+    replace: "⚠"
+  - trigger: ":alert "
+    replace: "⚠"
+    # 231a
+  - trigger: ":clock "
+    replace: "⌚"
+  - trigger: ":watch "
+    replace: "⌚"
+    # 1f5d1
+  - trigger: ":trash "
+    replace: "🗑"
+  - trigger: ":bin "
+    replace: "🗑"
+    # 1f4de
+  - trigger: ":phone "
+    replace: "📞"
+    # 1f3a4
+  - trigger: ":mic "
+    replace: "🎤"
+  - trigger: ":micro "
+    replace: "🎤"
+  - trigger: ":microphone "
+    replace: "🎤"
+    # 1f4f8 
+  - trigger: ":camera "
+    replace: "📸"
+    # 1f3a7
+  - trigger: ":headphone "
+    replace: "🎧"
+  - trigger: ":headphones "
+    replace: "🎧"
+    # 1f339
+  - trigger: ":rose "
+    replace: "🌹"
+    # 1f33b
+  - trigger: ":sunflower "
+    replace: "🌻"
+    
+  # And much more! For more information, visit the docs: https://espanso.org/docs/
