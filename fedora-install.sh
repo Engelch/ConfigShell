@@ -30,6 +30,8 @@ sudo dnf install -y golang-bin rust cargo tokei java-25-openjdk-devel ruby dotne
 sudo dnf install -y openssh-server htop telnet ansible opentofu npm
 sudo dnf install -y awscli2 kubernetes1.34-client
 sudo dnf install -y texlive vim-latex vim-latex-doc pandoc texlive-psutils
+sudo dnf install -y wl-clipboard libxkbcommon-devel dbus-devel wxGTK-devel gcc-c++ # espanso rust compilation
+
 # TODO bruno 2510: no flatpak, no rpm pkg
 
 ##########################################################################################
