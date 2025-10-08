@@ -32,14 +32,17 @@ function installConfigShell() {
    [ -d /opt/ConfigShell/. ] && errorExit 1 /opt/ConfigShell already existing, delete it for reinstallation
    sudo mkdir /opt/ConfigShell || errorExit 20 cannot create /opt/ConfigShell
    sudo chmod 777 /opt/ConfigShell
-   sudo useradd -s /bin/bash -m configshell || { cleanUpOnError ; errorExit 24 user creation failed ; }
+   echo creating group configshell
    sudo groupadd configshell
+   echo creating user configshell
+   sudo useradd -s /bin/bash -g configshell -m configshell || { cleanUpOnError ; errorExit 24 user creation failed ; }
    git clone --depth 1 -b master "$repo" /opt/ConfigShell || { cleanUpOnError ; errorExit 22 cannot clone ConfigShell ; }
    sudo chown -R configshell:configshell /opt/ConfigShell /home/configshell || errorExit 21 error executing chown with code $?
    sudo chmod 755 /opt/ConfigShell
 }
 
 function cleanUpOnError() {
+	# return # enable for debuggin only if you want to keep left overs
    echo Deleting ConfigShell installation...
 	sudo /bin/rm -fr /opt/ConfigShell /home/configshell
 	sudo userdel -f configshell
@@ -73,11 +76,15 @@ function configureConfigShellUser() {
 ' > "$file"
    sudo /bin/mv "$file" /home/configshell/.ssh/config || { cleanUpOnError ; errorExit 26 config file creation failed ; }
    sudo chmod 600  /home/configshell/.ssh/config || { cleanUpOnError ; errorExit 27 cannot change perms of config file ; }
+   local_ssh=/home/configshell/.ssh/id_rsa 
    if test -n "$id" ; then
+	[ ! -f "$id" ] && { cleanUpOnError ; errorExit 27 cannot read id as not a plain file; }
 	[ ! -r "$id" ] && { cleanUpOnError ; errorExit 27 cannot read id file ; }
-   	sudo /bin/cp "$id" /home/configshell/.ssh/id_rsa || { cleanUpOnError ; errorExit 28 error creating id file ; }
+	echo copying private ssh key $id as file $local_ssh
+   	sudo /bin/cp "$id" "$local_ssh" || { cleanUpOnError ; errorExit 28 error creating id file ; }
+	echo changing perms of $local_ssh
+	sudo chmod 600 "$local_ssh"  || { cleanUpOnError ; errorExit 29 cannot change perms of id_rsa ; }
    fi
-   sudo chmod 600 /home/configshell/.ssh/id_rsa || { cleanUpOnError ; errorExit 29 cannot change perms of id_rsa ; }
    sudo chown -R configshell /home/configshell || { cleanUpOnError ; errorExit 30 cannot change ownership of id_rsa ; }
 }
 
