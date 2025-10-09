@@ -157,10 +157,12 @@ function main() {
 
     # linux_arm5 introduced as support for old IoT devices.
     # Avoidance of the introduction of a further field to the command name.
-    declare -r _osArch=$(echo $_osDir | sed 's/.*_//' | sed 's/arm5$/arm/') # fix for old arm5 devices
+    declare _osArch=$(echo $_osDir | sed 's/.*_//' | sed 's/arm5$/arm/') # fix for old arm5 devices
     if [ "$(echo $_osDir | sed 's/.*_//')" = arm5  ] ; then
         declare -r _goarm='GOARM=5'
     fi
+
+   [ "$_osArch" = aarch64 ] && _osArch=arm64 && echo changing architecture from aarch64 to arm64
 
     _containerBuild=    # will be set by the -c option
     parseCLIOptions $@  # no parentheses required
