@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# version 251010-00
+
 ##########################################################################################
 # idempotent execution for adding a user
 ##########################################################################################
@@ -28,7 +30,7 @@ sudo dnf install -y yq jq bat tig mmv xmlstarlet
 sudo dnf install -y fish vim git-lfs procs du-dust lsb_release vim-X11 gnutls openvpn tree
 sudo dnf install -y golang-bin rust cargo tokei java-25-openjdk-devel ruby dotnet-sdk-9.0
 sudo dnf install -y openssh-server htop telnet ansible opentofu npm
-sudo dnf install -y awscli2 kubernetes1.34-client
+sudo dnf install -y awscli2 kubernetes1.34-client bumpversion
 sudo dnf install -y texlive vim-latex vim-latex-doc pandoc texlive-psutils
 sudo dnf install -y wl-clipboard libxkbcommon-devel dbus-devel wxGTK-devel gcc-c++ # espanso rust compilation
 
