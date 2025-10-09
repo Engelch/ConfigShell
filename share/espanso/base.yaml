@@ -321,7 +321,7 @@ matches:
   - trigger: ":leq "
     replace: "≤"
     # 2265
-  - trigger: ":req "
+  - trigger: ":geq "
     replace: "≥"
 
     # 2200
@@ -412,56 +412,6 @@ matches:
   - trigger: ":radiation "
     replace: "☢"
 
-    # 2318
-  - trigger: ":cmd "
-    replace: "⌘"
-    # 2325
-  - trigger: ":alt "
-    replace: "⌥"
-    # 23ce
-  - trigger: ":enter "
-    replace: "⏎"
-    # 232b
-  - trigger: ":bsp "
-    replace: "⌫"
-  - trigger: ":backspace "
-    replace: "⌫"
-    # 21e5
-  - trigger: ":tab "
-    replace: "⇥"
-
-    # 274c
-  - trigger: ":cross "
-    replace: "❌"
-    # 2714
-  - trigger: ":check "
-    replace: "✔"
-    # 1f5f2
-  - trigger: ":flash "
-    replace: "🗲"
-    # 26d4
-  - trigger: ":block "
-    replace: "⛔"
-  - trigger: ":blocker "
-    replace: "⛔"
-    # 26a0
-  - trigger: ":caution "
-    replace: "⚠"
-  - trigger: ":alert "
-    replace: "⚠"
-    # 231a
-  - trigger: ":clock "
-    replace: "⌚"
-  - trigger: ":watch "
-    replace: "⌚"
-    # 1f5d1
-  - trigger: ":trash "
-    replace: "🗑"
-  - trigger: ":bin "
-    replace: "🗑"
-    # 1f4de
-  - trigger: ":phone "
-    replace: "📞"
     # 1f3a4
   - trigger: ":mic "
     replace: "🎤"
