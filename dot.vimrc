@@ -190,4 +190,13 @@ map <S-F4> :call ToggleSpell()<CR>
 iabbrev adn and
 iabbrev tehn then
 
+inoremap <C-S-v> <Esc>"+pa
+nnoremap <C-S-v> "+p
+vnoremap <C-S-c> "+y
+vnoremap <C-S-x> "+x
+inoremap <C-v> <Esc>"+pa
+nnoremap <C-v> "+p
+vnoremap <C-c> "+y
+vnoremap <C-x> "+x
+
 " echo $MYVIMRC " loaded" 
