@@ -173,7 +173,7 @@ function cmdUpgrade() {
     cargoUpdate
     $(which flatpak &> /dev/null) &&
         echo flatpak .................................................................... &&
-       flatpak update
+       flatpak update -y
     [ $(uname) = Darwin ] && {
         echo OSX base ...................................................................
         if which softwareupdate &>/dev/null ; then softwareupdate -ai ; else 1>&2 echo softwareupdate NOT FOUND ; fi
