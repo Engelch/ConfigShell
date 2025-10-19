@@ -1,1 +1,4 @@
-curl https://ipinfo.io
+#!/usr/bin/env -S bash --norc --noprofile
+
+[ "$1" = '-h' ] && exec curl http://ipinfo.io  # option for CN
+exec curl https://ipinfo.io 
