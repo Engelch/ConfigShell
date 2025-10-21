@@ -1,14 +1,17 @@
 #!/usr/bin/env bash
 
-# version 251010-00
+# 251021
+# - installation of wheel/sudo file added about line 21-28
+# 251010-00
 
 ##########################################################################################
 # idempotent execution for adding a user
 ##########################################################################################
-#   detect the group for adding users to the sudo command
-#   make sure that the value is empty and no other variable with the same name from outside,
+#   detect the group for adding users to the sudo command - clear for fedora, but code is
+#   also usable for Debian- and Ubuntu-based systems.
+#   Make sure that the value is empty and no other variable with the same name from outside,
 #   e.g. environment variables, influences the evaluation.
-#   We expect that no system contains the groups wheel AND sudo.
+#   We expect that no system contains both the groups wheel AND sudo.
 
 _sudoType=
 grep ^wheel /etc/group &>/dev/null && echo wheel system && _sudoType=wheel
@@ -19,6 +22,16 @@ grep ^sudo  /etc/group &>/dev/null && echo sudo system  && _sudoType=sudo
 
 [ -n "$_sudoType" ] && sudo usermod -a -G "$_sudoType" "$USER" 
 [ -z "$_sudoType" ] && echo unclear sudo mechanism, please check && exit 99 
+
+sudo bash -c "test -f /etc/sudoers.d/$_sudoType"
+sudoRes=$?
+echo sudoRes is $sudoRes
+
+if [ "$sudoRes" -ne 0  ] ; then
+   sudo echo "%$_sudoType ALL=(ALL) NOPASSWD:ALL" >| /etc/sudoers.d/$_sudoType
+else
+   echo sudo setup already existing
+fi
 
 ##########################################################################################
 # dnf addition of packages
@@ -91,7 +104,8 @@ for app in \
        com.jetbrains.IntelliJ-IDEA-Ultimate \
        md.obsidian.Obsidian \
        org.gnome.GHex \
-       com.ktechpit.whatsie
+       com.ktechpit.whatsie \
+       com.visualstudio.code
 do
    echo Working on $app...
    sudo flatpak install --or-update -y --noninteractive flathub $app
