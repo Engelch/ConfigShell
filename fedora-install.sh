@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# 251023
+# - adding gnome-terminal
 # 251021
 # - installation of wheel/sudo file added about line 21-28
 # 251010-00
@@ -37,9 +39,12 @@ fi
 # dnf addition of packages
 ##########################################################################################
 
+# REMOVAL
+sudo dnf remove  -y podman podman-compose 
+
+# ADDITION
 sudo dnf -y group install development-tools
-sudo dnf remove  -y podman podman-compose
-sudo dnf install -y yq jq bat tig mmv xmlstarlet
+sudo dnf install -y yq jq bat tig mmv xmlstarlet gnome-terminal
 sudo dnf install -y fish vim git-lfs procs du-dust lsb_release vim-X11 gnutls openvpn tree
 sudo dnf install -y golang-bin rust cargo tokei java-25-openjdk-devel ruby dotnet-sdk-9.0
 sudo dnf install -y openssh-server htop telnet ansible opentofu npm
@@ -110,6 +115,12 @@ do
    echo Working on $app...
    sudo flatpak install --or-update -y --noninteractive flathub $app
 done
+
+echo
+echo If yo have not done so, you can uninstall the default terminal emulator
+echo by issusing \`dnf uninstall -y ptyxis\`
+echo Gnome-terminal was installed above which can fully replace ptyxis and
+echo who allows the sharing of profiles by dconf easily.
 
 ##########################################################################################
 # EOF

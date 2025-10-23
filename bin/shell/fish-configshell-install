@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+
+function loadLibs() {
+    #########################################################################################
+    # ConfigShell lib 1.1 (codebase 1.0.0)
+    bashLib="/opt/ConfigShell/lib/bashlib.sh"
+    [ ! -f "$bashLib" ] && 1>&2 echo "bash-library $bashLib not found" && exit 127
+    # shellcheck source=/opt/ConfigShell/lib/bashlib.sh
+    source "$bashLib"
+}
+
+
+function main() {
+   configshell_home_dir="$HOME/.config/fish/"
+   [ ! -d "$configshell_home_dir/." ] && errorExit 1 no fish installation found, first run fish once.
+   cd "$configshell_home_dir" || errorExit 2 cannot cd into the user\'s fish configshell directory.
+   /bin/rm -fr functions config.fish
+   /bin/ln -s /opt/ConfigShell/fish/config.fish .
+   mkdir functions
+   /bin/cp  /opt/ConfigShell/fish/functions ./functions/
+   echo Now start or reload fish.
+}
+
+main "$@" 
+
+# EOF

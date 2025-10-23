@@ -109,32 +109,32 @@ function fixGnupg() {
     fi
 }
 
-function createConfigShellFishConfiguration() {
-    mkdir -p "$fishCfgDir" 2>/dev/null
-    test -d  "$fishCfgDir" || errorExit 20 fish config directory "$fishCfgDir" could not be created
-    test -d "$_absoluteAppDir/fish" || errorExit 21 fish config directory not found in ConfigShell
-    cd "$fishCfgDir" || errorExit 22 "could not change to fish directory $fishCfgDir"
-    for file in "$_absoluteAppDir/fish/"* ; do
-        echo -n '  '
-        ln -sfv "$file" .
-    done
-}
-
-function installFish() {
-    echo FISH configuration file setup
-    declare -r fishCfgDir=~/.config/fish
-    if [ -d "$fishCfgDir" ] ; then
-        read -e -r -p '  Fish shell configuration found. Shall it be overwritten? [yN]?' -i n answer
-        if [ "${answer^^}" = 'Y' ] ; then
-            /bin/rm -fr "$fishCfgDir"
-            createConfigShellFishConfiguration
-        else
-            echo '  keeping existing configuration'
-        fi
-    else
-        createConfigShellFishConfiguration
-    fi
-}
+#function createConfigShellFishConfiguration() {
+#    mkdir -p "$fishCfgDir" 2>/dev/null
+#    test -d  "$fishCfgDir" || errorExit 20 fish config directory "$fishCfgDir" could not be created
+#    test -d "$_absoluteAppDir/fish" || errorExit 21 fish config directory not found in ConfigShell
+#    cd "$fishCfgDir" || errorExit 22 "could not change to fish directory $fishCfgDir"
+#    for file in "$_absoluteAppDir/fish/"* ; do
+#        echo -n '  '
+#        ln -sfv "$file" .
+#    done
+#}
+#
+#function installFish() {
+#    echo FISH configuration file setup
+#    declare -r fishCfgDir=~/.config/fish
+#    if [ -d "$fishCfgDir" ] ; then
+#        read -e -r -p '  Fish shell configuration found. Shall it be overwritten? [yN]?' -i n answer
+#        if [ "${answer^^}" = 'Y' ] ; then
+#            /bin/rm -fr "$fishCfgDir"
+#            createConfigShellFishConfiguration
+#        else
+#            echo '  keeping existing configuration'
+#        fi
+#    else
+#        createConfigShellFishConfiguration
+#    fi
+#}
 
 function warningIfBinariesNotFound()       { for file in "$@"; do command -v "$file" &>/dev/null || 1>&2 echo "WARNING:binary not found:$file"; done }
 
@@ -168,7 +168,8 @@ function main() {
     done
 
     fixGnupg
-    installFish
+    # installFish
+    # fish to be installed by fish-omf-install script
 
     mkdir -p ~/.sh.d    # add common shell directory for *.sh commands to be run as a sub-shell
 
@@ -191,7 +192,7 @@ function main() {
         [ "$_uid" = "$_configShellUid" ] && {
           echo UpgradeConfigShell: adding upgradeConfigShell to ~/.cpkg.d/upgrade
           /opt/ConfigShell/bin/cpkg-includeCfgShell.sh
-        } || echo DIFFERENT uids for you and /opt/ConfighShell
+        } || echo DIFFERENT uids for you and /opt/ConfighShell, not installing ~/.cpkg.d/upgrade/upgradeconfigshell
     else
         echo UpgradeConfigShell: not installing and removing upgradeConfigShell for the cpkg command
         /bin/rm -f ~/.cpkg.d/upgrade/upgradeConfigShell.sh 2>/dev/null
