@@ -5,40 +5,40 @@
 #
 
 # set -v
-which fish &>/dev/null || { echo fish does not seem to be installed, exiting ; exit 1 ; }
+# [ -f "$HOME/.config/fish/default_prompt" ]  && echo delete default_prompt && /bin/rm -fr "$HOME/.config/fish/default_prompt" 
 
-[ -e "$HOME/.local/share/omf" ] && \
-   echo Deleting previous omf installation && \
-   /bin/rm -fr "$HOME/.local/share/omf"
-
-if [ -d "$HOME/.config/fish/." ] ; then
-   # backup old fish installation, overwriting even older ones
-   [ -d "$HOME/.config/fish.old/." ] && \
-      echo Found old fish configuration "$HOME/.config/fish.old", ovwriting it && \
-      /bin/rm -fr "$HOME/.config/fish.old" 
-   mv "$HOME/.config/fish"  "$HOME/.config/fish.old" 
-fi
-mkdir "$HOME/.config/fish"
-
-if [ "$1" = -d -o "$1" = --default ] ; then # no ConfigShell
-   echo ============\> NOT installing ConfigShell fish version.
+if [ "$1" = -f ] ; then
+   if [ -d "$HOME/.config/fish" ] ; then
+      echo moving old fish configuration to '~/.config/fish.old' 
+      [ -e "$HOME/.config/fish.old" ] && echo removing old fish.old && /bin/rm -fr "$HOME/.config/fish.old"
+      mv "$HOME/.config/fish" "$HOME/.config/fish.old" 
+   fi
+   [ -e "$HOME/.local/share/omf" ] && \
+      echo deleting previous omf installation && \
+      /bin/rm -fr "$HOME/.local/share/omf"
 else
-   echo Removing default fish configuration
-   cd "$HOME/.config/fish/" || { echo cannot jump to fish directory ; exit 2 ; }
-   /bin/rm -fr config.fish
-   echo Installation of ConfigShell fish configuration
-   ln -s /opt/ConfigShell/fish/config.fish .
-   [ -d functions/. ] && echo copying functions && cp /opt/ConfigShell/fish/functions/* functions/.
-   echo Done.
+   [ -e "$HOME/.local/share/omf" ] && \
+      echo previous omf installation found, exiting && \
+      exit 1 
 fi
+
+echo CONFIGSHELL setup..........................
+[ ! -d ~/.config/fish ] && echo '    creating ~/.config/fish' && mkdir ~/.config/fish
+cd "$HOME/.config/fish" || { 2>&1 echo cannot change to fish configuration directory && exit 2 ; }
+/bin/rm -f config.fish
+echo '    s-linking config.fish to ConfigShell'
+ln -sv /opt/ConfigShell/fish/config.fish . | sed 's/^/      '
+[ ! -d ./functions ] && echo '     creating ./config/fish/functions' && mkdir functions
+cd "./functions" || exit 0
+echo '    s-linking fish functions'
+ln -sv /opt/ConfigShell/fish/functions/* . | sed 's/^/      '
 
 echo installing omf...
 curl https://raw.githubusercontent.com/oh-my-fish/oh-my-fish/master/bin/install | fish
 reload
-
-echo installing bobthefish
+echo '    installing bobthefish'
 omf install bobthefish
-echo installing bang-bang
+echo '    installing bang-bang'
 omf install bang-bang
 
 
