@@ -8,14 +8,15 @@
 # [ -f "$HOME/.config/fish/default_prompt" ]  && echo delete default_prompt && /bin/rm -fr "$HOME/.config/fish/default_prompt" 
 
 if [ "$1" = -f ] ; then
+   echo fish setup
    if [ -d "$HOME/.config/fish" ] ; then
-      echo moving old fish configuration to '~/.config/fish.old' 
-      [ -e "$HOME/.config/fish.old" ] && echo removing old fish.old && /bin/rm -fr "$HOME/.config/fish.old"
+      echo '   moving old fish configuration to ~/.config/fish.old' 
+      [ -e "$HOME/.config/fish.old" ] && echo '   removing old fish.old' && /bin/rm -fr "$HOME/.config/fish.old"
       mv "$HOME/.config/fish" "$HOME/.config/fish.old" 
    fi
    [ -e "$HOME/.local/share/omf" ] && \
       echo deleting previous omf installation && \
-      /bin/rm -fr "$HOME/.local/share/omf"
+      /bin/rm -vfr "$HOME/.local/share/omf" | sed 's/^/      /'
 else
    [ -e "$HOME/.local/share/omf" ] && \
       echo previous omf installation found, exiting && \
@@ -27,19 +28,19 @@ echo CONFIGSHELL setup..........................
 cd "$HOME/.config/fish" || { 2>&1 echo cannot change to fish configuration directory && exit 2 ; }
 /bin/rm -f config.fish
 echo '    s-linking config.fish to ConfigShell'
-ln -sv /opt/ConfigShell/fish/config.fish . | sed 's/^/      '
+ln -sv /opt/ConfigShell/fish/config.fish . | sed 's/^/      /'
 [ ! -d ./functions ] && echo '     creating ./config/fish/functions' && mkdir functions
 cd "./functions" || exit 0
 echo '    s-linking fish functions'
-ln -sv /opt/ConfigShell/fish/functions/* . | sed 's/^/      '
+ln -sv /opt/ConfigShell/fish/functions/* . | sed 's/^/      /'
 
 echo installing omf...
 curl https://raw.githubusercontent.com/oh-my-fish/oh-my-fish/master/bin/install | fish
 reload
 echo '    installing bobthefish'
-omf install bobthefish
+omf install bobthefish 2>&1 | sed 's/^/      /'
 echo '    installing bang-bang'
-omf install bang-bang
+omf install bang-bang 2>&1 | sed 's/^/      /'
 
 
 #echo setting default_prompt
