@@ -51,9 +51,9 @@ sudo dnf install -y openssh-server htop telnet ansible opentofu npm
 sudo dnf install -y awscli2 kubernetes1.34-client bumpversion
 sudo dnf install -y texlive vim-latex vim-latex-doc pandoc texlive-psutils
 sudo dnf install -y wl-clipboard libxkbcommon-devel dbus-devel wxGTK-devel gcc-c++ # espanso rust compilation
-# install cosmic desktop
-sudo dnf copr enable -y ryanabx/cosmic-epoch
-sudo dnf install -y cosmic-desktop
+# install cosmic desktop - nice looking, but does not support resize of the VM window --251027
+#  sudo dnf copr enable -y ryanabx/cosmic-epoch
+#  sudo dnf install -y cosmic-desktop
 
 # TODO bruno 2510: no flatpak, no rpm pkg
 
