@@ -2,9 +2,9 @@
 # vim: set expandtab: ts=3: sw=3
 # shellcheck disable=SC2155
 #
-# TITLE: container-run.sh
+# TITLE: d2.sh
 #
-# DESCRIPTION: helper to run container with current directory set.
+# DESCRIPTION: frontend to container-run.sh to run the terrastruct/d2 container.
 #
 # LICENSE: MIT ©2026 engel-ch@outlook.com
 #
@@ -25,14 +25,6 @@
 #
 # Changelog
 # 1.0:
-#  - cleanup of code:
-#    - Elements for ConfigShell loading into the container were removed.
-#    - container-lib is not loaded anymore
-# 0.2:
-# - allowing -e key-value to support environment variables to be set inside/for the container
-# - debug mode now shows the command that would be executed and waits for ENTER to continue
-# 0.1:
-# - initial version
 
 # reverse helps to write a message in reverse mode
 function reverse() {
@@ -57,27 +49,17 @@ NAME
     $_app
 SYNOPSIS
     $_app [-D] [-e key=value] ... container [ <<command to be run inside of the container>> ]
+    $_app -u
     $_app -V
     $_app -h
 VERSION
     $_appVersion
 DESCRIPTION
     About:
-    This commands runs a container, and it does not keep a container artifact
-    afterwards. It shall enable to run commands from containers and hereby
-    solve problems such as installing multiple psql or mysql client versions
-    in parallel on a host.
-
-    Mounting:
-    1. The container mounts the root directory of the host os in the container
-       under /wrk
-
-    Container Command:
-    The command uses podman is installed. Otherwise, if docker is found, it is
-    used. Else, an error is created.
-
-    The command can be called as container-run.sh or as cr.
+    This commands runs the d2 container. The -u option allows to pull the latest version of
+    the comtainer image.
 OPTIONS
+    -u      ::= pull the latest version of  the container image
     -D      ::= enable debug output
     -V      ::= output the version number and exit with 127
     -h      ::= show usage message and exit with exit with 0
@@ -86,7 +68,7 @@ OPTIONS
 
 EXAMPLE CALL
 
-    cr -D -e a=b -e b=c  terrastruct/d2 helloworld.d2 helloworld.jpg
+    cr -D -e a=b -e b=c  helloworld.d2 helloworld.jpg
 
 EXIT Codes
     <<container exit value>>  ::= exit of normal execution
@@ -100,8 +82,10 @@ HERE
 }
 
 function parseCLI() {
-    while getopts "DVe:h" options; do         # Loop: Get the next option;
+    while getopts "uDVe:h" options; do         # Loop: Get the next option;
         case "${options}" in                    # TIMES=${OPTARG}
+            u)  pullMode="TRUE"
+                ;;
             D)  1>&2 echo Debug enabled ; DebugFlag="TRUE"
                 ;;
             V)  1>&2 echo $_appVersion
@@ -138,22 +122,28 @@ function main() {
     declare -r _appVersion="1.0.0"      # use semantic versioning
     export DebugFlag=${DebugFlag:-FALSE}
     environmentOptions=
+    pullMode=
 
     parseCLI "$@"
     shift "$(( OPTIND - 1 ))"  # not working inside parseCLI
 
-    exitIfBinariesNotFound mktemp realpath
     containerCmd="$(defineContainerCommand)" || errorExit 253 defineContainerCommand could not determine container command
     debug "environment options are: $environmentOptions"
     debug "container-command is $containerCmd"
-
     debug args are "$@"
-    [ -z "$1" ] && errorExit 11 No container to be run was specified.
-    debug Executing, after pressing ENTER: "$containerCmd run -it --rm -u $(id -u):$(id -g) $environmentOptions -w /wrk -v $PWD:/wrk" "$@"
-    debugExecIfDebug read
-    # Disabling SC2086 as the variable environmentOptions shall be evaluated as potential multiple values.
-    # shellcheck disable=SC2086
-    "$containerCmd" run -it --rm -u "$(id -u):$(id -g)" $environmentOptions -w /wrk -v "$PWD:/wrk" "$@"
+
+    if [ -n "$pullMode" ] ; then
+        debug Executing, after pressing ENTER: $containerCmd pull terrastruct/d2:latest
+        debugExecIfDebug read
+        $containerCmd pull terrastruct/d2:latest
+    else
+        # normal execution
+        debug Executing, after pressing ENTER: "$containerCmd run -it --rm -u $(id -u):$(id -g) $environmentOptions -w /wrk -v $PWD:/wrk" terrastruct/d2:latest "$@"
+        debugExecIfDebug read
+        # Disabling SC2086 as the variable environmentOptions shall be evaluated as potential multiple values.
+        # shellcheck disable=SC2086
+        "$containerCmd" run -it --rm -u "$(id -u):$(id -g)" $environmentOptions -w /wrk -v "$PWD:/wrk" terrastruct/d2:latest "$@"
+    fi
 }
 
 main "$@"
