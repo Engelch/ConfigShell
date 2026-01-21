@@ -24,6 +24,8 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 # Changelog
+# 1.1:
+#  - add -v option for more variety
 # 1.0:
 #  - cleanup of code:
 #    - Elements for ConfigShell loading into the container were removed.
@@ -80,6 +82,7 @@ DESCRIPTION
 OPTIONS
     -D      ::= enable debug output
     -V      ::= output the version number and exit with 127
+    -v      ::= add a further docker/podman-like mountpoint
     -h      ::= show usage message and exit with exit with 0
     -e      ::= add an environmental option. The option can be supplied
                 multiple times.
@@ -87,6 +90,7 @@ OPTIONS
 EXAMPLE CALL
 
     cr -D -e a=b -e b=c  terrastruct/d2 helloworld.d2 helloworld.jpg
+    cr -D -v /tmp:/tmp -e b=c  terrastruct/d2 helloworld.d2 helloworld.jpg
 
 EXIT Codes
     <<container exit value>>  ::= exit of normal execution
@@ -100,7 +104,7 @@ HERE
 }
 
 function parseCLI() {
-    while getopts "DVe:h" options; do         # Loop: Get the next option;
+    while getopts "DVe:v:h" options; do         # Loop: Get the next option;
         case "${options}" in                    # TIMES=${OPTARG}
             D)  1>&2 echo Debug enabled ; DebugFlag="TRUE"
                 ;;
@@ -110,6 +114,8 @@ function parseCLI() {
             e)  environmentOptions="$environmentOptions -e ${OPTARG}"
                 ;;
             h)  usage ; exit 0
+                ;;
+            v)  fsMapOptions="$fsMapOptions -v ${OPTARG}"
                 ;;
             *)
                 1>&2 echo "Help with $_app -h"
@@ -135,8 +141,9 @@ function main() {
     declare -r _app=$(basename "${0}")
     declare -r _appDir=$(dirname "$0")
     declare -r _absoluteAppDir=$(cd "$_appDir" || exit 124 ; /bin/pwd)
-    declare -r _appVersion="1.0.0"      # use semantic versioning
+    declare -r _appVersion="1.1.0"      # use semantic versioning
     export DebugFlag=${DebugFlag:-FALSE}
+    fsMapOptions=
     environmentOptions=
 
     parseCLI "$@"
@@ -149,11 +156,11 @@ function main() {
 
     debug args are "$@"
     [ -z "$1" ] && errorExit 11 No container to be run was specified.
-    debug Executing, after pressing ENTER: "$containerCmd run -it --rm -u $(id -u):$(id -g) $environmentOptions -w /wrk -v $PWD:/wrk" "$@"
+    debug Executing, after pressing ENTER: "$containerCmd run -it --rm -u $(id -u):$(id -g) $fsMapOptions $environmentOptions -w /wrk -v $PWD:/wrk" "$@"
     debugExecIfDebug read
     # Disabling SC2086 as the variable environmentOptions shall be evaluated as potential multiple values.
     # shellcheck disable=SC2086
-    "$containerCmd" run -it --rm -u "$(id -u):$(id -g)" $environmentOptions -w /wrk -v "$PWD:/wrk" "$@"
+    "$containerCmd" run -it --rm -u "$(id -u):$(id -g)" $fsMapOptions $environmentOptions -w /wrk -v "$PWD:/wrk" "$@"
 }
 
 main "$@"
