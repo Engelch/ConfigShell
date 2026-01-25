@@ -13,5 +13,9 @@ function debug()                { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:'"$*" 1
 _dir="$(realpath "$(dirname "$1")")"
 debug workdir is: $_dir
 
+# TODO cache would be a posisiblity
+debug container.run pull davidanson/markdownlint-cli2:latest
+container.sh pull davidanson/markdownlint-cli2:latest
+
 debug container.sh run -v "$_dir":/workdir davidanson/markdownlint-cli2:latest "$(basename "$1")"
 container.sh run -v "$_dir":/workdir davidanson/markdownlint-cli2:latest "$(basename "$1")"
