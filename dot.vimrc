@@ -124,12 +124,28 @@ let g:completor_filetype_map.go = {'ft': 'lsp', 'cmd': 'gopls -remote=auto'}"
 " set cursorline     " Highlight cursor line underneath the cursor horizontally.
 " set cursorcolumn   " Highlight cursor line underneath the cursor vertically.
 
+" markdowntoc ====================================================
+" create TOC: :GenTocGFM
+"     as it's compatible with GitHub, GitLab
+
+" Auto update TOC on save
+let g:vmt_auto_update_on_save = 1
+
+" Don't create fence markers
+let g:vmt_fence_text = 'TOC'
+
+" Set TOC list item marker
+let g:vmt_list_item_char = '-'
+
+" ================================================================
 set incsearch
 set hlsearch
 
-set tabstop=3     " tabs are at proper location"
-set shiftwidth=3  " indenting is 3 spaces"
+set tabstop=4     " tabs are at proper location"
+set shiftwidth=4  " indenting is 3 spaces"
 set autoindent    " turns it on"
+set textwidth=80  " to allow markdown-lint compatible files
+
 autocmd FileType yaml setlocal ts=3 sts=3 sw=3 expandtab
 
 " paste command <F5> might be required if you paste from outside
