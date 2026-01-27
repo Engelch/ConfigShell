@@ -51,6 +51,7 @@ function! TogglePaste()
 endfunction
 
 map <F3> :call ToggleList()<CR>
+map <S-F3> :GenTocGFM<CR>
 map <F4> :noh<CR>
 " to stop indenting when pasting
 map <F5> :call TogglePaste()<CR>
@@ -127,6 +128,9 @@ let g:completor_filetype_map.go = {'ft': 'lsp', 'cmd': 'gopls -remote=auto'}"
 " markdowntoc ====================================================
 " create TOC: :GenTocGFM
 "     as it's compatible with GitHub, GitLab
+" install package
+"   mkdir -p  ~/.vim/pack/plugins/start
+"   git clone https://github.com/mzlogin/vim-markdown-toc.git ~/.vim/pack/plugins/start/vim-markdown-toc
 
 " Auto update TOC on save
 let g:vmt_auto_update_on_save = 1
