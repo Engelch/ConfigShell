@@ -219,4 +219,9 @@ nnoremap <C-v> "+p
 vnoremap <C-c> "+y
 vnoremap <C-x> "+x
 
+if has("gui_running")
+    set lines=42
+    set columns=132
+endif
+
 " echo $MYVIMRC " loaded" 
