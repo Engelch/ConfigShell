@@ -39,10 +39,6 @@ curl https://raw.githubusercontent.com/oh-my-fish/oh-my-fish/master/bin/install 
 reload
 echo '    installing bobthefish'
 omf install bobthefish 2>&1 | sed 's/^/      /'
-set -g theme_display_git_default_branch yes
-set -g theme_display_git_ahead_verbose yes
-set -g theme_display_k8s_namespace yes
-set -g theme_display_date no
 echo '    installing bang-bang'
 omf install bang-bang 2>&1 | sed 's/^/      /'
 

@@ -428,6 +428,12 @@ if status is-interactive # main code
     #command -q starship ; or debug starship not found >&2
     command -q zoxide ; and zoxide init fish | source
     command -q zoxide ; or debug zoxide not found >&2
+    # omf settings
+    set -g theme_display_git_default_branch yes
+    set -g theme_display_git_stashed_verbose yes
+    set -g theme_display_git_ahead_verbose yes
+    set -g theme_display_k8s_namespace yes
+    set -g theme_display_date no
 end
 
 # EOF
