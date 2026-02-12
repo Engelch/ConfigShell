@@ -26,7 +26,7 @@ set lcs+=space:·
 
 let b:togglelist = 0
 function! ToggleList()
- if b:togglelist == 0
+ if b:togglelist == 0 || !exists(b:togglelist)
    echom "list mode"
    set list
    let b:togglelist = 1
@@ -39,7 +39,7 @@ endfunction
 
 let b:togglepaste = 0
 function! TogglePaste()
-   if b:togglepaste == 0
+   if b:togglepaste == 0 || !exists(b:togglepaste)
       let b:togglepaste = 1
 		echom "paste"
       set paste
