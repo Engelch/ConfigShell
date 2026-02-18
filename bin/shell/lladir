@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+# list the directories only
+ls -Fla "$@" | grep '^d' # | paste  -s -
