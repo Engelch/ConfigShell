@@ -1,9 +1,0 @@
-#!/usr/bin/env sh
-
-if [ "$(uname)" = Darwin ] ; then
-    ls -lFG | grep -E  "$@"
-elif [ "$(uname)" = Linux ] ; then
-    ls -lF --color=auto | grep -E  "$@"
-else
-    ls -lF | egrep  "$@"
-fi

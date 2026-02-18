@@ -1,0 +1,9 @@
+#!/usr/bin/env -S bash --norc --noprofile
+
+if [ "$(uname)" = Darwin ] ; then
+    ls -latrFG "$@"
+elif [ "$(uname)" = Linux ] ; then
+    ls -latrF --color=auto "$@"
+else
+    ls -latrF "$@"
+fi
