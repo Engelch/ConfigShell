@@ -150,7 +150,7 @@ set shiftwidth=4  " indenting is 3 spaces"
 set autoindent    " turns it on"
 set textwidth=80  " to allow markdown-lint compatible files
 
-autocmd FileType yaml setlocal ts=3 sts=3 sw=3 expandtab
+autocmd FileType yaml setlocal ts=2 sts=2 sw=2 expandtab
 
 " paste command <F5> might be required if you paste from outside
 " and all text gets more and more indented by line

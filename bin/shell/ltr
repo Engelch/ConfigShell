@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+
+if [ "$(uname)" = Darwin ] ; then
+    ls -trFG "$@"
+elif [ "$(uname)" = Linux ] ; then
+    ls -trF --color=auto "$@"
+else
+    ls -tr "$@"
+fi
