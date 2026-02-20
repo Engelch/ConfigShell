@@ -7,6 +7,7 @@
 - [Last Upgrade](#last-upgrade)
 - [About](#about)
 - [Changelog / Release Notes](#changelog--release-notes)
+    - [260220](#260220)
     - [260127](#260127)
     - [250721 k8pod-get k8logs](#250721-k8pod-get-k8logs)
     - [250621 cpkg fix](#250621-cpkg-fix)
@@ -37,7 +38,7 @@
 
 ## Last Upgrade
 
-27th Jan 2026
+20th Feb 2026
 
 ## About
 
@@ -51,6 +52,18 @@ still on SunOS, Ultrix, Xenix, and Microport UNIX. Some of you might still
 remember...
 
 ## Changelog / Release Notes
+
+### 260220
+
+- `bin/shell/{lladir,llatr,lldir,ell}` tools cleaned up.
+- new `bin/lstr` for an `ls -tr to sort files.
+- README.md is markdown-linted. Only the TOC is still a challenge.
+
+In review mode to slim ConfigShell. Bugs:
+
+- db-psql-init does not work with PSQL18.
+- fish-omf-install again does not work as expected.
+- thinking about an easier way to install fonts for fish's bobthefish.
 
 ### 260127
 
