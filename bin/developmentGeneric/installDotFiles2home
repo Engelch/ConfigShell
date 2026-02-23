@@ -146,7 +146,7 @@ function main() {
     export DebugFlag=${DebugFlag:-FALSE}
     systemInst=""
     exitIfBinariesNotFound pwd tput basename dirname mktemp
-    warningIfBinariesNotFound ruby gnutls-cli openssl openvpn tree curl vim diff ansible-vault thefuck git
+    warningIfBinariesNotFound ruby gnutls-cli openssl openvpn tree curl vim diff ansible-vault git
     parseCLI "$@" ; # args=$parseCLI_result # args=$(parseCLI $*) creates a subshell and cannot set current shell debugFlag...
     cd || errorExit 10 to find home directory # jump to home directory, always install dot-files towards HOME directory
 
