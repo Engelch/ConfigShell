@@ -24,27 +24,27 @@ inoremap <S-F2> <Esc>:wq<CR>
 " show spaces as ., enabled with :set list, disabled w/ :set nolist
 set lcs+=space:· 
 
-let b:togglelist = 0
+let g:togglelist = 0
 function! ToggleList()
- if b:togglelist == 0 || !exists(b:togglelist)
+ if g:togglelist == 0 
    echom "list mode"
    set list
-   let b:togglelist = 1
+   let g:togglelist = 1
  else
    echom "nolist mode"
    set nolist
-   let b:togglelist = 0
+   let g:togglelist = 0
  endif
 endfunction
 
-let b:togglepaste = 0
+let g:togglepaste = 0
 function! TogglePaste()
-   if b:togglepaste == 0 || !exists(b:togglepaste)
-      let b:togglepaste = 1
+   if g:togglepaste == 0
+      let g:togglepaste = 1
 		echom "paste"
       set paste
    else
-      let b:togglepaste = 0
+      let g:togglepaste = 0
 		echom "nopaste"
       set nopaste
    endif
@@ -170,7 +170,8 @@ set number " show the current line not as 0 but as the current line number
 set splitright	" new window to the right, def left
 set splitbelow	" new windoe to bottom, def top
 
-set clipboard=unnamed  " plus	" yanked elements also put into system clipboard
+" Keeping the clip board separate from yanking gives more options for editing.
+" set clipboard=unnamed  " plus	" yanked elements also put into system clipboard
 
 " ==============================================================
 " spelling
@@ -181,16 +182,16 @@ set clipboard=unnamed  " plus	" yanked elements also put into system clipboard
 
 set nospell
 set spelllang=en_gb,de " de_ch existing
-let b:togglespell = 0
+let g:togglespell = 0
 function! ToggleSpell()
-   if b:togglespell == 0
-      let b:togglespell = 1
-		echom "nospell"
+    if g:togglespell == 0
+      let g:togglespell = 1
+      echom "nospell"
       set nospell
-   else
-      let b:togglespell = 0
-		echom "spell"
-      set spell
+    else
+        let g:togglespell = 0
+        echom "spell"
+        set spell
    endif
 endfunction
 
