@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # shellcheck disable=
 
+export DebugFlag
 function debugSet()             { DebugFlag="TRUE"; return 0; }
 function debugUnset()           { DebugFlag=; return 0; }
 function debug()                { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:'"$*" 1>&2 ; return 0; }
@@ -40,24 +41,50 @@ function checkGitDir() {
       git pull --tags 2>&1 | sed 's/^/    /'
 }
 
+
+# EXIT 0
 function versionOption() {
-   echo "1.0.1"
-   exit 0
+   local appVersion="1.1.0" # this extra line makes the version number changable by bma, bmi, bpa
+   echo "$appVersion"
 }
 
+# EXIT 1..
 function main() {
-   export -f checkGitDir         # export function to sub-processes
-   export -f debug               # export function to sub-processes
-   updateIfBehindAndNotModified=
+    export -f checkGitDir         # export function to sub-processes
+    export -f debug               # export function to sub-processes
+    updateIfBehindAndNotModified=
+    timeout=
 
-   [ "$1" = "-V" ] || [ "$1" = '--version' ] && versionOption && exit 0
-   [ "$1" = "-h" ] || [ "$1" = "--help" ]    && usage && exit 0
-   [ "$1" = "-d" ] || [ "$1" = "--debug" ]   && debugSet && shift
-   [ "$1" = "-u" ] || [ "$1" = "--update" ]  && updateIfBehindAndNotModified=-u && shift
-   [ "$1" = "-d" ] || [ "$1" = "--debug" ]   && debugSet && shift # not fully correct, but ok for testing for us
+    # CLI-PARSING #############################################################
+    VALID_ARGS=$(getopt -o DhVut --long debug,help,version,update,upgrade,timeout -- "$@")
+    if [[ $? -ne 0 ]]; then { 1>&2 echo ERROR invalid arguments; exit 1; }; fi
+    eval set -- "$VALID_ARGS"
 
-   [ -n "$1" ] && find "$@" -name .git -execdir bash -c "checkGitDir $updateIfBehindAndNotModified" \;
-   [ -z "$1" ] && find . -type d -name .git -execdir bash -c "checkGitDir $updateIfBehindAndNotModified" \;
+    while [ : ] ; do
+        case "$1" in
+            -D|--debug) debugSet; debug Debug enabled ; shift
+                ;;
+            -h|--help) usage ; exit 0
+                ;;
+            -V|--version) versionOption; exit 0
+                ;;
+            -u|--update|--upgrade) updateIfBehindAndNotModified=-u && shift
+                ;;
+            -t|--timeout) timeout="-t" ; shift
+                ;;
+            --) shift ; break
+                ;;
+        esac
+    done
+
+    if [ -n "$1" ] ; then
+        # for all args
+        debug find "$@" -name .git -execdir bash -c "/opt/ConfigShell/bin/git/git-status-all-checkGitDir $updateIfBehindAndNotModified $timeout" \\\;
+        find "$@" -name .git -execdir bash -c "/opt/ConfigShell/bin/git/git-status-all-checkGitDir $updateIfBehindAndNotModified $timeout" \;
+    else
+        debug find . -type d -name .git -execdir bash -c "/opt/ConfigShell/bin/git/git-status-all-checkGitDir $updateIfBehindAndNotModified $timeout" \\;
+        find . -type d -name .git -execdir bash -c "/opt/ConfigShell/bin/git/git-status-all-checkGitDir $updateIfBehindAndNotModified $timeout" \;
+    fi
 }
 
 main "$@"

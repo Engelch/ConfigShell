@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# © 2026 Christian Engel 
+#
+# License: MIT
+#
+# About:
+#   helper routine for git-status-all to check or optionally update (pull) a
+#   git repository
+
+
+function debug()                { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:'"$*" 1>&2 ; return 0; }
+debug Debug on
+
+# CLI-PARSING #############################################################
+# EXIT 1
+VALID_ARGS=$(getopt -o ut --long update,upgrade,timeout -- "$@")
+if [[ $? -ne 0 ]]; then { 1>&2 echo ERROR invalid arguments; exit 1; }; fi
+eval set -- "$VALID_ARGS"
+debug getopt done
+
+update=
+timeout=
+while [ : ] ; do
+    case "$1" in
+        -u|--update|--upgrade) update=TRUE; shift ;;
+        -t|--timeout) timeout="timeout 30s"; shift ;;
+        --) shift; break ;;
+    esac
+done
+
+debug CLI parsing finished
+debug update is $update, timeout is $timeout
+
+printf "%35s %s" "$(basename $(pwd))" "remote updating... "
+git remote update &>/dev/null
+echo -n 'done: '
+repo="$(git rev-parse --show-toplevel | sed -E s,"$HOME",~,)"
+status="[$(gitStatus)]"
+echo -e "$status\033[1;31m repo: \033[1;34m$repo \033[1;0m"
+[ -n "$update" ] && 
+    debug 'updating' &&
+    [ $(echo $status | grep -c behind) -eq 1 ] &&
+    debug 'after grepping for behind' &&
+    [ $(echo $status | grep -c '^M' ) -eq 0 ] &&
+    echo '    pulling...' &&
+    eval $timeout "git pull --tags 2>&1 | sed 's/^/    /'"
+
