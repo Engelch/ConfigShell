@@ -1,5 +1,7 @@
 # Welcome to ConfigShell
 
+<!-- markdownlint-disable MD007 -->
+
 ## Contents
 
 <!-- TOC GFM -->
@@ -7,6 +9,7 @@
 - [Last Upgrade](#last-upgrade)
 - [About](#about)
 - [Changelog / Release Notes](#changelog--release-notes)
+    - [260302](#260302)
     - [260220](#260220)
     - [260127](#260127)
     - [250721 k8pod-get k8logs](#250721-k8pod-get-k8logs)
@@ -38,7 +41,7 @@
 
 ## Last Upgrade
 
-20th Feb 2026
+2nd March 2026
 
 ## About
 
@@ -52,6 +55,19 @@ still on SunOS, Ultrix, Xenix, and Microport UNIX. Some of you might still
 remember...
 
 ## Changelog / Release Notes
+
+### 260302
+
+- `md` new command to format MarkDown files for the terminal using `glow`
+- `mdl` is calling markdownlint which will run markdownlint as a container
+    - The option `-p` disables pulling of the newest container
+- `git-status-all` with new option `-t` for timeouts after 30s
+- `dot.vimrc` a lot of clean ups done
+- PostgreSQL development support
+    - `psql-init.sh` version 1.8 is now compatible with PSQL version 18.
+    - `psql-showUsers.sh` lists non localadm users in db-connect.pws
+    - `psql-createUsers.sh` creates non localadm users from db-connect.pws
+    - `psql-dropUsers.sh` deletes non localadm users from db-connect.pws
 
 ### 260220
 

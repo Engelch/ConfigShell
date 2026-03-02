@@ -1,1 +1,0 @@
-/opt/ConfigShell/bin/dbms/psql-init.sh

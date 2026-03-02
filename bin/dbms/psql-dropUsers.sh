@@ -20,15 +20,21 @@ else
     DRY=
 fi
 
-[ ! -r db-connect-localadm.sh ] && errorExit 9 'ERROR_USAGE:cannot find db-connect-localadm.sh'
 [ ! -r db-connect.pws ] && errorExit 10 'ERROR_USAGE:cannot find db-connect.pws'
 [ ! -L db-connect.pws ] && errorExit 11 'ERROR_USAGE:db-connect.pws is supposed to be an s-link, by convention to db-connect.pw'
 source db-connect.pws
+
+# check if localadm user is existing
+
+[ "$(grep -c localadm db-connect.pws)" -lt 6 ] && errorExit 12 Cannot find user localadm configured in db-connect.pws
+
+
+
 # determine users from .pws file
 declare -a users
 users=$(egrep '127.0.0.1|localhost|::1' db-connect.pws | sed 's/_HOST.*//')
 
 for i in ${users[@]}; do
 user=$(echo $i | tr '[A-Z]' '[a-z]')
- [ "$user" != localadm ] && printf "\t%s\t" "$user" && $DRY ./db-connect-localadm.sh  "drop user if exists $user;"
+ [ "$user" != localadm ] && printf "\t%s\t" "$user" && $DRY db-connect.sh localadm  "drop user if exists $user;"
 done

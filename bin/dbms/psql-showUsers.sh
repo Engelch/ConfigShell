@@ -28,12 +28,13 @@ source db-connect.pws
 
 [ "$(grep -c localadm db-connect.pws)" -lt 6 ] && errorExit 12 Cannot find user localadm configured in db-connect.pws
 
+
+
 # determine users from .pws file
 declare -a users
 users=$(egrep '127.0.0.1|localhost|::1' db-connect.pws | sed 's/_HOST.*//')
 
 for i in ${users[@]}; do
 user=$(echo $i | tr '[A-Z]' '[a-z]')
- pwname="${i}_PW"   # prepare variable name for dynamic variable access
- [ "$user" != localadm ] && printf "\t%s\t" "$user" && $DRY db-connect.sh localadm  "drop user if exists $user; create user $user login password '${!pwname}';"
+ [ "$user" != localadm ] && echo $user
 done

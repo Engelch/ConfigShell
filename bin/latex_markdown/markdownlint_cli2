@@ -7,15 +7,19 @@ function debug()                { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:'"$*" 1
 [ "$1" = '-D' ] && shift && debugSet
 [ "$1" = '--debug' ] && shift && debugSet
 
+
+if [ "$1" = -p -o "$1" = '--nopull' ] ; then
+    shift
+else
+    # by default, pull for newest container
+    debug container.sh pull davidanson/markdownlint-cli2:latest
+    container.sh       pull davidanson/markdownlint-cli2:latest
+fi
+
 [ $# -eq 0 ] && { 1>&2 echo ERROR no filename supplied; exit 1 ; }
 [ $# -gt 1 ] && { 1>&2 echo ERROR only one filename can be supplied; exit 2 ; }
 
 _dir="$(realpath "$(dirname "$1")")"
 debug workdir is: $_dir
-
-# TODO cache would be a posisiblity
-debug container.run pull davidanson/markdownlint-cli2:latest
-container.sh pull davidanson/markdownlint-cli2:latest
-
-debug container.sh run -v "$_dir":/workdir davidanson/markdownlint-cli2:latest "$(basename "$1")"
-container.sh run -v "$_dir":/workdir davidanson/markdownlint-cli2:latest "$(basename "$1")"
+debug container.sh run --rm -v "$_dir":/workdir davidanson/markdownlint-cli2:latest "$(basename "$1")"
+container.sh run --rm -v "$_dir":/workdir davidanson/markdownlint-cli2:latest "$(basename "$1")"

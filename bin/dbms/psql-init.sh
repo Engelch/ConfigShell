@@ -3,6 +3,10 @@ set -u
 
 declare -g -r _options='init|s|start|e|stop|delete|status|version|h|-h|help|--help|name=...|volume=...|arch=...|image=...|port=...'
 
+function is_natural() {
+    [[ -n "$1" && "$1" =~ ^[0-9]+$ ]]
+}
+
 # EXIT 10
 # EXIT 11
 # EXIT 12
@@ -21,10 +25,24 @@ function startContainer() {
   [ -z "$localadm_PW" ] && errorExit 13 'ERROR_USAGE:cannot find password for localadm'
   PSQL_PORT="${PSQL_PORT:-$localadm_PORT}"
 
+    # check for ≥ V18 PSQL as it uses a different default path to the data in a
+    # psql container
+    container.sh pull "${PSQL_IMAGE_NAME:-postgres}" || errorExit 15 Cannot pull latest container
+    container_major_version="$(container.sh image inspect postgres | jq -r '.[0].Config.Env.[] | select(contains("PG_MAJOR"))')"
+    container_major_version="$(echo $container_major_version | sed 's/.*=//')"
+    debug DRY Detected container version $container_major_version
+    if is_natural "$container_major_version" ; then
+        container_data_path=/var/lib/postgresql/data
+        [ "$container_major_version" -ge 18 ] && container_data_path=/var/lib/postgresql/18/docker
+    else
+        errorExit 16 Cannot determine container version: $container_major_version
+    fi
+    # exit 99 # debug exit
+
   if [ -n "$CONTAINER_VOLUME" ]; then
     $DRY container.sh volume create "$CONTAINER_VOLUME" && res=$?
     [ "$res" -ne 0 ] && errorExit 14 'ERROR_INTERNAL:creating the container volume'
-    $DRY container.sh run -d --name $POSTGRESQL_CONTAINER_LABEL ${PSQL_CONTAINER_ARCHITECTURE:-}  -p $PSQL_PORT:5432 --volume "$CONTAINER_VOLUME":"/var/lib/postgresql/data" -e POSTGRES_PASSWORD=$localadm_PW -e "POSTGRES_USER=$localadm_USER" -e "POSTGRES_DB=$localadm_DB" -d  "$@" "${PSQL_IMAGE_NAME:-postgres}"
+    $DRY container.sh run -d --name $POSTGRESQL_CONTAINER_LABEL ${PSQL_CONTAINER_ARCHITECTURE:-}  -p $PSQL_PORT:5432 --volume "$CONTAINER_VOLUME":"$container_data_path" -e POSTGRES_PASSWORD=$localadm_PW -e "POSTGRES_USER=$localadm_USER" -e "POSTGRES_DB=$localadm_DB" -d  "$@" "${PSQL_IMAGE_NAME:-postgres}"
   else # same without volume
     $DRY container.sh run -d --name $POSTGRESQL_CONTAINER_LABEL ${PSQL_CONTAINER_ARCHITECTURE:-} -p $PSQL_PORT:5432 -e POSTGRES_PASSWORD=$localadm_PW -e "POSTGRES_USER=$localadm_USER" -e "POSTGRES_DB=$localadm_DB" -d "$@" "${PSQL_IMAGE_NAME:-postgres}"
   fi
@@ -66,12 +84,15 @@ function helpExit() {
     err '  name=psql0'
     err '  -l psql0'
     err '    default is psql0, or use "PSQL_CONTAINER_NAME=..."'
+    err
     err '  volume=vipdata0'
     err '  -v vipdata0'
     err '    default is to use the same as the container name, or use "PSQL_CONTAINER_VOLUME=..."'
+    err
     err '  image=postgres'
     err '  -i postgres' 
     err '    default is postgres "PSQL_IMAGE_NAME=..."'
+    err
     err '  arch=linux/amd64' 
     err '  -a linux/amd64' 
     err '    default if not set, use the current architecture of the host.'
@@ -118,6 +139,7 @@ function main() {
   if [ "${1:-}" = '-n' ]; then
     err DRY run mode
     DRY=echo
+    debugSet
     shift
   else
     DRY=
@@ -229,7 +251,7 @@ function main() {
       helpExit  # exits
       ;;
     -V|--version|version)
-      err 1.7.0
+      err 1.8.0
       exit 3
       ;;
     *)
