@@ -69,7 +69,7 @@ function chpwd () {
 
 function main() {
    local files
-   umask 002
+   umask 007
 
    case $- in
       *i*) 

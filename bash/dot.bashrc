@@ -224,7 +224,7 @@ function main() {
          # source .bash_profile if it was not done before
          loadLibs # load the library
          [ "$?" -ne 0 ] && 1>&2 echo could not load library && return 1
-         umask 002
+         umask 007
          # shellcheck source=/dev/null
          [ -z "$BASHPROFILE" ] && [ -r ~/.bash_profile ] && source ~/.bash_profile && return
          loadSource pre

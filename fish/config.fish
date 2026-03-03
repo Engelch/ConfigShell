@@ -375,7 +375,7 @@ end
 
 function setupExportVars
     debug in setupExportVars
-    umask 0002
+    umask 0007
     set -g -x LESS '-iR'
     set -g -x RSYNC_FLAGS "-rltHpDvu" # Windows FS updates file-times only every 2nd second
     set -g -x RSYNC_Add_Windows "--modify-window=1" # Windows FS updates file-times only every 2nd second
