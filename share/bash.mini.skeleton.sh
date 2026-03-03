@@ -1,29 +1,7 @@
-#!/usr/bin/env bash
-# vim: set expandtab: ts=3: sw=3
-# shellcheck disable=SC2155
-#
-# TITLE: $_app
-#
-# DESCRIPTION: <see usage function below>
-#
-# LICENSE: MIT todo
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy of this
-# software and associated documentation files (the "Software"), to deal in the Software
-# without restriction, including without limitation the rights to use, copy, modify, merge,
-# publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons
-# to whom the Software is furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all copies
-# or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
-# INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
-# PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
-# FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#
+#!/usr/bin/env -S bash --norc --noprofile
 
+# EXIT 127
+# load functions such as errorExit, debug, debugSet
 function loadLibs() {
     #########################################################################################
     # ConfigShell lib 1.1 (codebase 1.0.0)
@@ -33,65 +11,48 @@ function loadLibs() {
     source "$bashLib"
 }
 
-function usage()
-{
-    1>&2 cat <<HERE
-NAME
-    $_app
-SYNOPSIS
-    $_app [-D] [dir...]
-    $_app [-V]
-    $_app -h
-VERSION
-    $_appVersion
-DESCRIPTION
-    ...
-OPTIONS
-    -D      ::= enable debug output
-    -V      ::= output the version number to stderr and exit with 0
-    -h      ::= show usage message to stderr and exit with 0
+# NOEXIT
+function help() {
+    cat <<- HERE
+Synopsis:
+    $appName -h | --help
+    $appName -V | --version
+    $appName [ -D | --debug ]  ...
+
+About:
+    TODO
+
+Options:
+    -D | --debug                               :- debug output for this shell-script; also see -v
+    -h | --help                                :- this help
+    --                                         :- pass remaining CLI elements as arguments
 HERE
 }
 
-function parseCLI() {
-    while getopts "DVh" options; do         # Loop: Get the next option;
-        case "${options}" in                    # TIMES=${OPTARG}
-            D)  1>&2 echo Debug enabled ; DebugFlag="TRUE"
-                ;;
-            V)  1>&2 echo $_appVersion
-                exit 0
-                ;;
-            h)  usage ; exit 0
-                ;;
-            # v)  verbose=TRUE
-            #     ;;
-            *)
-                1>&2 echo "Help with $_app -h"
-                exit 1  # Exit abnormally.
-                ;;
+
+# EXIT 1..
+function main() {
+    loadLibs
+    readonly appVersion="0.0.1"
+    readonly appName="$(basename "$0")"
+    # Options w/ an argument have a colon (:) after the option
+    VALID_ARGS=$(getopt -o DVh --long debug,help,version -- "$@")
+    if [[ $? -ne 0 ]]; then { 1>&2 echo ERROR invalid arguments; exit 1; }; fi
+    eval set -- "$VALID_ARGS"
+
+    while [ : ]; do
+        case "$1" in
+        -D|--debug) debugSet; debug Debug enabled. ; shift 
+            debug appVersion:"$appVersion"
+            debug appName:"$appName"
+            ;;
+        -h|--help)  help ; exit 2 ;;
+        -V|--version) verbose="${verbose}v" ; shift ;;
+        --) shift; break ;;
         esac
     done
-}
 
-function main() {
-    # Variables
-    declare -r _app=$(basename "${0}")
-    declare -r _appDir=$(dirname "$0")
-    declare -r _absoluteAppDir=$(cd "$_appDir" || exit 99 ; /bin/pwd)
-    declare -r _appVersion="0.0.1"      # use semantic versioning
-    export DebugFlag=${DebugFlag:-FALSE}
-    # verbose=
-
-    parseCLI "$@"               # cannot use fn-s from loadLibs
-    shift "$(( OPTIND - 1 ))"   # not working inside parseCLI
-
-    loadLibs
-    exitIfBinariesNotFound mktemp
-
-    debug args are "$*"
-
+    # do the main tasks
 }
 
 main "$@"
-
-# EOF

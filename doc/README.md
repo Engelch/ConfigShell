@@ -9,6 +9,7 @@
 - [Last Upgrade](#last-upgrade)
 - [About](#about)
 - [Changelog / Release Notes](#changelog--release-notes)
+    - [260303](#260303)
     - [260302](#260302)
     - [260220](#260220)
     - [260127](#260127)
@@ -41,7 +42,7 @@
 
 ## Last Upgrade
 
-2nd March 2026
+3rd March 2026
 
 ## About
 
@@ -55,6 +56,11 @@ still on SunOS, Ultrix, Xenix, and Microport UNIX. Some of you might still
 remember...
 
 ## Changelog / Release Notes
+
+### 260303
+
+- `share/bash.mini.skeleton.sh` changed for short and long options support
+- default umask changed to 007 for group work collaboration
 
 ### 260302
 
