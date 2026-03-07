@@ -9,6 +9,7 @@
 - [Last Upgrade](#last-upgrade)
 - [About](#about)
 - [Changelog / Release Notes](#changelog--release-notes)
+    - [260307](#260307)
     - [260303](#260303)
     - [260302](#260302)
     - [260220](#260220)
@@ -42,7 +43,7 @@
 
 ## Last Upgrade
 
-3rd March 2026
+7th March 2026
 
 ## About
 
@@ -56,6 +57,11 @@ still on SunOS, Ultrix, Xenix, and Microport UNIX. Some of you might still
 remember...
 
 ## Changelog / Release Notes
+
+### 260307
+
+- `gipu`, `gipua` accept an optional list of remote git repositories as
+arguments.
 
 ### 260303
 
