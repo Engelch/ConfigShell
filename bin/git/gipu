@@ -11,9 +11,10 @@ if [ $# -eq 0 ] ; then
     git push
     git push --tags
 else
-    for repo in "$*" ; do
+    for repo in "$@" ; do
+        echo Working on $repo...
         git push "$repo"
-        git push --tags "$repo@"
+        git push --tags "$repo"
     done
 fi
 

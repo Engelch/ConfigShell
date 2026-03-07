@@ -11,7 +11,8 @@ if [ $# -eq 0 ] ; then
       git push --all
       git push --tags
 else
-   for remoterepo in "$*"; do 
+   for remoterepo in "$@"; do 
+      echo Working on $remoterepo...
       git push --all  "$remoterepo" 
       git push --tags "$remoterepo"
    done
