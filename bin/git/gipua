@@ -8,12 +8,10 @@ if [ "$1" = -V ] || [ "$1" = '--version' ] ; then
 fi
 
 if [ $# -eq 0 ] ; then
-   for remoterepo in $(grep '^\[remote' $(git rev-parse --show-toplevel)/.git/config | sed -e 's/.remote \"//' -e s'/..$//') ; do 
-      git push --all  "$remoterepo" 
-      git push --tags "$remoterepo"
-   done 
+      git push --all
+      git push --tags
 else
-   for remoterepo in "$@"; do 
+   for remoterepo in "$*"; do 
       git push --all  "$remoterepo" 
       git push --tags "$remoterepo"
    done
