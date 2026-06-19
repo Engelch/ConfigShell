@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# OK: shellcheck
+
+readonly newVersion=$(version.sh)
+if [ -d ./build/ ] ; then
+    if [ $(find ./build -name "*-${newVersion}" | wc -l) -eq 0 ] ; then
+        echo Not incrementing version as no binary exists for the current version
+    else
+        bma
+    fi
+fi
+godebug

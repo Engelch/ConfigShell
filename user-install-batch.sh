@@ -1,0 +1,183 @@
+#!/usr/bin/env bash
+# vim: set expandtab: ts=3: sw=3
+# shellcheck disable=SC2155 disable=SC2088
+#
+# TITLE:
+#
+# DESCRIPTION:
+#
+# CHANGELOG:
+# 1.0.0
+# - added local copy of gitignore file
+# - shellcheck and move many elements to bash.mini.skeleton version
+# 0.0.1
+# - initial version
+# - s-link all /opt/ConfigShell/dot.* files to ~ 
+#
+# COPYRIGHT © 2025 Christian Engel (mailto:engel-ch@outlook.com)
+# Skeleton:
+#   0.1.0 - improved exitIfErr
+# LICENSE: MIT
+# Permission is hereby granted, free of charge, to any person obtaining a copy of this
+# software and associated documentation files (the "Software"), to deal in the Software
+# without restriction, including without limitation the rights to use, copy, modify, merge,
+# publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons
+# to whom the Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all copies
+# or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+# INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+# PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+# FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+#########################################################################################
+
+#########################################################################################
+# ConfigShell lib 1.1 (codebase 1.0.0)
+bashLib="/opt/ConfigShell/lib/bashlib.sh"
+[ ! -f "$bashLib" ] && 1>&2 echo "bash-library $bashLib not found" && exit 127
+# shellcheck source=/opt/ConfigShell/lib/bashlib.sh
+source "$bashLib"
+unset bashLib
+#########################################################################################
+
+# MAIN ===============================================================================
+
+function usage()
+{
+    err SYNOPSIS:
+    err4 "$_app" '[-D] [-V]'
+    err4 "$_app" '[-h]'
+    err4 "$_app" '[-s]   # ConfigShell to be upgrade to system, not s-link added to ~/.cpkg.d/upgrade'
+    err DESCRIPTION
+    err4 Install the dot-files of ConfigShell to the current user
+    err OPTIONS
+    err4 -D := enable debug
+    err4 -V := show the version number
+    err4 -h := show this help
+}
+
+function parseCLI() {
+    while getopts "DVhs" options; do         # Loop: Get the next option;
+        case "${options}" in                    # TIMES=${OPTARG}
+            D)  1>&2 echo Debug enabled ; DebugFlag="TRUE"
+                ;;
+            V)  1>&2 echo $_appVersion
+                exit 0
+                ;;
+            h)  usage ; exit 0
+                ;;
+            s)  systemInst=TRUE
+                ;;  
+            # v)  verbose=TRUE
+            #     ;;
+            *)
+                1>&2 echo "Help with $_app -h"
+                exit 1  # Exit abnormally.
+                ;;
+        esac
+    done
+}
+
+function fixGnupg() {
+    echo 'GNUPG fixing: s-link ~/.gnupg to ~/.ssh/gnupg'
+    # .gnupg is kept under ~/.ssh/gnupg so that backups are easier as one tarball
+    if [ \( ! -L ~/.gnupg \) ] && [ -d ~/.gnupg ] ; then
+        if [ -d ~/.ssh ] ; then
+            if [ -d ~/.ssh/gnupg ] ; then
+                errorExit 20 '~/.gnupg and ~/.ssh/gnupg are both existing directories. Please fix manually.'
+            else
+                mv ~/.gnupg ~/.ssh/gnupg
+                ln -fs ~/.ssh/gnupg ~/.gnupg
+            fi
+        else
+            mkdir ~/.ssh; chmod 700 ~/.ssh
+            mv ~/.gnupg ~/.ssh/gnupg
+            ln -fs ~/.ssh/gnupg ~/.gnupg
+        fi
+    else
+        if [ -d ~/.ssh ] ; then
+            [ ! -d ~/.ssh/gnupg ] && mkdir ~/.ssh/gnupg
+        else
+            mkdir -p ~/.ssh/gnupg ; chmod 700 ~/.ssh
+        fi
+        echo -n '  '
+        ln -fvs ~/.ssh/gnupg ~/.gnupg
+    fi
+}
+
+function createConfigShellFishConfiguration() {
+    mkdir -p "$fishCfgDir" 2>/dev/null
+    test -d  "$fishCfgDir" || errorExit 20 fish config directory "$fishCfgDir" could not be created
+    test -d "$_absoluteAppDir/fish" || errorExit 21 fish config directory not found in ConfigShell
+    cd "$fishCfgDir" || errorExit 22 "could not change to fish directory $fishCfgDir"
+    for file in "$_absoluteAppDir/fish/"* ; do
+        echo -n '  '
+        ln -sfv "$file" .
+    done
+}
+
+function installFish() {
+    echo FISH configuration file setup
+    declare -r fishCfgDir=~/.config/fish
+    if [ -d "$fishCfgDir" ] ; then
+        read -e -r -p '  Fish shell configuration found. Shall it be overwritten? [yN]?' -i n answer
+        if [ "${answer^^}" = 'Y' ] ; then
+            /bin/rm -fr "$fishCfgDir"
+            createConfigShellFishConfiguration
+        else
+            echo '  keeping existing configuration'
+        fi
+    else
+        createConfigShellFishConfiguration
+    fi
+}
+
+function warningIfBinariesNotFound()       { for file in "$@"; do command -v "$file" &>/dev/null || 1>&2 echo "WARNING:binary not found:$file"; done }
+
+function main() {
+    readonly _app="$(basename "$0")"
+    readonly _appDir="$(dirname "$0")"
+    readonly _absoluteAppDir="$(cd "$_appDir" || errorExit 1 cannot change to directory of binary; /bin/pwd)"
+    readonly _appVersion="1.1.0" # use semantic versioning
+    export DebugFlag=${DebugFlag:-FALSE}
+    systemInst=""
+    exitIfBinariesNotFound pwd tput basename dirname mktemp
+    warningIfBinariesNotFound ruby gnutls-cli openssl openvpn tree curl vim diff ansible-vault thefuck git
+    parseCLI "$@" ; # args=$parseCLI_result # args=$(parseCLI $*) creates a subshell and cannot set current shell debugFlag...
+    cd || errorExit 10 to find home directory # jump to home directory, always install dot-files towards HOME directory
+
+    # the job begins
+    cd || errorExit 10 cannot chdir to home directory # jump to home directory, always install dot-files towards HOME directory
+    echo 's-link /opt/ConfigShell/dot.* files'
+    for file in "$_absoluteAppDir"/dot* ; do
+        _nameWithoutDot="$(basename "$file" | sed 's/^dot//')"
+
+        [[ $_nameWithoutDot =~ .*~ ]] && continue   # not s-linking files with ~ at the end
+        [[ $_nameWithoutDot =~ .*bak ]] && continue   # not s-linking files with bak at the end
+        [[ $_nameWithoutDot =~ .*old ]] && continue   # not s-linking files with old at the end
+
+        echo -n '  '
+        [ -e "${_nameWithoutDot}" ] || debug4 not found "${_nameWithoutDot}" 
+        [ -e "${_nameWithoutDot}" ] && debug4 deleting "${_nameWithoutDot}" && /bin/rm -f "${_nameWithoutDot}"
+        echo -n '  '
+        ln -sfv "$file" "$_nameWithoutDot"
+    done
+
+    fixGnupg
+    installFish
+
+    mkdir -p ~/.sh.d    # add common shell directory for *.sh commands to be run as a sub-shell
+
+    echo vim directory creation '~/.vim/backup ~/.vim/swap ~/.vim/undo ~/.vim/pack' 
+    mkdir -p ~/.vim/backup ~/.vim/swap ~/.vim/undo  ~/.vim/pack
+
+    /opt/ConfigShell/bin/cpkg-includeCfgShell.sh
+}
+
+main "$@"
+
+# EOF

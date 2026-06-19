@@ -1,0 +1,12 @@
+/opt/ConfigShell/bin
+
+~/go/bin
+
+~/.cargo/bin
+
+~/.ghcup/bin
+~/.cabal/bin
+
+/opt/zig
+
+# EOF

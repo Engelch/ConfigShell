@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+
+## k8exec just requires a unique part of the pod-name in the given or the default namespace
+## options (all optional):
+## -n namespace
+##
+## options: -n namespace
+## arguments, optional: command, default: /bin/bash
+
+[ -z "$KUBECTL" ] && echo >&2 "KUBECTL environment variable is not set, exiting" && exit 1
+
+## cmdline parsing
+declare -a other_opts=()
+declare -a ns=()
+declare -a container=()
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+    -c | --container)
+        # This is only parsed if it's before the first positional arg
+        # because if it's after the first positional arg, it may well be
+        # an option for the command in the container
+        if [ "${#other_opts[@]}" -eq 0 ]; then
+            container=("-c" "$2")
+            shift 2
+        fi
+        ;;
+    -n | --namespace)
+        # This is only parsed if it's before the first positional arg
+        # because if it's after the first positional arg, it may well be
+        # an option for the command in the container
+        if [ "${#other_opts[@]}" -eq 0 ]; then
+            ns=("-n" "$2")
+            shift 2
+        fi
+        ;;
+    *)
+        other_opts+=("$1") # save positional arg
+        shift
+        ;;
+    esac
+done
+
+declare -a cmd_to_exec=("$KUBECTL")
+
+[ "${#other_opts[@]}" -eq 0 ] && echo >&2 "ERROR: no pod name given" && exit 2
+# default to 'bash' with 1 positional arg (pod name)
+[ "${#other_opts[@]}" -eq 1 ] && other_opts+=("bash")
+
+_pod="$($KUBECTL "${ns[@]}" get pod | grep -i "${other_opts[0]}" | awk '{ print $1; }')"
+[ "$(echo "$_pod" | wc -l)" -gt 1 ] && echo >&2 -e "ERROR: too many pods matched:\n$_pod" && exit 3
+[ "$_pod" = '' ] || [ -z "${_pod+x}" ] && {
+    echo >&2 "ERROR: no pods matched with: ${other_opts[0]}"
+    exit 4
+}
+
+# Add to command to execute:
+# exec -n<ns> -it <pod_name> <other_opts>
+cmd_to_exec+=("exec" "${ns[@]}" "-it" "$_pod" "${container[@]}")
+# Add command separator if not user-supplied (it must be the 2nd positional arg)
+[ "${other_opts[1]}" != "--" ] &&
+    cmd_to_exec+=("--")
+cmd_to_exec+=("${other_opts[@]:1}")
+
+set -x
+"${cmd_to_exec[@]}"

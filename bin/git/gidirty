@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+# not ok for directory names with spaces, but this should be avoided
+# anyway
+arg="$*"
+[ -z "$*" ] && arg=.
+
+find $arg -name ".git" -type d -exec sh -c '
+    repo=$(realpath "$(dirname "$1")")
+    status=$(git -C "$repo" status --porcelain)
+    ahead=$(git -C "$repo" rev-list --count @{upstream}..HEAD 2>/dev/null)
+    if [ -n "$status" ] || [ "${ahead:-0}" -gt 0 ]; then
+        echo "$repo" | sed "s,$HOME,\~/,;s,//,/,g" 
+    fi
+' _ {} \;

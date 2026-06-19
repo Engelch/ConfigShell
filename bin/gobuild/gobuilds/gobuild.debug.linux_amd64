@@ -1,0 +1,219 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2086,SC2001 # using multi eval levels
+#########################################################################################
+# CHANGELOG
+# 2.2.z:
+
+#########################################################################################
+# ConfigShell lib 1.1 (codebase 1.0.0)
+bashLib="/opt/ConfigShell/lib/bashlib.sh"
+[ ! -f "$bashLib" ] && 1>&2 echo "bash-library $bashLib not found" && exit 127
+# shellcheck source=/opt/ConfigShell/lib/bashlib.sh
+source "$bashLib"
+unset bashLib
+#########################################################################################
+
+# MAIN ====================================================================
+
+function usage() {
+     1>&2 cat <<EOF
+SYNOPSYS
+    gobuild-<<type>> [OPTIONS]
+DESCRIPTION
+    Compile a golang application for the specific architecture. Either the architecture and OS
+    is determined automatically (by calling godebug or gorelease or goupx) or it is explicitly
+    set by specifying is as the command such as gobuild.debug.linux_arm64.
+
+    Normally, by default, a local go installation is expected which is executed just by
+    calling go. The can be overwritten by specifying the environment variable GoCommand.
+OPTIONS
+    -c  ::= builds with a container. You can specify the container in the _container file.
+            If this file does not exist, the command takes to go version from the go.mod file
+            and usess goland:<<go version>> as the compiler image.
+            The command automatically checks for either installed podman or docker binaries.
+            These binaries are supposed to be in the PATH.
+    -D  ::= enable debug
+    -V  ::= show Version numer
+    -f  ::= force mode, compile/build even if a binary for the current version already exists
+EXIT CODES
+    0   ::= result of returned execution, or from returning the version number, or the help text
+    1   ::= unsupported option 
+EOF
+}
+
+
+set -e      # exit if error
+
+### CLI parsing
+# EXIT 1 usage
+# EXIT 2 wrong option
+# EXIT 3 version
+function parseCLIOptions() {
+    while getopts "DVcfh" options; do         # Loop: Get the next option;
+        case "${options}" in                    # TIMES=${OPTARG}
+            D)  1>&2 echo Debug enabled ; DebugFlag="TRUE"
+                ;;
+            V)  echo $AppVersion
+                exit 0
+                ;;
+            c)  # container build support
+                debug container build chosen
+                _containerBuild=1
+                ;;
+            h)  usage ; exit 0
+                ;;
+            f)  1>&2 echo "forced mode, overwriting existing binary"
+                _forceMode=TRUE
+                ;;
+            *)  1>&2 echo "Help with $App -h"
+                exit 1
+                ;;
+        esac
+    done
+}
+
+# checkOutputDirAndExistingBinary creates the output directory if not existing
+# It also checks for a potentially already existing binary. It exits if it exists and force mode is not set.
+# EXIT 96
+function checkOutputDirAndExistingBinary() {
+    #### if required create the output directory and jump into it
+    if [ ! -d ${_outputDir} ] ; then 
+        debug creating output directory
+        mkdir -p ${_outputDir}
+        [ $? -ne 0 ] && errorExit 96 could not create output directory
+    fi
+    # cd ${_outputDir}
+    debug passed optionally create output dir
+    #### do not overwrite an existing version if not _forceMode is set
+    [ -f ${_outputDir}/${_appName}-${_appVersion} ] && [ -z "${_forceMode}" ] && errorExit 10 Current version ${_appName}-${_appVersion} already exists.
+    debug passed overwrite check existing versions
+}
+
+# debugOutputVars
+function debugOutputVars() {
+    debug bindir         $_binDir
+    debug osdir          $_osDir
+    debug ostype         $_osType
+    debug osarch         $_osArch
+    debug releaseType    $_releaseType
+    debug ldFlags        $_ldFlags
+    debug AppDir         $AppDir
+    debug outputDir      $_outputDir
+    debug appName        $_appName
+    debug appVersion     $_appVersion   # careful different from $AppVersion which is for this script
+    debug goarm          $_goarm
+    debug upx            $_upx
+    debug _hostarch     $_hostarch
+    debug _hostostyp    $_hostostype
+    debug _containerBuild $_containerBuild
+
+    debug Press ENTER to continue or ctrl-C to exit.
+    debugExecIfDebug read
+}
+
+# localGoBuild builds the app using a locally installed go compiler
+function localGoBuild() {
+    echo Executing GOARCH="${_osArch}" GOOS="${_osType}" ${_goarm} "$GoCmd" build ${_ldFlags} -o "${_outputDir}/${_appName}-${_appVersion}${_upx}"
+    eval GOARCH="${_osArch}" GOOS="${_osType}" ${_goarm} "$GoCmd" build ${_ldFlags} -o "${_outputDir}/${_appName}-${_appVersion}${_upx}"
+    # ldflags -s is already stripping; double strip caused problems on Darwin-arm64
+    # strip only if building for the same host as we are compiling on
+    # [ $_hostarch = $_osArch -a $_osType = $_hostostype ] && \
+    #   [ "$_releaseType" = release -o "$_releaseType" = upx ] && \
+    #   echo stripping binary && strip ${_outputDir}/${_appName}-${_appVersion}${_upx}
+}
+
+# containerBuild builds the app locally using a container image build using either docker or podman
+# EXIT 98
+function containerBuild() {
+    if [ -f _container ] ; then
+        containerName="$(grep -v '^$' < _container | grep -Ev '^[[:space:]]*#')"
+    else
+        echo 'using default containerName golang, a good idea?'
+        containerName=golang:$(grep '^go ' < go.mod | awk '{print $2;}')
+    fi
+    containerCmd=$(which docker)
+    [ -z "$containerCmd" ] && containerCmd=$(which podman)
+    [ -z "$containerCmd" ] && errorExit 98 Cannot determine container command
+    debug $containerCmd run --rm -v "$PWD":/usr/src/myapp -w /usr/src/myapp -e GOARCH=${_osArch} -e GOOS=${_osType} $containerName go build ${_ldFlags} -o "${_outputDir}/${_appName}-${_appVersion}${_upx}"
+    $containerCmd run --rm -v "$PWD":/usr/src/myapp -w /usr/src/myapp -e GOARCH=${_osArch} -e GOOS=${_osType} $containerName go build ${_ldFlags} -o "${_outputDir}/${_appName}-${_appVersion}${_upx}"
+}
+
+# EXIT 2
+# EXIT 10
+# EXIT 20
+function main() {
+    exitIfBinariesNotFound sed version.sh
+
+    declare -r App=$(basename "$0")
+    declare -r AppDir=$(dirname "$0")
+    declare -r AppVersion="2.4.2"
+    declare -r GoCmd="${GoCommand:-go}" # go application can be overwritten from the environment
+    _forceMode=
+
+    # app-specific vars
+    declare -r _binDir=${BINDIR:-./build}   # build/ directory can be overwritten from the environment
+    declare -r _osDir=$(echo $0 | sed 's/.*\.//')
+    declare -r _osType=$(echo $_osDir | sed 's/_.*//')
+
+    # linux_arm5 introduced as support for old IoT devices.
+    # Avoidance of the introduction of a further field to the command name.
+    declare _osArch=$(echo $_osDir | sed 's/.*_//' | sed 's/arm5$/arm/') # fix for old arm5 devices
+    if [ "$(echo $_osDir | sed 's/.*_//')" = arm5  ] ; then
+        declare -r _goarm='GOARM=5'
+    fi
+
+   [ "$_osArch" = aarch64 ] && _osArch=arm64 && echo changing architecture from aarch64 to arm64
+
+    _containerBuild=    # will be set by the -c option
+    parseCLIOptions $@  # no parentheses required
+
+    unset _upx
+    declare -r _releaseType=$(basename $0 | cut -d . -f 2)
+    case $_releaseType in
+        debug)
+            declare -r _ldFlags=${LDFLAGS:-}
+            ;;
+        release)
+            declare -r _ldFlags=${LDFLAGS:-"-ldflags -w -ldflags -s"}
+            ;;
+        upx)
+            declare -r _ldFlags=${LDFLAGS:-"-ldflags -w -ldflags -s"}
+            declare -r _upx=.upx
+            command -v upx > /dev/null 2>&1 || errorExit 20 upx command not found.
+            ;;
+        *) errorExit 2 Unsupported release-type:$_releaseType
+            ;;
+    esac
+
+    declare -r _outputDir=$_binDir/$_releaseType/$_osDir
+
+    declare _appName=$(pwd | xargs basename)     # app to be build, if app is src, the go for the parent directory
+    [ "$_appName" = "src" ] && _appName=$(pwd | xargs dirname | xargs basename) && echo fix appname to parent directory ..... ${_appName}
+
+    declare -r _appVersion=$(version.sh)   # version of app to be build
+    [ -z "$_appVersion" ] && errorExit 10 Could not determine the version of the go application.
+
+    declare -r _hostarch=$(uname -m | tr '[:upper:]' '[:lower:]' | sed 's/x86_64/amd64/')   # compiler aka host-architecture
+    declare -r _hostostype=$(uname | tr '[:upper:]' '[:lower:]')
+
+    debugOutputVars
+
+    [ $_releaseType = upx ] && exitIfBinariesNotFound upx
+    debug passed upx check
+
+    checkOutputDirAndExistingBinary
+
+    if [ -n "$_containerBuild" ] ; then     # Now let's check if a container build shall be done
+        containerBuild
+    else # conventional build
+        localGoBuild
+    fi
+    # do optional upx step
+    [ -n "${_upx}" ] && echo upx "${_outputDir}/${_appName}-${_appVersion}${_upx}" && upx "${_outputDir}/${_appName}-${_appVersion}${_upx}"
+    # link actual binary to just now created version
+    ln -fs "${_appName}-${_appVersion}${_upx}" "${_outputDir}/${_appName}"
+}
+
+main "$*"
+
+# EOF

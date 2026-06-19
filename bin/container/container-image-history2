@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+# setContainerCmd determines whether podman (preferred) or docker shall be used
+# An error is created if none of them could be found.
+# EXIT 10
+function setContainerCmd() {
+   which docker &>/dev/null && containerCmd=docker
+   which podman &>/dev/null && containerCmd=podman
+   [ -z "$containerCmd" ] && errorExit 10 container command could not be found
+   debug Container command is "$containerCmd"
+}
+
+declare -g containerCmd=
+
+"$containerCmd" run -v /var/run/docker.sock:/var/run/docker.sock --rm chenzj/dfimage # find base image for a container OR docker image history

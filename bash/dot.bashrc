@@ -1,0 +1,265 @@
+#!/usr/bin/env bash
+# vim:ts=2:sw=2
+# shellcheck disable=SC2155 disable=SC2012 disable=SC2153
+
+# Copyright © 2023 by Christian ENGEL (mailto:engel-ch@outlook.com)
+# License: BSD
+# All rights reserved.
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+# 3. All advertising materials mentioning features or use of this software
+#    must display the following acknowledgement:
+#    This product includes software developed by the <organization>.
+# 4. Neither the name of the <organization> nor the
+#    names of its contributors may be used to endorse or promote products
+#    derived from this software without specific prior written permission.
+#########################################################################################
+
+# debug "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '...............................................'
+# debug "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'
+
+# =========================================================================================
+# === normal use-case related functions ===================================================
+# =========================================================================================
+
+function loadLibs() {
+    bashLib="/opt/ConfigShell/lib/bashlib.sh"
+    [ ! -f "$bashLib" ] && 1>&2 echo "bash-library $bashLib not found" && return 1
+    source "$bashLib"
+    unset bashLib
+    return 0
+}
+
+# user-specific pre/post/... configuration
+function loadSource() {
+   debug8 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '...............................................'
+   if [ -r "$HOME/.bashrc.$1" ] ; then debug8 "loadSource ~/.bashrc.$1" ; source "$HOME/.bashrc.$1" ; else
+      debug8 "loadSource FILE NOT FOUND $HOME/.bashrc.$1"
+   fi
+   debug8 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'
+}
+
+# change default cd behaviour
+function cd() {   # cd "$1" does not return to $HOME, if the 1st argument is given, but empty
+   [ -z "$1" ] && builtin cd
+   [ -n "$1" ] && builtin cd "$1"
+   [ -f 00DIR.txt ] && cat 00DIR.txt
+   [ -r 00DIR.sh ] && /usr/bin/env bash 00DIR.sh
+   return 0
+}
+
+# setAliases sets the default aliases
+function setAliases() {
+   # ls aliases, all others as scripts in /opt/ConfigShell/bin
+   alias ls="/bin/ls    -hCF       \$LS_COLOUR"
+   alias ls-bw="export LS_COLOUR=--color=none"
+   # cd aliases
+   alias ..='cd ..'
+   alias .2='cd ../..'
+   alias .3='cd ../../..'
+   alias .4='cd ../../../..'
+   alias .5='cd ../../../../..'
+   alias brmd='[ -f .DS_Store ] &&  /bin/rm -f .DS_Store ; cd .. ; rmdir "$OLDPWD"'
+   alias cd..='cd ..'
+   # alias helpers
+   alias a=alias
+   alias af='alias | ei '
+   # default commands
+   alias cp='cp -i'
+   alias e='grep -E'
+   alias ei='grep -iE'
+   alias eir='grep -iER'
+   alias er='grep -ER'
+
+   alias h=history
+   alias hf='history | grep -Ei'
+   alias j=jobs
+   alias l=less
+   alias mcd=mkcd
+   function mkcd(){ mkdir -p "$1" && cd "$1"; }
+   alias mv='mv -i'
+   alias po=popd
+   alias pu=pushd
+   alias rl="source ~/.bash_profile ; source ~/.bashrc"
+   alias rlDebug="debugSet; source ~/.bash_profile; debugUnset"
+   alias rlFull=rlDebug            # backward compatibility
+   alias rm='rm -i'           # life assurance
+   alias rm~=rmbak    # stopped to be realised as a script because the script is deleted by rm~ :-)
+   alias wh=which
+   # X11 commands
+   alias disp0='export DISPLAY=:0'
+   alias disp1='export DISPLAY=:1'
+   # sw development
+   alias k=$KUBECTL
+   alias k8=$KUBECTL
+   alias k8s=$KUBECTL
+}
+
+# setHistFileUserShell: largely simplified history file management
+function setHistFileUserShell() {
+   debug8 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '...............................................'
+   HISTFILE=~/.bash_history
+   HISTCONTROL=ignoredups:erasedups:ignorespace
+   HISTSIZE=10000
+   HISTFILESIZE=10000
+   HISTTIMEFORMAT='%Y-%m-%d_%H%M%S: '
+   PROMPT_COMMAND='history -a'
+   shopt -s histappend   # When the shell exits, append to the history file instead of overwriting it
+   debug8 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'
+}
+
+# gitContents is integrated here as it is required by setPrompt().
+# Helper for PS1, git bash prompt like, but much shorter and also working for darwin.
+function gitContents() {
+    if [[ $(git rev-parse --is-inside-work-tree 2>&1 | grep fatal | wc -l) -eq 0  ]] ; then
+            _gitBranch=$(git status -s -b | head -1 | sed 's/^##.//')
+            _gitStatus=$(git status -s -b | tail -n +2 | sed 's/^\(..\).*/\1/' | sort | uniq | tr "\n" " " | sed -e 's/ //g' -e 's/??/?/' -e 's/^[ ]*//')
+            echo $_gitStatus $_gitBranch
+    fi
+}
+
+function getK8sNS() {
+  ctx="$(kubectl config view --minify -o jsonpath='{.current-context}' 2>/dev/null)"
+  [ -z "$ctx" ] && echo '' && return
+  ns="$(kubectl config view --minify -o jsonpath="{..namespace}" 2>/dev/null)"
+   [ $(echo "$ns" | wc -w) -gt 1 ] && ns='...'
+   echo $ctx $ns
+   unset ns ctx
+}
+
+# setPrompt
+function setPrompt() {
+   debug8 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '...............................................'
+   if [ $(id -u) -eq 0 ] ; then
+      debug8 bash ROOT shell
+      PATH=/sbin:/bin:/usr/sbin:/usr/bin:"$PATH" # security: no enhanced PATHs first
+      PS1='[$?] \033[0;31m\t | \u@\h | $(pwd) \033[0m##########################\n'
+   else
+      debug8 bash non-root shell
+      PS1='[$?] \033[34m\t\033[0m|\033[32m\u@\h\033[0m|\033[34m$(getK8sNS)\033[0m|\033[0;31m$(gitContents)\033[0m|${AWS_PROFILE:-}|\033[0;33m\w\e[0m\n'
+   fi
+   debug8 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'
+}
+
+# todo check w/ Lx system
+# hadmRealUserDetermination determines the real user if logging is as hadm
+# The function is currently designed to work only on systems with systemd
+function hadmRealUserDetermination() {
+   debug8 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '...............................................'
+   if [[ $(id -un) == "hadm" ]]  && command -v journalctl &>/dev/null ; then
+      debug8 user hadm and journalctl existing
+      [ -n "${HADM_LAST_LOGIN_FINGERPRINT:-}" ] && unset HADM_LAST_LOGIN_FINGERPRINT
+      export HADM_LAST_LOGIN_FINGERPRINT=${HADM_LAST_LOGIN_FINGERPRINT:-$(sudo journalctl -r -u ssh -g 'Accepted publickey' -n 1 -q 2>&1 | awk '{ print $NF }')}
+      debug8 HADM_LAST_LOGIN_FINGERPRINT "$HADM_LAST_LOGIN_FINGERPRINT"
+      debug8 "SSH_CLIENT $SSH_CLIENT"
+
+      if [ "$SSH_CLIENT" != "" ] && [ ! -z "$HADM_LAST_LOGIN_FINGERPRINT" ] ; then
+         for file in ~/.ssh/*.pub
+         do
+            if [ $(ssh-keygen -lf $file | grep $HADM_LAST_LOGIN_FINGERPRINT | wc -l) -eq 1 ] ; then
+               export HADM_LAST_LOGIN_USER=$(basename $file .pub)
+               logger "You are user $HADM_LAST_LOGIN_USER logging in as hadm. Welcome."
+               echo You are user "$HADM_LAST_LOGIN_USER" logging in as hadm. Welcome.
+               break
+            fi
+         done
+      else
+         debug8 "SSH_CLIENT or HADM_LAST_LOGIN_FINGERPRINT not set"
+      fi
+   else
+      debug8 "User not hadm $(id -un) or journalctl not existing"
+   fi
+   debug8 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'
+}
+
+# have routine used by many completions
+# This function checks whether we have a given program on the system.
+# No need for bulky functions in memory if we don't.
+#
+function have()
+{
+    unset -v have
+    # Completions for system administrator commands are installed as well in
+    # case completion is attempted via `sudo command ...'.
+    PATH=$PATH:/sbin:/usr/sbin:/usr/local/sbin type $1 &>/dev/null &&
+    have="yes"
+}
+
+# load different completions for bash
+function loadCompletions() {
+  debug8 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '...............................................'
+  for file in /etc/profile.d/bash_completion.sh /etc/bash_completion.d/* /opt/homebrew/share/bash-completion/completions/* ; do
+    [ -e "$file" ] && debug8 sourcing "$file" && source "$file"
+  done
+  $(which aws_completer &>/dev/null) && debug4 aws completion helper found && complete -C "$(which aws_completer)" aws
+  # load ssh and rsync completion, the completion list can be created with ssh-createCompletionList
+  local sshCompletionList="$HOME/.ssh/completion.lst"
+  [ -f $sshCompletionList ] && \
+     complete -W "$(cat $sshCompletionList)" -- ssh && \
+     complete -f -d -W "$(cat $sshCompletionList)" -- rsync
+  command -v zoxide >/dev/null 2>&1 && debug4 zoxide initialisation && eval "$(zoxide init bash)"
+  debug8 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'
+}
+
+############################################################################
+# main
+############################################################################
+
+function main() {
+   shopt -s nullglob
+   case $- in
+      *i*) #  "This shell is interactive"
+          export BASHRC=TRUE # do not load again from bash_profile
+          # shellcheck source=/dev/null
+          [ -z "${BASHPROFILE:-}" ] && [ -r ~/.bash_profile ] && echo '---- BASHPROFILE not set, loading' && source ~/.bash_profile && return
+         loadLibs # load the library
+         [ "$?" -ne 0 ] && 1>&2 echo could not load library && return 1
+         umask 022
+         loadSource pre
+         export USER=${USER:-root} # fix for docker
+         export SHELL=${SHELL:-$(ps a | grep $$ | sed -n "/^ *$$/p" | awk '{ print $NF }')} # fix for docker
+         setHistFileUserShell                      # history file permission, ownership, settings
+         setPrompt
+         setAliases
+         loadCompletions
+         hadmRealUserDetermination
+
+         # changed to common2.* and bash2.* files
+         for file in $PROFILES_CONFIG_DIR/Shell/common.*.rc $PROFILES_CONFIG_DIR/Shell/bash.*.rc $PROFILES_CONFIG_DIR/Shell/os."$(uname)".rc; do
+            if [ -f "$file"  ] && [ -r "$file" ] ; then
+               # shellcheck source=/dev/null
+               source "$file" # removing constructor style: $(basename $file .sh).init # call the file-local initialiser
+            fi
+         done
+
+         loadSource post
+         for file in $HOME/.bashrc.d/*.rc $HOME/.rc.d/*.rc ; do
+            [ -r "$file" ] && debug4 sourcing "$file" && source "$file"
+            [ -r "$file" ] || err could not read "$file"
+         done
+         for file in $HOME/.bashrc.d/*.sh ; do
+            [ -r "$file" ] && debug4 executing "$file" && bash "$file"
+            [ -r "$file" ] || err could not read "$file"
+         done
+         for file in $HOME/.sh.d/*.sh ; do
+            [ -r "$file" ] && debug4 executing "$file" && bash "$file"
+            [ -r "$file" ] || err could not read "$file"
+         done
+         ;;
+      *) #echo "This is a script";;
+         ;;
+   esac
+}
+
+# 2606 add consistency
+shopt -s nullglob
+set -u
+main "$@"
+set +u
+
+#################### EOF

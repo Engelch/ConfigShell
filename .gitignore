@@ -1,0 +1,15 @@
+.DS_Store
+*.key
+*.crt
+*~
+*.aux
+*.bcf
+*.fls
+*.log
+*.run.xml
+*.synctex.gz
+*.toc
+*.fdb_latexmk
+
+/lib/tests/version.sh/**/main
+.idea/

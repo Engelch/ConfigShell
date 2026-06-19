@@ -1,0 +1,11 @@
+[Unit]
+Description="Pull ConfigShell"
+Requires=configshell-upgrade.timer
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/configshell-upgrade.sh
+User=configshell
+
+[Install]
+WantedBy=multi-user.target

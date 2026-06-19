@@ -1,0 +1,11 @@
+#!/usr/bin/env sh
+# call bat, in Rust written cat replacement
+
+if command -v bat > /dev/null 2>&1; then
+    exec bat --style=plain "$@"
+elif command -v batcat > /dev/null 2>&1; then
+    exec batcat --style=plain "$@"
+else
+    echo "Error: neither bat nor batcat found in PATH" >&2
+    exit 1
+fi

@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+[ -z "$KUBECTL" ] && echo >&2 "KUBECTL environment variable is not set, exiting" && exit 1
+
+[ -z "$1" ] && 1>&2 echo namespace not specfified, cannot change to a non-specified namespace && exit 1
+$KUBECTL config set-context --current --namespace="$1"

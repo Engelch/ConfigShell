@@ -1,0 +1,48 @@
+#!/usr/bin/env ruby
+# CHANGELOG
+# v2.4
+# - added output of critical extensions
+# v2.3
+# - normal key usage also added to output
+# v2.2
+# - extended key usage also output if existing
+
+VERSION="v2.4.0"
+args    = ARGV.join(" ")
+count   = -1
+outarr  = Array.new()
+# read lines beginning with BEGIN CERTIFICATE and the following into an outarr
+IO.foreach(args) do | name |
+    if name.include? "----BEGIN CERTIFICATE"
+        count += 1
+    end
+    outarr[count] = outarr[count].to_s + name if count >= 0
+end
+print "############################################################\n"
+print "Certificate: ", args, "\n"
+print "Number of certificates (#{VERSION}): ", count+1, "\n"
+print "============================================================\n"
+(count+1).times do |val|
+    IO.popen("openssl x509 -subject -email -issuer -dates -sha256 -serial -noout -ext 'subjectAltName,authorityKeyIdentifier,subjectKeyIdentifier,keyUsage,extendedKeyUsage,basicConstraints' 2>/dev/null", "w+") do |proc|
+         proc.write(outarr[val])
+         proc.close_write
+
+         proc.readlines.each { |x|
+            if x.length > 1
+               print (x.to_s.gsub("\n", ""))
+               print ("\n") if not [ "Identifier", "Alternative Name", "Key Usage"  ].any?{ |s| x.include? s }
+            end
+         }
+    end
+    IO.popen("openssl x509 -text 2>/dev/null | grep -B 1 'Public-Key:' | xargs", "w+") do |proc|
+        proc.write(outarr[val])
+        proc.close_write
+        proc.readlines.each { |x|
+            if x.length > 1
+                print (x.to_s.gsub(" Public-Key:", ", Public-Key:"))
+            end
+        }
+    end
+    puts "--------------------------------------------------------------" if val >= 0
+end
+

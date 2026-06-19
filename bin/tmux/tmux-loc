@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+tmux select-pane -P "fg=white,bg=color237"
+

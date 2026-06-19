@@ -1,0 +1,17 @@
+function setupBSD() { 
+   debug8 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '...............................................'
+   alias proc='ps auxww | egrep -i '
+   alias o=xdg-open
+   alias open=o
+   alias xlock='xlock -remote -mode blank -allowroot'
+   alias xl=xlock
+   debug8 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'
+}
+
+
+debug8 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '...............................................'
+setupBSD
+debug8 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'
+
+
+# EOF

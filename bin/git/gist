@@ -1,0 +1,25 @@
+#!/usr/bin/env -S bash --noprofile --norc
+
+if [ "$1" = -V ] || [ "$1" = '--version' ] ; then
+    cd "$PROFILES_CONFIG_DIR/bin/git" || { 1>&2 echo ERROR, unusual ConfigShell installation ; exit 2 ; }
+    [ ! -f ./version.txt ] && { 1>&2 echo ERROR, version of git tools cannot be determined. ; exit 3 ; }
+    version.sh
+    exit 1
+fi
+
+if [ $# != 0 ] ; then
+   1>&2 echo gist only allows the arguments -V or --version
+   exit 10
+fi
+
+git status -u --show-stash ; res=$? # --ignore-submodules
+
+git rev-parse --show-toplevel &>/dev/null || exit "$res" 
+
+declare -r gitroot="$(git rev-parse --show-toplevel)"
+
+[ -f "$gitroot/.git/gee" ] && echo && echo "git gee status:" && git gee s
+exit 0
+
+ # EOF
+ 

@@ -1,0 +1,34 @@
+# ---- Linux -----------------------------------------------------------------------
+
+function setupLinux() {          # Linux-specific settings of aliases and shell-functions
+   debug8 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '...............................................'   
+   eval $(dircolors)
+   export LS_COLOUR='--color=auto'
+   alias proc='ps -ef | grep -i '
+   alias o=xdg-open
+   alias open=o
+   alias xlock='xlock -remote -mode blank -allowroot'
+   alias xl=xlock
+
+   if [[ $(uname -r) =~ Microsoft ]] ; then  # WSL
+      debug8 "Microsoft WSL environment detected"
+      alias docker=docker.exe
+      alias kubectl=kubectl.exe
+      alias k=kubectl.exe
+   fi
+
+   # systemd ; always load them, as likelihodd is high that it exists :-(
+   debug8 "Loading functions/aliases for systemd"
+   function sylt() { systemctl list-timers $* ; }
+   function sylu() { systemctl list-units $* ; }
+   function syrestart() { systemctl restart $* ; systemctl --no-pager status $* ; }
+   alias restat=syrestart
+   function systart() { systemctl start $* ; systemctl --no-pager status $* ; }
+   alias systat='systemctl status'
+   function systop() { systemctl stop $* ; systemctl --no-pager status $* ; }
+   debug8 "${BASH_SOURCE[0]}::${FUNCNAME[0]}" '$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$'
+}
+
+setupLinux
+
+# EOF

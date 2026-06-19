@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+
+exec tmux join-pane -s "$@"

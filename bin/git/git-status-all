@@ -1,0 +1,92 @@
+#!/usr/bin/env bash
+# shellcheck disable=
+#
+# Copyright © 2026 Christian Engel engel-ch@outlook.com
+#
+#
+# CHANGELOG
+#
+# v1.2
+#   - new, shortened output format
+
+export DebugFlag
+function debugSet()             { DebugFlag="TRUE"; return 0; }
+function debugUnset()           { DebugFlag=; return 0; }
+function debug()                { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:'"$*" 1>&2 ; return 0; }
+function debug4()               { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:    ' "$*" 1>&2 ; return 0; }
+function debug8()               { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:        ' "$*" 1>&2 ; return 0; }
+function debug12()              { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:            ' "$*" 1>&2 ; return 0; }
+
+function usage() {
+    cat << HERE
+git-status-all -V
+git-status-all ( -h | --help )
+git-status-all [ -u ] [ -t ] [ dir ] ...
+
+Without a directory, the commands start at your home-directory and at /opt/ConfigShell to
+check the status of your git repositories. With arguments, the commands starts at the specified
+directories and recursively checks for git repositories and output their status.
+
+-u ::= update if the local repository has no changes (M) and is behind the remote branch
+-t ::= set timeout for each git pull to 30s
+-V ::= output the version   and exit 1
+-h ::= output help          and exit 2
+HERE
+}
+
+# EXIT 10
+function versionOption() {
+   local appVersion="1.2.0" # this extra line makes the version number changable by bma, bmi, bpa
+   echo "$appVersion"
+   exit 10
+}
+
+# EXIT 1..
+function main() {
+    export -f debug               # export function to sub-processes
+    updateIfBehindAndNotModified=
+    timeout=
+
+    [ "$(uname)" = Darwin ] && {
+        getoptpath="$(which getopt)" 
+        if ! [[ "$getoptpath" =~ gnu-getopt ]] ; then
+            echo gnu-getopt missing
+            exit 9
+        fi
+    }
+
+    # CLI-PARSING #############################################################
+    VALID_ARGS=$(getopt -o DhVut --long debug,help,version,update,upgrade,timeout -- "$@")
+    if [[ $? -ne 0 ]]; then { 1>&2 echo ERROR invalid arguments; exit 1; }; fi
+    eval set -- "$VALID_ARGS"
+
+    while [ : ] ; do
+        case "$1" in
+            -D|--debug) debugSet; debug Debug enabled ; shift
+                ;;
+            -h|--help) usage ; exit 0
+                ;;
+            -V|--version) versionOption; exit 0
+                ;;
+            -u|--update|--upgrade) updateIfBehindAndNotModified=-u && shift
+                ;;
+            -t|--timeout) timeout="-t" ; shift
+                ;;
+            --) shift ; break
+                ;;
+        esac
+    done
+
+    if [ -n "$1" ] ; then
+        # for all args
+        debug find "$@" -name .git -execdir bash -c "/opt/ConfigShell/bin/git/git-status-all-checkGitDir $updateIfBehindAndNotModified $timeout" \\\;
+        find "$@" -name .git -execdir bash -c "/opt/ConfigShell/bin/git/git-status-all-checkGitDir $updateIfBehindAndNotModified $timeout" \;
+    else
+        debug find . -type d -name .git -execdir bash -c "/opt/ConfigShell/bin/git/git-status-all-checkGitDir $updateIfBehindAndNotModified $timeout" \\;
+        find . -type d -name .git -execdir bash -c "/opt/ConfigShell/bin/git/git-status-all-checkGitDir $updateIfBehindAndNotModified $timeout" \;
+    fi
+}
+
+main "$@"
+
+# EOF

@@ -1,0 +1,1 @@
+/opt/ConfigShell/bin/dbms/db-connect.sh

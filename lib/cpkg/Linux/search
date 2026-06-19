@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+
+function err()          { echo "$*" 1>&2; return 0; }
+function warning()      { err "WARNING:$*" ; return 0; }                                  # depends on err
+function errorExit()    { EXITCODE=$1 ; shift; err "ERROR:$*" ; exit "${EXITCODE}"; }    # depends on err
+function debug()                { [ "$DebugFlag:-" = TRUE ] && echo 'DEBUG:'"$*" 1>&2 ; return 0; }
+
+set -u
+
+function aptSearch() {
+    debug aptSearch
+    sudo apt-cache search "$@"
+}
+
+if [ -e /etc/debian_version ] ; then
+    debug search Debian            
+    aptSearch "$@"
+elif [ -e /etc/fedora-release ] ; then
+    debug search Fedora
+    sudo dnf search "$@"
+elif [ -e /etc/redhat-release ] ; then
+    debug search Redhat
+    sudo yum search "$@"
+elif [ -e /etc/os-release ] && grep -q 'ID=ubuntu' /etc/os-release ; then
+    debug search Ubuntu
+    aptSearch "$@"
+elif [ -e /etc/os-release ] && grep -q 'ID=Alpine' /etc/os-release ; then
+    debug search Alpine Linux
+    sudo apk search "$@"
+elif [ -e /etc/os-release ] && grep -q 'ID=arch' /etc/os-release ; then
+    debug search Arch Linux
+    sudo pacman -Ss "$@"
+elif [ -e /etc/NIXOS ] ; then
+    debug search NixOS
+    nix search "$@"
+else
+    errorExit 1 "Could not determine the OS"
+fi
+
+# EOF

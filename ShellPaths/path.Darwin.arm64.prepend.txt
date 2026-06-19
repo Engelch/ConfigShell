@@ -1,0 +1,4 @@
+
+/opt/ConfigShell/BinConfigDarwin/bin-arm64/
+
+# eof

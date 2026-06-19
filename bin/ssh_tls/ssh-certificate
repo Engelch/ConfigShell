@@ -1,0 +1,99 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2155
+
+readonly _app=$(basename "$0")
+readonly _appDir=$(dirname "$0")
+readonly _absoluteAppDir=$(cd "$_appDir" || errorExit 1 cannot determine absolute path of app_dir; /bin/pwd)
+readonly _appVersion="1.0.0" # use semantic versioning
+export DebugFlag=${DebugFlag:-FALSE}
+
+#########################################################################################
+
+# --- debug: Conditional debugging. All commands begin w/ debug.
+
+function debugSet()             { DebugFlag=TRUE; return 0; }
+function debugUnset()           { DebugFlag=; return 0; }
+function debug()                { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:'"$*" 1>&2 ; return 0; }
+function debug4()               { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:    ' "$*" 1>&2 ; return 0; }
+function debug8()               { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:        ' "$*" 1>&2 ; return 0; }
+function debug12()              { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:            ' "$*" 1>&2 ; return 0; }
+
+# --- Exits
+
+# function error()        { err 'ERROR:' $*; return 0; } # similar to err but with ERROR prefix and possibility to include
+# Write an error message to stderr. We cannot use err here as the spaces would be removed.
+function error()        { echo 'ERROR:'"$*" 1>&2;             return 0; }
+function error4()       { echo 'ERROR:    '"$*" 1>&2;         return 0; }
+function error8()       { echo 'ERROR:        '"$*" 1>&2;     return 0; }
+function error12()      { echo 'ERROR:            '"$*" 1>&2; return 0; }
+
+function errorExit()    { EXITCODE="$1" ; shift; error "$*" ; exit "$EXITCODE"; }
+function exitIfErr()    { a="$1"; b="$2"; shift; shift; [ "$a" -ne 0 ] && errorExit "$b" App returned "$a $*"; }
+
+function err()          { echo "$*" 1>&2; }                 # just write to stderr
+function err4()         { echo '   ' "$*" 1>&2; }           # just write to stderr
+function err8()         { echo '       ' "$*" 1>&2; }       # just write to stderr
+function err12()        { echo '           ' "$*" 1>&2; }   # just write to stderr
+
+# --- Existance checks
+function exitIfBinariesNotFound()       { for file in "$@"; do command -v "$file" &>/dev/null || errorExit 253 binary not found: "$file"; done }
+function exitIfPlainFilesNotExisting()  { for file in "$@"; do [ ! -f "$file" ] && errorExit 254 'plain file not found:'"$file" 1>&2; done }
+function exitIfFilesNotExisting()       { for file in "$@"; do [ ! -e "$file" ] && errorExit 255 'file not found:'"$file" 1>&2; done }
+function exitIfDirsNotExisting()        { for dir in "$@"; do [ ! -d "$dir" ] && errorExit 252 "$APP:ERROR:directory not found:$dir"; done }
+
+# --- Temporary file/directory  creation
+# -- file creation -- TMP1=$(tempFile); TMP2=$(tempFile) ;;;; trap "rm -f $TMP1 $TMP2" EXIT
+# -- directory creation -- TMPDIR=$(tempDir) ;;;;;  trap "rm -fr $TMPDIR;" EXIT
+#
+function tempFile()                     { mktemp "${TMPDIR:-/tmp/}$_app.XXXXXXXX"; }
+function tempDir()                      { mktemp -d "${TMPDIR:-/tmp/}$_app.YYYYYYYYY"; }
+# realpath as shell, argument either supplied as stdin or as $1
+
+#########################################################################################
+
+function usage()
+{
+    err DESCRIPTION
+    err4 'list ssh-certificate data'
+    err
+    err SYNOPSIS
+    err4 "$_app" '[-D] [file...]'
+    err4 "$_app" '-h'
+    err
+    err VERSION
+    err4 "$_appVersion"
+    err
+    err OPTIONS
+    err4 '-D      ::= enable debug output'
+    err4 '-h      ::= show usage message and exit with exit code 1'
+}
+
+function parseCLI() {
+    while getopts "Dh" options; do         # Loop: Get the next option;
+        case "${options}" in                    # TIMES=${OPTARG}
+            D)  err Debug enabled ; debugSet
+                ;;
+            h)  usage ; exit 1
+                ;;
+            *)
+                err Help with "$_app" -h
+                exit 2  # Exit abnormally.
+                ;;
+        esac
+    done
+}
+
+function main() {
+    exitIfBinariesNotFound pwd basename dirname mktemp ssh-keygen
+    parseCLI "$@"
+    shift $(( OPTIND - 1 ))  # not working inside parseCLI
+    debug args are "$*"
+    for file in "$@" ; do
+        ssh-keygen -Lf "$file"
+    done
+}
+
+main "$@"
+
+# EOF
+

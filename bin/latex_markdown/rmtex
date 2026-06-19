@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+for file in *.log *.aux *.dvi *.loc *.toc *~ *.bcf *.run.xml
+    /bin/rm -fv $fil
+end

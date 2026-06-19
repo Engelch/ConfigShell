@@ -1,0 +1,11 @@
+.DS_Store
+cover.out
+coverage.out
+.touchfile
+.terraform
+*.backup
+*~
+*.bak
+
+.fake
+build/

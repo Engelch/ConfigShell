@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+# © 2026 Christian Engel engel-ch@outlook.com
+#
+# License: MIT
+#
+# About:
+#   helper routine for git-status-all to check or optionally update (pull) a
+#   git repository
+
+
+function debug()                { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:'"$*" 1>&2 ; return 0; }
+debug Debug on
+
+# CLI-PARSING #############################################################
+# EXIT 1
+VALID_ARGS=$(getopt -o ut --long update,upgrade,timeout -- "$@")
+if [[ $? -ne 0 ]]; then { 1>&2 echo ERROR invalid arguments; exit 1; }; fi
+eval set -- "$VALID_ARGS"
+debug getopt done
+
+update=
+timeout=
+while [ : ] ; do
+    case "$1" in
+        -u|--update|--upgrade) update=TRUE; shift ;;
+        -t|--timeout) timeout="timeout -f 30s"; shift ;;
+        --) shift; break ;;
+    esac
+done
+
+debug CLI parsing finished
+debug update is $update, timeout is $timeout
+
+repo="$(git rev-parse --show-toplevel | sed -E s,"$HOME",~,)"
+[ -n "$COLUMNS" ] && _cols=$(( COLUMNS - 60 ))
+[[ "$_cols" -lt 40 ]] && _cols=40
+# echo cols are $_cols
+printf "%${_cols}s ... " "$repo" 
+eval $timeout "git remote update &>/dev/null"
+res=$?
+if [ "$res" -ne 0 ] ; then
+    echo TERMINATED.
+else
+    echo -n 'done. '
+    status="[$(gitStatus)]"
+    echo -e "\033[1;34m$status\033[1;0m" 
+    [ -n "$update" ] && 
+        debug 'updating' &&
+        [ $(echo $status | grep -c behind) -eq 1 ] &&
+        debug 'after grepping for behind' &&
+        [ $(echo $status | grep -c '^M' ) -eq 0 ] &&
+        echo '    pulling...' &&
+        eval $timeout "git pull --tags 2>&1 | sed 's/^/    /'"
+fi

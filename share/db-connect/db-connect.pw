@@ -1,0 +1,6 @@
+locadm_DB_TYPE=mysql|mariadb|psql
+locadm_HOST=127.0.0.1
+locadm_PORT=5432|3306
+locadm_USER=postgres
+locadm_PW= 
+locadm_DB=postgres

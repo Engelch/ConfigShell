@@ -1,0 +1,25 @@
+#!/usr/bin/env ruby
+
+require "CGI"
+
+output = 
+
+if __FILE__ == $0
+   # puts("hi, #{ARGV[0]}")
+   found = false
+   if ARGV.length == 0 
+      infd='/dev/stdin'
+   else
+      infd=ARGV[0]
+   end
+   File.readlines(infd, chomp: true).each do |line|
+      if ! found && ! line.include?('-----BEGIN CERTIFICATE-----')
+         ;
+      else 
+         found = true
+         output = output + "\n" + line if output != nil
+         output = line + "\n" if output == nil
+      end
+   end
+   puts(CGI.escape(output))
+end

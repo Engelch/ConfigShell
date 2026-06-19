@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+set -u
+
+export DebugFlag=${DebugFlag:-FALSE}
+function debugSet()             { DebugFlag="TRUE"; return 0; }
+function debug()                { [ "$DebugFlag" = TRUE ] && echo 'DEBUG:'"$*" 1>&2 ; return 0; }
+
+# REQU:
+#  - OSX requires gnu getopt, else error
+# EXIT 9
+[ "$(uname)" = Darwin ] && {
+        getoptpath="$(which getopt)"
+        if ! [[ "$getoptpath" =~ gnu-getopt ]] ; then
+            echo gnu-getopt missing
+            exit 9
+        fi
+    }
+
+# PARSE CLI
+# EXIT 8
+VALID_ARGS=$(getopt -o aDrtV --long all,debug,reverse,time,version -- "$@")
+if [[ $? -ne 0 ]]; then { 1>&2 echo ERROR invalid arguments; exit 8; }; fi
+eval set -- "$VALID_ARGS"
+
+# options to set up
+args=
+
+# EXIT 1
+while [ : ]; do
+  case "$1" in
+    -a|--all) debug show all files ; args="$args -a" ; shift
+        ;;
+    -D|--debug) debugSet; debug Debug enabled. ; shift
+        ;;
+    -r|--reverse) debug no reverse extra action, it it the default ; shift
+        ;;
+    -t|--time) debug time set ; args="--sort modified" && shift
+        ;;
+    -V|--version) { echo 1.0.0 ; exit 1 ; }  
+        ;;
+    --) shift; break ;;
+  esac
+done
+
+debug command called is "$(basename "$0")"
+[[ "$(basename "$0")" =~ ^el(l|a) ]] && debug el call && args="$args -lg --group-directories-first"
+[[ "$(basename "$0")" =~ ^e.?a ]] && debug all call && args="$args -all"
+debug final args line is "$args"
+exec eza $args "$@" 

@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+if [ "$1" = -V ] || [ "$1" = '--version' ] ; then
+    cd "$PROFILES_CONFIG_DIR/bin/git" || { 1>&2 echo ERROR, unusual ConfigShell installation ; exit 10 ; }
+    [ ! -f ./version.txt ] && { 1>&2 echo ERROR, version of git tools cannot be determined. ; exit 11 ; }
+    version.sh
+    exit 0
+fi
+
+git branch -avv --color "$@"
+
+for module in $(git submodule status | awk '{print $2}') ; do
+    echo
+    echo "Submodule: $module"
+    git -C "$module" branch -avv --color "$@"
+done
+
+# EOF

@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+# push to a list of remote repositories or the default one
+
+if [ "$1" = -V ] || [ "$1" = '--version' ] ; then
+    cd "$PROFILES_CONFIG_DIR/bin/git" || { 1>&2 echo ERROR, unusual ConfigShell installation ; exit 10 ; }
+    [ ! -f ./version.txt ] && { 1>&2 echo ERROR, version of git tools cannot be determined. ; exit 11 ; }
+    version.sh
+    exit 1
+fi
+
+if [ $# -eq 0 ] ; then
+    git push
+    git push --tags
+else
+    for repo in "$@" ; do
+        echo Working on $repo...
+        git push "$repo"
+        git push --tags "$repo"
+    done
+fi
+
+# EOF
