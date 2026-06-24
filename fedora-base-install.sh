@@ -41,7 +41,7 @@ sudo dnf install -y fish vim git-lfs procs du-dust lsb_release vim-X11 gnutls op
 sudo dnf install -y golang-bin rust cargo tokei java-25-openjdk-devel ruby dotnet-sdk-9.0
 sudo dnf install -y openssh-server htop telnet ansible opentofu npm ripgrep
 sudo dnf install -y awscli2 kubernetes1.34-client bumpversion mc
-sudo dnf install -y texlive vim-latex vim-latex-doc pandoc texlive-psutils
+sudo dnf install -y texlive vim-latex vim-latex-doc pandoc texlive-psutils bumpversion
 sudo dnf install -y wl-clipboard libxkbcommon-devel dbus-devel wxGTK-devel gcc-c++ # espanso rust compilation
 
 # install cosmic desktop - nice looking, but does not support resize of the VM window --251027
