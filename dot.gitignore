@@ -6,6 +6,6 @@ coverage.out
 *.backup
 *~
 *.bak
-
 .fake
 build/
+
