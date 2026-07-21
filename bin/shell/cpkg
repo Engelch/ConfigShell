@@ -174,6 +174,11 @@ function cmdUpgrade() {
     $(which flatpak &> /dev/null) &&
         echo flatpak .................................................................... &&
        flatpak update -y
+    $(which fwupd &> /dev/null) &&
+        echo fwupd ..................................................................... &&
+        { fwupdmgr refresh --force || true ; } &&
+        { fwupdmgr get-updates && fwupdmgr update -y --no-reboot-check || true ; } &&
+        fwupdmgr update
     [ $(uname) = Darwin ] && {
         echo OSX base ...................................................................
         if which softwareupdate &>/dev/null ; then softwareupdate -ai ; else 1>&2 echo softwareupdate NOT FOUND ; fi
