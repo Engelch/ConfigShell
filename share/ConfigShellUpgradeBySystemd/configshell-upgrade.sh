@@ -38,7 +38,10 @@ CfgShellDir=/opt/ConfigShell/.
 
 debug ready to upgrade
 
-[ -d "$HOME/.ssh" ] && [ "$(ssh-add -l | grep -v 'no identities' | wc -l)" -eq 0 ] && \
+# unclear what we find in .bashrc, let's switch off -u option
+set +u
+[ -d "$HOME/.ssh" ] && [ "$(ssh-add -l &>/dev/null| grep -v 'no identities' | wc -l)" -eq 0 ] && \
 	echo sourcing .bashrc &&
 	source $HOME/.bashrc
+set -u
 cd /opt/ConfigShell && git pull || errorExit 4 "Cannot upgrade ConfigShell"
