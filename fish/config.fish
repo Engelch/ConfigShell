@@ -38,6 +38,12 @@ function setupAliases_Abbreviations
     else
         alias ls "/bin/ls -hCF --group-directories-first \$LS_COLOUR"
     end
+    # which eza &> /dev/null ;and begin     # 240812 eza as all cargo binaries not stable enough in rebuilts
+    #     alias ls "eza -O"
+    #     alias ll "eza -lO"
+    # ; end
+	
+    which vim &> /dev/null ; and debug alias vi=vim ; and alias vi vim
 
     alias ls-bw "set -g -x LS_COLOUR '--color=none'"
     functions -e la # delete default definition as fish/3.6.1/share/fish/functions/la.fish
