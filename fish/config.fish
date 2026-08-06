@@ -33,14 +33,11 @@ function setupAliases_Abbreviations
     set -g -x LS_COLOUR '--color'
 
     if [ (uname) = "Darwin" ]
-        alias ls "gls -hCF --group-directories-first \$LS_COLOUR"
+        which gls &> /dev/null ; and \
+            alias ls "gls -hCF --group-directories-first \$LS_COLOUR"
     else
         alias ls "/bin/ls -hCF --group-directories-first \$LS_COLOUR"
     end
-    # which eza &> /dev/null ;and begin     # 240812 eza as all cargo binaries not stable enough in rebuilts
-    #     alias ls "eza -O"
-    #     alias ll "eza -lO"
-    # ; end
 
     alias ls-bw "set -g -x LS_COLOUR '--color=none'"
     functions -e la # delete default definition as fish/3.6.1/share/fish/functions/la.fish
@@ -118,7 +115,6 @@ function setupAliases_Abbreviations
     abbr -a hs 'history search --reverse --contains' # new command from fish. If it is good, it shall replace/become hf
 
     abbr -a rl 'source /opt/ConfigShell/fish/config.fish'
-    alias rlFull=rlDebug
 
     set -g -x KUBECTL kubectl
     command -q docker ; and set -g -x CONTAINER docker
