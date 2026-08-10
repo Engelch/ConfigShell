@@ -1,5 +1,8 @@
 " vimrc ConfigShell
-" 260309
+" 260810
+
+" the File, Open dialog defaults to the current file's directory
+set browsedir=buffer
 
 " Turn off search highlighting by pressing \\.
 :let mapleader = "\\"
