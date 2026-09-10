@@ -59,7 +59,7 @@ function login2aws() {
       _err=0
       [ -z "${AWS_ACCESS_KEY_ID:-}" ] && _err=6
       [ -z "${AWS_SECRET_ACCESS_KEY:-}" ] && _err=6
-      [ -z "${AWS_SESSION_TOKEN:-}" ] && _err=6
+      [[ "${AWS_ACCESS_KEY_ID:-}" == ASIA* ]] && [ -z "${AWS_SESSION_TOKEN:-}" ] && _err=6
       [ ${_err} = 6 ] && errorExit 6 "AWS_PROFILE environment variable is required, in order to login to the docker registry"
     fi
     [ -n "${AWS_PROFILE:-}" ] && debug AWS_PROFILE set to "${AWS_PROFILE:-}"
