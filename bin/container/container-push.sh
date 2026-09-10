@@ -24,6 +24,8 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 # Changelog
+# 1.1:
+# - add -r flag: auto-retry Huawei SWR pushes on "net/http: timeout awaiting response headers"
 # 1.0:
 # - initial version
 
@@ -49,7 +51,7 @@ function usage()
 NAME
     $_app
 SYNOPSIS
-    $_app [-D] container ...
+    $_app [-D] [-r] container ...
     $_app -V
     $_app -h
 VERSION
@@ -63,6 +65,9 @@ DESCRIPTION
     will push all images whose repository is docker.io/debian regardless of the tag.
 OPTIONS
     -D      ::= enable debug output
+    -r      ::= auto-retry on Huawei SWR (myhuaweicloud.com) pushes when the
+                push fails with 'net/http: timeout awaiting response headers'.
+                Max attempts default is 10, override via env CRP_HUAWEI_RETRY_MAX.
     -V      ::= output the version number and exit with 0
     -h      ::= show usage message and exit with 0
 
@@ -83,9 +88,11 @@ HERE
 }
 
 function parseCLI() {
-    while getopts "DVh" options; do         # Loop: Get the next option;
+    while getopts "DrVh" options; do         # Loop: Get the next option;
         case "${options}" in                    # TIMES=${OPTARG}
             D)  1>&2 echo Debug enabled ; DebugFlag="TRUE"
+                ;;
+            r)  HuaweiRetryFlag="TRUE"
                 ;;
             V)  1>&2 echo $_appVersion
                 exit 0
@@ -112,12 +119,48 @@ function defineContainerCommand() {
     return 42
 }
 
+# pushContainer performs a single push. When HuaweiRetryFlag is TRUE and the image targets
+# myhuaweicloud.com, it retries up to CRP_HUAWEI_RETRY_MAX times, but only when the failure
+# stderr contains exactly "net/http: timeout awaiting response headers".
+function pushContainer() {
+    local image="$1"
+    local maxAttempts="${CRP_HUAWEI_RETRY_MAX:-10}"
+    local retryable=FALSE
+    if [ "$HuaweiRetryFlag" = TRUE ] && [[ "$image" == *myhuaweicloud.com* ]] ; then
+        retryable=TRUE
+    fi
+    if [ "$retryable" != TRUE ] ; then
+        "$containerCmd" push "$image"
+        return $?
+    fi
+    local attempt=1 rc tmpErr
+    while : ; do
+        tmpErr=$(mktemp)
+        "$containerCmd" push "$image" 2> >(tee "$tmpErr" >&2)
+        rc=$?
+        if [ "$rc" -eq 0 ] ; then
+            rm -f "$tmpErr"
+            return 0
+        fi
+        if grep -q -F 'net/http: timeout awaiting response headers' "$tmpErr" \
+                && [ "$attempt" -lt "$maxAttempts" ] ; then
+            attempt=$((attempt + 1))
+            1>&2 reverse "RETRY: Huawei SWR timeout on '$image', attempt $attempt/$maxAttempts"
+            rm -f "$tmpErr"
+            continue
+        fi
+        rm -f "$tmpErr"
+        return "$rc"
+    done
+}
+
 function main() {
     declare -r _app=$(basename "${0}")
     declare -r _appDir=$(dirname "$0")
     declare -r _absoluteAppDir=$(cd "$_appDir" || exit 124 ; /bin/pwd)
-    declare -r _appVersion="1.0"      # use semantic versioning
+    declare -r _appVersion="1.1"      # use semantic versioning
     export DebugFlag=${DebugFlag:-FALSE}
+    export HuaweiRetryFlag=${HuaweiRetryFlag:-FALSE}
 
     parseCLI "$@"
     shift "$(( OPTIND - 1 ))"  # not working inside parseCLI
@@ -149,7 +192,7 @@ function main() {
     for container in "${containersToBePushed[@]}" ; do
         debug Executing, after pressing ENTER: "$containerCmd push $container"
         debugExecIfDebug read
-        "$containerCmd" push "$container"
+        pushContainer "$container"
     done
 }
 
