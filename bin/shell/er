@@ -1,0 +1,4 @@
+#!/usr/bin/env -S bash --norc --noprofile
+
+GREP_OPTIONS="--color=auto" grep -ER $*
+
