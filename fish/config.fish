@@ -94,21 +94,17 @@ function setupAliases_Abbreviations
             fish 00DIR.fish
         end
         if test -f 00DIR.sh
-            bash 00DIR.sh
+            command -q bash ; and bash 00DIR.sh
+            command -q bash ; or echo bash not found, cannot execute 00DIR.sh >&2
         end
         if test -f 00DIR.fishrc
             source 00DIR.fishrc
         else if test -f 00DIR.rc
-            echo "Here is your fish shell, I cannot execute 00DIR.rc"
+            echo "Here is your fish shell, I cannot execute 00DIR.rc" >&2
         end
     end
 
-    abbr -a e "grep -E"
-    abbr -a ei 'grep -Ei'
-    abbr -a eir 'grep -EiR'
-    abbr -a er 'grep -ER'
-
-    abbr -a h "history --show-time"
+    abbr -a h "history" #  --show-time"
 
     abbr --erase hf # delete the old hf #abbr -a -g hf 'history | grep -Ei '
     function hf
@@ -212,67 +208,6 @@ function optSourceFile
     source $argv[1]
 end
 
- function git_prompt_status
-     if [ (git rev-parse --is-inside-work-tree 2>&1 | grep fatal | wc -l) -eq 0  ]
-         set -l _gitBranch (git status -s -b | head -1 | sed 's/^##.//')
-         set -l _gitStatus (git status -s -b | tail -n +2 | sed 's/^\(..\).*/\1/' | sort | uniq | tr "\n" " " | sed -e 's/ //g' -e 's/??/?/' -e 's/^[ ]*//')
-         echo $_gitStatus $_gitBranch
-     else
-        echo not in git
-     end
- end
-
-function fish_prompt_configshell -d "prompt for Configshell, toggable"
-    set -l res $status
-    if test "$res" -eq 0
-        set resString (set_color white)"$res"
-    else
-        set resString (set_color -o red)"$res"(set_color white)
-    end
-    printf '[%s]%s · %s%s@%s%s · %s%s%s · %s%s%s · %s%s%s · %s%s%s\n>' \
-        $resString (set_color blue) \
-        (set_color white) $USER $hostname (set_color blue) \
-        (set_color green) AWS:$AWS_PROFILE (set_color blue) \
-        (set_color magenta) (watson status) (set_color blue) \
-        (set_color red) (git_prompt_status) (set_color blue) \
-        (set_color yellow) (pwd | sed -E "s,$HOME,~,") (set_color white)
-end
-
-function setPromptConfigShell -d 'set the prompt for ConfigShell'
-    if not set -q fishPromptConfigShell ;or test "$fishPromptConfigShell" -eq 0
-        functions -e fish_prompt_orig
-        functions -c fish_prompt fish_prompt_orig
-        functions -e fish_prompt
-    end
-    functions -e fish_prompt    # the next line copying to fish_prompt creates an error if fish_prompt already exists
-    functions -c fish_prompt_configshell fish_prompt
-    set -g fishPromptConfigShell 1
-    touch "$HOME/.config/fish/configshellPrompt"
-end 
-
-function setPromptOrig -d 'set the prompt to the stored version'
-    if functions -q fish_prompt_orig 
-        functions -e fish_prompt
-        functions -c fish_prompt_orig fish_prompt
-        set -g fishPromptConfigShell 0 
-        /bin/rm -f "$HOME/.config/fish/configshellPrompt"
-    else
-        echo No stored backup version. >&2
-    end
-end
-
-function promptToggle -d 'toggle the current prompt setup with configShell prompt style'
-    if not set -q fishPromptConfigShell
-        echo ERROR variable fishPromptConfigShell not set
-    else
-        if test $fishPromptConfigShell -eq 0
-            setPromptConfigShell
-        else
-            setPromptOrig
-        end
-    end
-end
-
 function setupPrompt -d "fish prompt controlled by ~/.config/fish/configshellPrompt"
     debug "default prompt mode for bobthefish, should do not harm for other shells"
     set -g theme_show_exit_status yes
@@ -300,27 +235,19 @@ function setupPrompt -d "fish prompt controlled by ~/.config/fish/configshellPro
     set -g theme_display_go verbose
     set -g theme_display_node yes
     set -g theme_display_nix no
-    
-    if test -f "$HOME/.config/fish/configshellPrompt"
-        setPromptConfigShell
-    else
-        set -g fishPromptConfigShell 0 
-    end
-    if not test -f "$HOME/.config/fish/configshellSupport"
-        set_color red
-        echo You can change/toggle to the ConfigShell prompt using promptToggle.
-        set_color normal
-        touch "$HOME/.config/fish/configshellSupport"
-    end
+
+    set -g theme_display_date no
 end
 
 function setupCompletion -d "load completion for rsync and ssh"
     debug in setupCompletion
     if test -r ~/.ssh/completion.lst
-        complete -F -c rsync -a ~/.ssh/completion.lst
-        complete -x -c ssh -a ~/.ssh/completion.lst
+        complete -x -c rsync    -a ~/.ssh/completion.lst
+        complete -x -c ssh      -a ~/.ssh/completion.lst
+        complete -x -c sftp     -a ~/.ssh/completion.lst
+        complete -x -c scp      -a ~/.ssh/completion.lst
     else
-        err 'Cannot find ~/.ssh/completion.lst. Cannot load completions for ssh and rsync.'
+        err 'Cannot find ~/.ssh/completion.lst. Cannot load completions for ssh, rsync, sftp, scp.'
     end
 end
 
@@ -407,16 +334,20 @@ if status is-interactive # main code
     setupAliases_Abbreviations
     setupCompletion
     setupSsh
+    setupPrompt
 
+    # execution with bash (def shell) expected
     for file in $HOME/.config/fish/conf.d/*.sh $HOME/.sh.d/*.sh
         debug "  executing $file"
         command -q bash ; and bash $file
-        command -q bash ; or echo bash not found >&2
+        command -q bash ; or echo bash not found, cannot execute $file >&2
     end
+    # fish scripts
     for file in $HOME/.fishrc.d/*.fish $HOME/.fishrc.d/*.sh
         debug "  executing $file"
         fish $file
     end
+    # fish sourcable scripts
     for file in $HOME/.fishrc.d/*.fishrc $HOME/.fishrc.d/*.rc
         debug "  sourcing $file"
         source $file
@@ -431,12 +362,6 @@ if status is-interactive # main code
     #command -q starship ; or debug starship not found >&2
     command -q zoxide ; and zoxide init fish | source
     command -q zoxide ; or debug zoxide not found >&2
-    # omf settings
-    set -g theme_display_git_default_branch yes
-    set -g theme_display_git_stashed_verbose yes
-    set -g theme_display_git_ahead_verbose yes
-    set -g theme_display_k8s_namespace yes
-    set -g theme_display_date no
 end
 
 # EOF
