@@ -173,7 +173,8 @@ function cmdUpgrade() {
     cargoUpdate
     $(which flatpak &> /dev/null) &&
         echo flatpak .................................................................... &&
-       flatpak update -y
+       flatpak update -y &&
+       flatpak uninstall --unused -y
     $(which fwupdmgr &> /dev/null) &&
         echo fwupdmgr ..................................................................... &&
         { fwupdmgr refresh --force || true ; } &&
@@ -220,7 +221,7 @@ function main() {
     declare -r _app=$(basename "${0}")
     declare -r _appDir=$(dirname "$0")
     declare -r _absoluteAppDir=$(cd "$_appDir" || exit 99 ; /bin/pwd)
-    declare -r _appVersion="0.1.1"      # use semantic versioning
+    declare -r _appVersion="0.1.2"      # use semantic versioning
     export DebugFlag=${DebugFlag:-FALSE}
     declare forceMode=''
     # verbose=
