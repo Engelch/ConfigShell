@@ -6,6 +6,14 @@
 # shellcheck disable=SC2154 # as variables are assigned in the library file
 
 # Changelog
+# 2.8
+# - checkForGoCompatibility also recognises `FROM --platform=$BUILDPLATFORM golang:...` (cross-compiling
+#   builder stage, no toolchain emulation); the golang version is taken from that line as before
+# - --provenance=false only passed to docker: podman/buildah do not know the option (and never attach attestations)
+# - --load for docker: a buildx builder with the docker-container driver keeps the image in its cache unless
+#   the result is exported; the default docker driver loads implicitly, so the flag is harmless there
+# - go.mod version read from the `go` directive only; `grep 'go '` also matched module paths ending in go
+#   (github.com/gofiber/contrib/v3/swaggo ...) and made the check fail with exit 20
 # 2.7
 # adding the option build --provenance=false to build images compatible with Huawei SWR
 # 2.6
@@ -144,13 +152,16 @@ function optionallyCreateGoSetup() {
 
 # EXIT 20
 function checkForGoCompatibility() {
-    if [ "$(grep -ci 'FROM *golang:' "$containerFile")" -gt 0 ] ; then 
+    # FROM golang:<ver>... or FROM --platform=<...> golang:<ver>... (builder stage cross-compiling for $TARGETARCH)
+    local -r fromGolang='^FROM +(--platform=[^ ]+ +)?golang:'
+    if [ "$(grep -ciE "$fromGolang" "$containerFile")" -gt 0 ] ; then 
         debug golang compilation detected
-        debug selected line from Containerfile: $(grep -i 'FROM *golang:' "$containerFile")
-        golangversion="$(grep -i 'From *golang:' "$containerFile" | sed 's/.*golang://' | sed 's/ .*//' | sed 's/-.*//')"
+        debug selected line from Containerfile: $(grep -iE "$fromGolang" "$containerFile")
+        golangversion="$(grep -iE "$fromGolang" "$containerFile" | sed 's/.*golang://' | sed 's/ .*//' | sed 's/-.*//')"
         debug "golangversion $golangversion"
         if [ -f ../go.mod ] ; then
-            modGoVersion="$(grep -i 'go ' ../go.mod | sed 's/go *//' | sed 's/ //g')"
+            # only the `go` directive: 'go ' would also match module paths ending in go (github.com/gofiber/contrib/v3/swaggo v1.0.11)
+            modGoVersion="$(grep -E '^go +[0-9]' ../go.mod | awk '{ print $2 }')"
             debug modGoVersion "$modGoVersion"
             if [ ! "$golangversion" = "$modGoVersion" ] ; then 
                 1>&2 echo "$containerFile version is of golang is: $golangversion"
@@ -252,7 +263,7 @@ function main() {
     [ "$(uname)" = Darwin ]  && exitIfBinariesNotFound gtar
     set -u
     declare -g app="$(basename $0)"
-    declare -gr appVersion='2.7.0'
+    declare -gr appVersion='2.8.0'
     declare -g containerCmd=''
     declare -g containerFile=''
     declare -g containerName=''
@@ -294,10 +305,17 @@ function main() {
     debug "Version is: $_version"
     date="$(date -u +%y%m%d_%H%M%S)"
     debug "Date tag set to $date"
-    debug Would execute: "$containerCmd" buildx build  $@ $extTargetEnv --provenance=false --progress plain -t "$containerName":"$_version" -t "$containerName:latest" -t "$containerName:$date" .
+    # Huawei SWR rejects the OCI index with the provenance attestation buildx attaches by default;
+    # podman/buildah never attach one and do not know the option
+    # --load: import the result into the local image store. The default docker driver does that
+    # anyway, a docker-container driver (e.g. a `multiarch` builder instance) keeps the image in
+    # its build cache otherwise ("No output specified with docker-container driver").
+    local dockerOpts=''
+    [ "$containerCmd" = docker ] && dockerOpts='--provenance=false --load'
+    debug Would execute: "$containerCmd" buildx build  $@ $extTargetEnv $dockerOpts --progress plain -t "$containerName":"$_version" -t "$containerName:latest" -t "$containerName:$date" .
 
     [ "$DebugFlag" = TRUE ] && echo press ENTER to execute && read -r
-    $DRY "$containerCmd" buildx build $@ $extTargetEnv --provenance=false --progress plain -t "$containerName":"$_version" -t "$containerName:latest" -t "$containerName:$date" .
+    $DRY "$containerCmd" buildx build $@ $extTargetEnv $dockerOpts --progress plain -t "$containerName":"$_version" -t "$containerName:latest" -t "$containerName:$date" .
 }
 
 main "$@"
