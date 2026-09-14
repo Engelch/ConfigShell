@@ -4,6 +4,10 @@
 # no errors
 #
 # CHANGELOG
+# 0.5
+# - dnf: --refresh so stale repo metadata (default 48h) cannot hide new packages
+# - dnf: autoremove and PackageKit cache resync (pkcon refresh force)
+# - kernel reboot check: version-sort rpm -q kernel output
 # 0.4
 # - ITE reintroduced again to get nicer code
 # - checking for kernel versions if Linux should be rebooted
@@ -17,7 +21,7 @@ function err()          { echo "$*" 1>&2; return 0; }
 function warning()      { err "WARNING:$*" ; return 0; }                                  # depends on err
 function errorExit()    { EXITCODE=$1 ; shift; err "ERROR:$*" ; exit "${EXITCODE}"; }    # depends on err
 
-declare -r version=0.4.2
+declare -r version=0.5.0
 _uname=$(uname)
 declare -r touchFile="$HOME/.pkgU" 
 
@@ -57,7 +61,7 @@ function debianUpgrade() {
 }
 
 function checkIfActualKernelAndLibc() {
-   installedKernelVersion=$(rpm -q kernel | tail -n1 | sed -e 's/kernel-//' -e 's/-.*//')
+   installedKernelVersion=$(rpm -q kernel | sort -V | tail -n1 | sed -e 's/kernel-//' -e 's/-.*//')
    runningKernelVersion=$(uname -r | sed -e 's/kernel-//' -e 's/-.*//') # substituting kernel not required, but no harm
    if [ "$installedKernelVersion" = "$runningKernelVersion" ] ; then
       echo kernel NO reboot required.
@@ -79,8 +83,10 @@ function checkIfActualKernelAndLibc() {
 }
 
 function dnfUpgrade() {
-   echo dnf ugprade .............................................................
-   sudo dnf -y upgrade && sudo dnf -y clean packages
+   echo dnf upgrade .............................................................
+   sudo dnf -y --refresh upgrade && sudo dnf -y autoremove && sudo dnf -y clean packages
+   # resync the PackageKit cache so GNOME Software does not keep showing already-installed updates
+   command -v pkcon &>/dev/null && { pkcon refresh force || true ; }
 }
 
 function yumUpgrade() {
