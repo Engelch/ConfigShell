@@ -105,7 +105,6 @@ function setupAliases_Abbreviations
     end
 
     abbr -a h "history" #  --show-time"
-
     abbr --erase hf # delete the old hf #abbr -a -g hf 'history | grep -Ei '
     function hf
         history | grep -Ei --colour $argv[1] | sort
@@ -114,14 +113,15 @@ function setupAliases_Abbreviations
 
     abbr -a rl 'source /opt/ConfigShell/fish/config.fish'
 
-    set -g -x KUBECTL kubectl
     command -q docker ; and set -g -x CONTAINER docker
     command -q podman ; and set -g -x CONTAINER podman
     debug "  set CONTAINER $CONTAINER"
 
-    abbr -a k        $KUBECTL
-    abbr -a k8       $KUBECTL
-    abbr -a k8s      $KUBECTL
+    # As abbreviations are expanded in the command line itself the moment you press space/tab, the completions also work for k8, k8s, and k.
+    abbr -a k   kubectl
+    abbr -a k8  kubectl
+    abbr -a k8s kubectl
+    command -q kubectl ; and kubectl completion fish | source
 end
 
 function rlDebug
