@@ -249,6 +249,10 @@ function setupCompletion -d "load completion for rsync and ssh"
     else
         err 'Cannot find ~/.ssh/completion.lst. Cannot load completions for ssh, rsync, sftp, scp.'
     end
+    set -l cs_comp /opt/ConfigShell/fish/completions   # adjust
+    if test -d $cs_comp; and not contains -- $cs_comp $fish_complete_path
+        set -p fish_complete_path $cs_comp
+    end
 end
 
 function start_ssh_agent
