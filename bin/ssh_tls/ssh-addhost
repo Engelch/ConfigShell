@@ -1,0 +1,113 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2155
+# ssh-addhost — record a host's SSH key on deliberate first contact.
+#
+# With "StrictHostKeyChecking yes" in ~/.ssh/config an unknown host is refused instead of
+# prompted for. This script makes the one exception explicit: it connects once with
+# accept-new (the key is stored, a CHANGED key is still refused), then prints the
+# fingerprint that was recorded and the file it went to — so it can be compared with the
+# host's own `ssh-keygen -l -f /etc/ssh/ssh_host_ed25519_key.pub`.
+# The key lands in whatever UserKnownHostsFile applies to that host (global file, or a
+# per-customer file from an included block), under its HostKeyAlias if one is set —
+# exactly as a normal ssh would store it. macOS bash 3.2 compatible.
+
+readonly _app=$(basename "$0")
+readonly _appVersion="1.1.0" # use semantic versioning
+
+function err()  { echo "$*" 1>&2; }
+function err4() { echo '    ' "$*" 1>&2; }
+
+function usage() {
+    err NAME
+    err4 "$_app" '- record the SSH host key of a host on deliberate first contact'
+    err
+    err SYNOPSIS
+    err4 "$_app" '[-r] <<host>> [<<host>> ...]'
+    err4 "$_app" '-h'
+    err4 "$_app" '-V'
+    err
+    err VERSION
+    err4 "$_appVersion"
+    err
+    err OPTIONS
+    err4 '-h      ::= show usage message and exit with exit code 1'
+    err4 '-V      ::= show version and exit with exit code 1'
+    err4 '-r      ::= replace: the host was re-imaged and legitimately has a NEW key;'
+    err4 '            remove the old entry first, then record the new one. Without -r a'
+    err4 '            changed key is always refused - that is the point.'
+    err
+    err ARGUMENTS
+    err4 'host    ::= as you would type it for ssh: alias, user@host, host'
+}
+
+function parseCLI() {
+    while getopts "hVr" options; do
+        case "${options}" in
+            h)  usage ; exit 1 ;;
+            V)  err "$_appVersion" ; exit 1 ;;
+            r)  replace=1 ;;
+            *)  err Help with "$_app" -h ; exit 2 ;;
+        esac
+    done
+}
+
+# known_hosts files and the name the entry is stored under, as ssh itself resolves them
+function khFiles() { ssh -G "$1" 2>/dev/null | awk '$1=="userknownhostsfile"{for(i=2;i<=NF;i++)print $i}' | sed "s|^~|$HOME|"; }
+function khName() {
+    local a
+    a=$(ssh -G "$1" 2>/dev/null | awk '$1=="hostkeyalias"{print $2; exit}')
+    [ -n "$a" ] || a=$(ssh -G "$1" 2>/dev/null | awk '$1=="hostname"{print $2; exit}')
+    printf '%s' "$a"
+}
+
+function addHost() {
+    local host="$1" name files port f n out found
+    echo "== $host"
+    name=$(khName "$host")
+    files=$(khFiles "$host")
+    if [ "$replace" = 1 ]; then
+        port=$(ssh -G "$host" 2>/dev/null | awk '$1=="port"{print $2; exit}')
+        for f in $files; do
+            [ -f "$f" ] || continue
+            for n in "$name" "[$name]:$port"; do          # non-default ports are stored as [name]:port
+                if ssh-keygen -F "$n" -f "$f" >/dev/null 2>&1; then
+                    ssh-keygen -R "$n" -f "$f" >/dev/null 2>&1 && echo "   removed old entry '$n' from $f"
+                fi
+            done
+        done
+    fi
+    if ! ssh -n -o StrictHostKeyChecking=accept-new "$host" true; then
+        err "   FAILED: connection or verification refused."
+        [ "$replace" = 1 ] || err "   A CHANGED key is never accepted here; for a re-imaged host use: $_app -r $host"
+        return 1
+    fi
+    found=0
+    for f in $files; do
+        [ -f "$f" ] || continue
+        out=$(ssh-keygen -l -F "$name" -f "$f" 2>/dev/null | grep -v '^#')
+        if [ -n "$out" ]; then
+            echo "   recorded in $f as '$name':"
+            echo "$out" | sed 's/^/   /'
+            found=1
+            break
+        fi
+    done
+    [ $found -eq 1 ] || err "   connected, but no entry found for '$name' in: $files"
+    return 0
+}
+
+function main() {
+    replace=0
+    parseCLI "$@"
+    shift $(( OPTIND - 1 ))
+    [ $# -ge 1 ] || { usage ; exit 1 ; }
+    local rc=0 host
+    for host in "$@"; do
+        addHost "$host" || rc=1
+    done
+    exit $rc
+}
+
+main "$@"
+
+# EOF
