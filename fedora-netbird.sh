@@ -1,4 +1,4 @@
-[ ! -f -f -f -f -f -f -f -f -f /etc/yum.repos.d/netbird.repo ] && sudo tee /etc/yum.repos.d/netbird.repo <<'EOF'
+[ ! -f /etc/yum.repos.d/netbird.repo ] && sudo tee /etc/yum.repos.d/netbird.repo <<'EOF'
 [netbird]
 name=netbird
 baseurl=https://pkgs.netbird.io/yum/
