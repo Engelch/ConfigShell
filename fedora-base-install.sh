@@ -38,7 +38,8 @@ fi
 sudo dnf -y group install development-tools
 sudo dnf install -y yq jq bat tig mmv xmlstarlet gnome-terminal
 sudo dnf install -y fish vim git-lfs procs du-dust lsb_release vim-X11 gnutls openvpn tree
-sudo dnf install -y golang-bin rust cargo tokei java-25-openjdk-devel ruby dotnet-sdk-9.0
+# rust removed
+sudo dnf install -y golang-bin tokei java-25-openjdk-devel ruby dotnet-sdk-9.0
 sudo dnf install -y openssh-server htop telnet ansible opentofu npm ripgrep
 sudo dnf install -y awscli2 kubernetes1.34-client bumpversion mc
 sudo dnf install -y texlive vim-latex vim-latex-doc pandoc texlive-psutils bumpversion
