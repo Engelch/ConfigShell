@@ -156,9 +156,10 @@ function hadmRealUserDetermination() {
       [ -n "${HADM_LAST_LOGIN_FINGERPRINT:-}" ] && unset HADM_LAST_LOGIN_FINGERPRINT
       export HADM_LAST_LOGIN_FINGERPRINT=${HADM_LAST_LOGIN_FINGERPRINT:-$(sudo journalctl -r -u ssh -g 'Accepted publickey' -n 1 -q 2>&1 | awk '{ print $NF }')}
       debug8 HADM_LAST_LOGIN_FINGERPRINT "$HADM_LAST_LOGIN_FINGERPRINT"
-      debug8 "SSH_CLIENT $SSH_CLIENT"
+      debug8 "SSH_CLIENT ${SSH_CLIENT:-}"
 
-      if [ "$SSH_CLIENT" != "" ] && [ ! -z "$HADM_LAST_LOGIN_FINGERPRINT" ] ; then
+      # ${VAR:-} guards: SSH_CLIENT is unset under su - / console logins (set -u)
+      if [ -n "${SSH_CLIENT:-}" ] && [ -n "${HADM_LAST_LOGIN_FINGERPRINT:-}" ] ; then
          for file in ~/.ssh/*.pub
          do
             if [ $(ssh-keygen -lf $file | grep $HADM_LAST_LOGIN_FINGERPRINT | wc -l) -eq 1 ] ; then

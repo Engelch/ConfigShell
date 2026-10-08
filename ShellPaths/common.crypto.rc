@@ -13,7 +13,7 @@ function start_ssh_agent() {
 function sshagent_init {
    #  ssh agent sockets can be attached to a ssh daemon process or an ssh-agent process.
    debug8 "${BASH_SOURCE[0]}::${FUNCNAME[0]}"
-   [ -n "${SSH_AUTH_SOCK}" ] && [ -n "${SSH_TTY}" ] && return
+   [ -n "${SSH_AUTH_SOCK:-}" ] && [ -n "${SSH_TTY:-}" ] && return # :- guards: unset in non-SSH sessions (set -u)
 
    local -r ssh_auth_sock_file=$HOME/.ssh_auth_sock
    debug12 ssh_auth_sock_file set to "$ssh_auth_sock_file"
