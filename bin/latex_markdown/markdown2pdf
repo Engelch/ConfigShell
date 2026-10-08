@@ -24,6 +24,23 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 # CHANGELOG
+# 1.6.0
+# - LaTeX mode no longer aborts when the markdown file contains top-level sections (#):
+#   exactly one '# ' heading becomes the document title (overrides the title of the header
+#   file) and all other headings move one level up; no '# ' heading: all headings move one
+#   level up (as before); several '# ' headings: headings are kept as they are.
+# - headings inside fenced code blocks (``` or ~~~) are ignored when counting and shifting
+# 1.5.0
+# - PDF engine is lualatex in both modes, with a Unicode font fallback header
+#   (/opt/ConfigShell/share/Markdown-Document/unicode-fallback.tex): any character missing in
+#   the Latin Modern fonts is taken from DejaVu (part of TeX Live). Unicode symbols such as
+#   ✓ → ≤ … no longer abort the run (pdflatex) and are no longer silently dropped (xelatex).
+# - default paper size is DIN A4 (-V papersize=a4) in both modes
+# - the header is injected by the Lua filter unicode-fallback.lua (same directory): pandoc -H
+#   would override a header-includes block of header_tex.yaml. The pdflatex-only lines of
+#   header_tex.yaml (inputenc, \DeclareUnicodeCharacter) are now guarded by \ifPDFTeX.
+# - environment: PANDOC_PDF_ENGINE overrides the engine (the fallback header is only added for
+#   lualatex), MD2PDF_UNICODE_FALLBACK overrides the path of the fallback header
 # 1.4
 # - not deleting LaTeX comments from the input file anymore (was a kind of overengineering)
 # - -k and -x together makes no sense anymore. -k has not effect if -x is selected
@@ -55,8 +72,8 @@ VERSION
     $_appVersion
 
 DESCRIPTION
-    Convert a markdown file to PDF using pandoc. This version works more stable when using
-    classical LaTeX instead of xelatex. The starting position is: The markdown file can be 
+    Convert a markdown file to PDF using pandoc. PDF engine is lualatex with a Unicode font fallback
+    (see ENVIRONMENT), paper size DIN A4. The starting position is: The markdown file can be 
     formatted by itself and is 'good looking'. No LaTeX commands are included. But:
     Elements of the source markdown file before the comment 
 
@@ -77,6 +94,14 @@ DESCRIPTION
     Further options can be passed to the pandoc command using the environment
     variable PANDOC_OPTIONS. This environment variable is not double-quoted, so it can contain
     multiple options.
+
+ENVIRONMENT
+    PANDOC_OPTIONS          ::= additional pandoc options, not quoted (see above)
+    PANDOC_PDF_ENGINE       ::= pandoc PDF engine, default lualatex. The Unicode font fallback
+                                header is only added for lualatex.
+    MD2PDF_UNICODE_FALLBACK ::= LaTeX header providing the Unicode font fallback, default
+                                /opt/ConfigShell/share/Markdown-Document/unicode-fallback.tex
+                                The Lua filter injecting it is expected next to it as <name>.lua
 OPTIONS
     -H <<file>> ::= optional headerfile with YAML, LaTeX commands,
                     default: 
@@ -89,13 +114,15 @@ OPTIONS
     -V          ::= output the version number to stderr and exit with 0
     -x          ::= disable LaTeX processing. This is useful if the markdown file shall be 
                     formatted to look nice in LaTeX. 
-                    LaTeX formatting is disabled by default. This has the following effect:
+                    LaTeX processing is enabled by default. It has the following effect:
                         1. All lines before the comment [//]: # (delete before 4 LaTeX)
                            are removed.
-                        1. Only one section (#) is allowed which
-                           is removed by the title specified in the LaTeX header file.
-                        2. All other sections below (e.g. subsection (##))
-                           will be moved one level up.
+                        2. If the file contains exactly one top-level section (#), it becomes
+                           the document title (overriding the title of the header file) and
+                           all other sections move one level up (## -> #). Without any
+                           top-level section, all sections move one level up as well. With
+                           several top-level sections, the headings are kept as they are.
+                           Headings inside fenced code blocks are ignored.
     -h          ::= show usage message to stderr and exit with 0
 HERE
 }
@@ -137,7 +164,7 @@ function parseCLI() {
 #   4) output filename
 #   5) TMP2
 #   6) TMP3
-# EXIT 21, 
+# EXIT: none specific (1.6.0: the former exit 21 "no section allowed" is gone)
 function doLaTeXProcessing() {
     readonly _header="$1"
     readonly _processedMarkdownFile="$2"
@@ -146,27 +173,42 @@ function doLaTeXProcessing() {
     readonly _tmp2="$TMP2"
     readonly _tmp3="$TMP3"
 
-    # stop if file contains more than one section (#)
-    [ "$(grep -E -c '^# ' "$_processedMarkdownFile")" -gt 0 ] && errorExit 21 "No section is supposed to exist"
-  
-    # remove the section alias title from the file
-    # sed -e '/^# /d' "$2" > "$3"
-    # move subsections to sections
-    sed -e 's/^## /# /' "$_processedMarkdownFile" > "$_tmp2"
-    # move subsubsections to subsections
-    sed -e 's/^### /## /' "$_tmp2" > "$_tmp3"
-    # move subsubsubsections to subsubsections
-    sed -e 's/^#### /### /' "$_tmp3" > "$_tmp2"
-    # move subsubsubsubsections to subsubsubsections
-    sed -e 's/^##### /#### /' "$_tmp2" > "$_tmp3"
+    # 1.6.0: top-level sections (#) are allowed. Headings inside fenced code blocks (``` or ~~~)
+    # are ignored by the counting and by the level shifting.
+    #   exactly one '# ' heading: it becomes the document title (a YAML block placed after the
+    #       header file overrides its title), the heading line is removed and all other headings
+    #       move one level up (## -> #, ### -> ##, ...)
+    #   no '# ' heading:          all headings move one level up (behaviour of < 1.6.0)
+    #   several '# ' headings:    headings are kept as they are
+    local _h1Count _title _titleYaml
+    _h1Count=$(awk '/^(```|~~~)/ { fence = !fence; next } !fence && /^# / { n++ } END { print n+0 }' "$_processedMarkdownFile")
+    debug "top-level headings outside fenced code: $_h1Count"
+    case "$_h1Count" in
+        0)  debug "no top-level heading: moving all headings one level up"
+            awk '/^(```|~~~)/ { fence = !fence; print; next } !fence && /^##/ { sub(/^#/, "") } { print }' \
+                "$_processedMarkdownFile" > "$_tmp3"
+            ;;
+        1)  _title=$(awk '/^(```|~~~)/ { fence = !fence; next } !fence && /^# / { sub(/^# +/, ""); print; exit }' "$_processedMarkdownFile")
+            debug "single top-level heading becomes the title: $_title"
+            awk '/^(```|~~~)/ { fence = !fence; print; next }
+                 !fence && /^# / && !done { done = 1; next }
+                 !fence && /^##/ { sub(/^#/, "") }
+                 { print }' "$_processedMarkdownFile" > "$_tmp2"
+            _titleYaml=$(printf '%s' "$_title" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g')
+            { printf -- '\n---\ntitle: "%s"\n---\n\n' "$_titleYaml" ; cat "$_tmp2" ; } > "$_tmp3"
+            ;;
+        *)  debug "$_h1Count top-level headings: headings are kept as they are"
+            cp "$_processedMarkdownFile" "$_tmp3"
+            ;;
+    esac
     # move TeX formatting - does not work on OSX
     sed -e 's/\bTeX\b/\\TeX\{\}/g' "$_tmp3" > "$_tmp2"
     # move LaTeX formatting
     sed -e 's/LaTeX/\\LaTeX\{\}/g' "$_tmp2" > "$_tmp3"
     cp "$_tmp3" "$_processedMarkdownFile"   # keep the next line constant, independent from the number of conversion steps
     [ -n "$keepTemporaryFiles" ] && err "creating latexPreparedMarkdown.txt" && cp "$_processedMarkdownFile" "latexPreparedMarkdown.txt"
-    debug cat "$_header" "$_processedMarkdownFile" "$_footer" \| pandoc $PANDOC_OPTIONS -f markdown -t pdf -o "$_output" 
-    cat "$_header" "$_processedMarkdownFile" "$_footer" | pandoc $PANDOC_OPTIONS -f markdown -t pdf -o "$_output" 
+    debug cat "$_header" "$_processedMarkdownFile" "$_footer" \| pandoc $PANDOC_OPTIONS $pandocPdfOptions -f markdown -t pdf -o "$_output" 
+    cat "$_header" "$_processedMarkdownFile" "$_footer" | pandoc $PANDOC_OPTIONS $pandocPdfOptions -f markdown -t pdf -o "$_output" 
 }
 
 function setHeaderfile() {
@@ -192,7 +234,7 @@ function main() {
     declare -r _app=$(basename "${0}")
     declare -r _appDir=$(dirname "$0")
     declare -r _absoluteAppDir=$(cd "$_appDir" || exit 99 ; /bin/pwd)
-    declare -r _appVersion="1.4.1"      # use semantic versioning
+    declare -r _appVersion="1.6.0"      # use semantic versioning
     declare keepTemporaryFiles=''
 
     declare footerFile="footer_tex.tex"
@@ -202,7 +244,20 @@ function main() {
     shift "$(( OPTIND - 1 ))"   # not working inside parseCLI
 
     loadLibs
-    exitIfBinariesNotFound mktemp awk pandoc sed   # exit if required apps not found
+    # 1.5.0: PDF engine (default lualatex), Unicode font fallback header, DIN A4 — used in both modes
+    declare -r pdfEngine="${PANDOC_PDF_ENGINE:-lualatex}"
+    declare -r unicodeFallback="${MD2PDF_UNICODE_FALLBACK:-/opt/ConfigShell/share/Markdown-Document/unicode-fallback.tex}"
+    declare -r unicodeFallbackFilter="${unicodeFallback%.tex}.lua"
+    exitIfBinariesNotFound mktemp awk pandoc sed "$pdfEngine"   # exit if required apps not found
+    pandocPdfOptions="--pdf-engine=$pdfEngine -V papersize=a4"
+    if [ "$pdfEngine" = lualatex ] ; then
+        [ ! -r "$unicodeFallback" ] && errorExit 12 "Unicode fallback header not readable: $unicodeFallback"
+        [ ! -r "$unicodeFallbackFilter" ] && errorExit 13 "Unicode fallback filter not readable: $unicodeFallbackFilter"
+        # a Lua filter appends the header to header-includes; pandoc -H would override a YAML header-includes block
+        export MD2PDF_UNICODE_FALLBACK="$unicodeFallback"
+        pandocPdfOptions="$pandocPdfOptions --lua-filter $unicodeFallbackFilter"
+    fi
+    debug "pandoc PDF options: $pandocPdfOptions"
 
     # simplification for completions: also allow to specify the input file as
     # inputFilename. instead of inputFilename.md. In both cases, the input
@@ -231,7 +286,7 @@ function main() {
     #    cat $HEADER_TEXT "$TMP1" $FOOTER_TEXT | pandoc $PANDOC_OPTIONS -f markdown -t pdf -o "$outputFile" 
     if [ -n "$disableLaTeXProcessing" ] ; then
         # keepTemporaryFiles makes no sense with -x processing
-        pandoc $PANDOC_OPTIONS --pdf-engine=xelatex -f markdown -t pdf -o "$outputFile" < "$inputFile"
+        pandoc $PANDOC_OPTIONS $pandocPdfOptions -f markdown -t pdf -o "$outputFile" < "$inputFile"
     else
         # header and footer files are only used in LaTeX mode
         HEADER_TEXT=

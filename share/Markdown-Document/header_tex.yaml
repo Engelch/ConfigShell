@@ -7,11 +7,13 @@ header-includes: |
   \usepackage[a4paper, total={6.5in, 10in}]{geometry}
   \usepackage[UKenglish]{babel}
   \usepackage[UKenglish]{isodate}
-  \usepackage[utf8]{inputenc}
-  \DeclareUnicodeCharacter{2933}{$\leadsto$}
-  \DeclareUnicodeCharacter{21D2}{$\Rightarrow$}
-  \DeclareUnicodeCharacter{2264}{$\leq$}
-  \DeclareUnicodeCharacter{2265}{$\geq$}
+  \ifPDFTeX
+    \usepackage[utf8]{inputenc}
+    \DeclareUnicodeCharacter{2933}{$\leadsto$}
+    \DeclareUnicodeCharacter{21D2}{$\Rightarrow$}
+    \DeclareUnicodeCharacter{2264}{$\leq$}
+    \DeclareUnicodeCharacter{2265}{$\geq$}
+  \fi
   \usepackage{enumitem}
   \setlistdepth{20}
   \renewlist{itemize}{itemize}{20}

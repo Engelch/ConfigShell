@@ -1,0 +1,21 @@
+% unicode-fallback.tex — generic Unicode handling for pandoc --pdf-engine=lualatex
+%
+% pdflatex aborts on every Unicode character it was not told about ("Unicode character ✓
+% (U+2713) not set up for use with LaTeX"); xelatex/lualatex accept any character but
+% silently DROP every glyph the current font does not have (only a "Missing character"
+% warning in the log). This header keeps the Latin Modern look and lets luaotfload take
+% every missing glyph from DejaVu, which ships with TeX Live (texmf-dist), i.e. it works
+% on macOS and Linux without system fonts. Nothing to maintain when new symbols appear;
+% check the .log for "Missing character" if a glyph is in none of the fallback fonts.
+%
+% Used by md2pdf (ConfigShell) via: pandoc --pdf-engine=lualatex -H unicode-fallback.tex
+\directlua{
+  luaotfload.add_fallback("unifallback", {
+    "DejaVuSans:mode=harf;script=dflt;",
+    "DejaVuSansMono:mode=harf;script=dflt;",
+    "DejaVuSerif:mode=harf;script=dflt;",
+  })
+}
+\setmainfont{Latin Modern Roman}[RawFeature={fallback=unifallback}]
+\setsansfont{Latin Modern Sans}[RawFeature={fallback=unifallback}]
+\setmonofont{Latin Modern Mono}[RawFeature={fallback=unifallback}]
