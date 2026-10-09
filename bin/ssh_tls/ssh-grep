@@ -4,7 +4,7 @@
 readonly _app=$(basename "$0")
 readonly _appDir=$(dirname "$0")
 readonly _absoluteAppDir=$(cd "$_appDir" || errorExit 1 cannot determine absolute path of app_dir; /bin/pwd)
-readonly _appVersion="2.1.0" # use semantic versioning
+readonly _appVersion="2.2.0" # use semantic versioning
 export DebugFlag=${DebugFlag:-FALSE}
 
 #########################################################################################
@@ -50,7 +50,7 @@ function usage()
     err4 'list records from ssh-config'
     err
     err SYNOPSIS
-    err4 "$_app" '[-D] <<pattern>>'
+    err4 "$_app" '[-D] [-f] <<pattern>>'
     err4 "$_app" '-h'
     err4 "$_app" '-V'
     err
@@ -59,18 +59,22 @@ function usage()
     err
     err OPTIONS
     err4 '-D      ::= enable debug output'
+    err4 '-f      ::= search in files, default search ~/.ssh/completion.lst'
     err4 '-h      ::= show usage message and exit with exit code 1'
     err4 '-V      ::= show version'
 }
 
+# exit 1 2
 function parseCLI() {
-    while getopts "DhV" options; do         # Loop: Get the next option;
+    while getopts "DfhV" options; do         # Loop: Get the next option;
         case "${options}" in                    # TIMES=${OPTARG}
             D)  err Debug enabled ; debugSet
                 ;;
             h)  usage ; exit 1
                 ;;
             V)  err "$_appVersion" ; exit 0
+                ;;
+            f)  fileSearch=TRUE
                 ;;
             *)
                 err Help with "$_app" -h
@@ -80,14 +84,21 @@ function parseCLI() {
     done
 }
 
+# exit 0 3
 function main() {
+    fileSearch=FALSE
     exitIfBinariesNotFound pwd basename dirname mktemp grep xargs sed find paste fgrep
     exitIfDirsNotExisting "$HOME/.ssh/"
     parseCLI "$@"
     shift $(( OPTIND - 1 ))  # not working inside parseCLI
     debug args are "$*"
     for pattern in "$@" ; do
-        find -L  "$HOME/.ssh/"  -name \*.config -type f | grep -v \.old | xargs grep -ri 'host ' | sed -e 's,.*\.ssh//,,' | grep -E --color "$pattern" # keep colour
+        if [ "$fileSearch" = TRUE ]; then
+            find -L  "$HOME/.ssh/" \( -name \*.config -o -name \*.conf -o -name \*.cfg \) -type f | grep -v \.old | xargs grep -ri 'host ' | sed -e 's,.*\.ssh//,,' | grep -E --color "$pattern" # keep colour
+        else
+            [ ! -f "$HOME/.ssh/completion.lst" ] && errorExit 3 "$HOME/.ssh/completion.lst not found, run ssh-completion.sh first"
+            grep -E --color "$pattern" "$HOME/.ssh/completion.lst"
+        fi
     done
 }
 
